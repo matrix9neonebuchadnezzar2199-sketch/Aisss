@@ -296,6 +296,103 @@
       letter-spacing: 0;
     }
 
+    /* RAG admin tree layout */
+    .rag-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+      min-height: 420px;
+    }
+    @media (max-width: 900px) {
+      .rag-layout { grid-template-columns: 1fr; }
+    }
+    .rag-tree-panel {
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      background: var(--canvas-subtle);
+      overflow: auto;
+      max-height: 520px;
+    }
+    .rag-tree-head {
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-default);
+    }
+    .rag-tree { list-style: none; padding: 6px 0; margin: 0; font-size: 13px; }
+    .rag-tree ul { list-style: none; padding-left: 14px; margin: 0; }
+    .rag-tree li { margin: 0; }
+    .rag-tree-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      padding: 6px 10px;
+      border: none;
+      background: transparent;
+      color: var(--fg-default);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+    }
+    .rag-tree-btn:hover { background: var(--canvas-inset); }
+    .rag-tree-btn.active {
+      background: var(--info-subtle);
+      border-left-color: var(--accent-fg);
+      color: var(--accent-emphasis);
+      font-weight: 600;
+    }
+    .rag-tree-btn .chev { color: var(--fg-subtle); font-size: 10px; width: 12px; }
+    .rag-tree-btn.file { padding-left: 28px; font-size: 12px; color: var(--fg-muted); }
+    .rag-tree-btn.file.active { color: var(--accent-emphasis); }
+    .rag-mode-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-default);
+      padding-bottom: 0;
+    }
+    .rag-mode-tabs button {
+      padding: 8px 14px;
+      border: none;
+      background: transparent;
+      color: var(--fg-muted);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .rag-mode-tabs button:hover { color: var(--fg-default); }
+    .rag-mode-tabs button.active {
+      color: var(--accent-emphasis);
+      border-bottom-color: var(--accent-fg);
+      font-weight: 600;
+    }
+    .rag-file-list { font-size: 13px; }
+    .rag-file-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .rag-file-row:hover { background: var(--canvas-inset); }
+    .rag-file-row .fname { flex: 1; }
+    .rag-file-row.nested { padding-left: 28px; }
+    .rag-enabled-mark { color: var(--success-fg); font-weight: 700; }
+    .rag-register-note {
+      font-size: 12px;
+      color: var(--fg-muted);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    .rag-register-note strong { color: var(--fg-default); }
+
     /* Panels */
     .view { display: none; }
     .view.active { display: block; }
@@ -720,13 +817,14 @@
     <nav class="sidebar-nav">
       <p class="sidebar-group-title">登録</p>
       <a href="#" data-view="register" title="ケース（事象）登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース（事象）</span></a>
+      <a href="#" data-view="standalone-file" class="sidebar-sub" title="単独ファイル（参照資料）"><span class="nav-icon">📎</span><span class="sidebar-label">単独ファイル（参照資料）</span></a>
 
       <p class="sidebar-group-title">検索</p>
       <a href="#" data-view="search" class="active" title="ケース（事象）検索"><span class="nav-icon">🔍</span><span class="sidebar-label">ケース（事象）</span></a>
       <a href="#" data-view="ai" class="sidebar-sub" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
 
       <p class="sidebar-group-title">管理</p>
-      <a href="#" data-view="rag-admin" title="RAG 管理"><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
+      <a href="#" data-view="rag-admin" class="sidebar-sub" title="RAG 管理"><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
       <a href="#" data-view="models" class="sidebar-sub" title="モデル管理（API 連携）"><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理（API 連携）</span></a>
       <a href="#" data-view="masters" class="sidebar-sub" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
       <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
@@ -950,6 +1048,37 @@
       </div>
     </section>
 
+    <!-- 単独ファイル登録 -->
+    <section class="view" id="view-standalone-file">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>単独ファイル（参照資料）登録</h2>
+          <button class="btn btn-primary btn-sm" onclick="showView('rag-admin')">RAG 管理で確認</button>
+        </div>
+        <div class="panel-body">
+          <div class="policy-banner" style="margin-bottom:12px">
+            ケースに紐づけない参照資料を登録します。権限・タグ・グループ（細部）を付与し、抽出 → 埋め込み後に RAG 管理ツリーへ表示されます。AI 検索の対象にするかは RAG 管理の「RAG 有効化」で切り替えます。
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label>タイトル（細部グループ名）</label><input type="text" placeholder="例: 2025年度経理データ" /></div>
+            <div class="form-group"><label>ジャンル</label><select><option>単独ファイル（参照資料）</option></select></div>
+            <div class="form-group"><label>タグ</label><input type="text" placeholder="カンマ区切り" /></div>
+            <div class="form-group"><label>閲覧範囲</label><select><option>分析第一課</option><option>全員</option></select></div>
+          </div>
+          <div class="upload-zone" style="margin-top:12px">
+            Office / PDF / 画像 / 音声 — ドラッグ＆ドロップ、または <button class="btn btn-sm">ファイルを選択</button>
+          </div>
+          <p class="rag-register-note" style="margin-top:12px">
+            <strong>ケース添付との違い:</strong> 登録 → ケース（事象）で表題・事象メタデータと一緒に添付。本画面はメタデータ最小の「ファイル単体」登録用です。
+          </p>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary">登録して抽出開始</button>
+            <button class="btn">キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- RAG 管理 -->
     <section class="view" id="view-rag-admin">
       <div class="stats">
@@ -961,63 +1090,98 @@
       <div class="panel">
         <div class="panel-header">
           <h2>RAG 管理</h2>
+          <button class="btn btn-sm" onclick="showView('standalone-file')">+ 単独ファイル登録</button>
           <button class="btn btn-sm">一括再インデックス</button>
         </div>
         <div class="panel-body">
-          <div class="policy-banner" style="margin-bottom:12px">
-            Office / PDF の DB 化はケース添付 → 抽出 → 埋め込み → Qdrant のパイプラインで行います。この画面で監視・再実行します。
-          </div>
-          <div class="filter-bar" style="margin-bottom:12px">
-            <select><option>すべての状態</option><option>抽出失敗</option><option>埋め込み待ち</option><option>同期ずれ</option></select>
-            <button class="btn btn-sm">更新</button>
-          </div>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ケース ID</th>
-                <th>表題</th>
-                <th>抽出</th>
-                <th>埋め込み</th>
-                <th>RAG 同期</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="mono">CASE-2026-00142</td>
-                <td>東アジア情勢に関する月次分析</td>
-                <td><span class="label label-success">完了</span></td>
-                <td><span class="label label-success">完了</span></td>
-                <td><span class="label label-success">同期済</span></td>
-                <td><button class="btn btn-sm">再インデックス</button></td>
-              </tr>
-              <tr>
-                <td class="mono">CASE-2026-00089</td>
-                <td>地域経済レポート（PDF 添付）</td>
-                <td><span class="label label-success">完了</span></td>
-                <td><span class="label label-warning">待機中</span></td>
-                <td><span class="label label-default">—</span></td>
-                <td><button class="btn btn-sm">再インデックス</button></td>
-              </tr>
-              <tr>
-                <td class="mono">CASE-2026-00012</td>
-                <td>会議録（Office 添付）</td>
-                <td><span class="label label-danger">失敗</span></td>
-                <td><span class="label label-default">—</span></td>
-                <td><span class="label label-default">—</span></td>
-                <td><button class="btn btn-sm btn-primary">再抽出</button></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="form-section" style="margin-top:20px">
-            <h3>設定（管理者）</h3>
-            <div class="form-grid">
-              <div class="form-group"><label>チャンクサイズ</label><input type="text" value="800 tokens" readonly /></div>
-              <div class="form-group"><label>オーバーラップ</label><input type="text" value="120 tokens" readonly /></div>
-              <div class="form-group"><label>埋め込みモデル</label><input type="text" value="nomic-embed-text:latest" readonly /></div>
-              <div class="form-group"><label>ReRank</label><input type="text" value="OFF（既定）" readonly /></div>
+          <p class="rag-register-note">
+            <strong>ファイルの登録方法:</strong>
+            ① <strong>ケース添付</strong> — 登録 → ケース（事象）でファイルを添付。
+            ② <strong>単独ファイル</strong> — 登録 → 単独ファイル（参照資料）、または本画面の「+ 単独ファイル登録」。
+            いずれも左ツリー（ジャンル → 細部 → ファイル）に表示され、ここで抽出状態の確認と RAG 有効化を行います。
+          </p>
+          <div class="rag-layout">
+            <div class="rag-tree-panel">
+              <div class="rag-tree-head">ジャンル → 細部 → ファイル</div>
+              <ul class="rag-tree" id="ragTree">
+                <li>
+                  <button type="button" class="rag-tree-btn active" data-rag-genre="case">
+                    <span class="chev">▼</span> ケース（事象）
+                  </button>
+                  <ul>
+                    <li>
+                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 2025年度経理データ</button>
+                      <ul>
+                        <li><button type="button" class="rag-tree-btn file">2025年度.xlsx</button></li>
+                      </ul>
+                    </li>
+                    <li>
+                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 2026年度経理データ</button>
+                      <ul>
+                        <li><button type="button" class="rag-tree-btn file">2026年度.xlsx</button></li>
+                      </ul>
+                    </li>
+                    <li>
+                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> ●山の自然</button>
+                      <ul>
+                        <li><button type="button" class="rag-tree-btn file">植物.pdf</button></li>
+                        <li><button type="button" class="rag-tree-btn file">河川名.xlsx</button></li>
+                      </ul>
+                    </li>
+                    <li>
+                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> ハリウッド俳優</button>
+                      <ul>
+                        <li><button type="button" class="rag-tree-btn file">男性.xlsx</button></li>
+                        <li><button type="button" class="rag-tree-btn file">女性.xlsx</button></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <button type="button" class="rag-tree-btn" data-rag-genre="standalone">
+                    <span class="chev">▸</span> 単独ファイル（参照資料）
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div class="rag-main">
+              <div class="rag-mode-tabs" id="ragModeTabs">
+                <button type="button" class="active" data-rag-mode="browse">一覧・検索</button>
+                <button type="button" data-rag-mode="enable">RAG 有効化 <span class="rag-enabled-mark">㋹</span></button>
+              </div>
+              <div class="filter-bar" style="margin-bottom:12px">
+                <input type="search" placeholder="タイトル・ファイル名…" />
+                <input type="text" placeholder="タグ" style="max-width:120px" />
+                <input type="date" title="期間（開始）" />
+                <span style="color:var(--fg-muted)">〜</span>
+                <input type="date" title="期間（終了）" />
+                <button class="btn btn-sm">検索</button>
+              </div>
+              <div id="ragPanelBrowse">
+                <div class="rag-file-list">
+                  <div class="rag-file-row"><span class="fname">2025年度経理データ / 2025年度.xlsx</span><span class="label label-success">抽出済</span><span class="label label-default">RAG OFF</span></div>
+                  <div class="rag-file-row"><span class="fname">2026年度経理データ / 2026年度.xlsx</span><span class="label label-warning">埋め込み待ち</span><span class="label label-default">RAG OFF</span></div>
+                  <div class="rag-file-row"><span class="fname">●山の自然 / 植物.pdf</span><span class="label label-success">抽出済</span><span class="label label-success">RAG ON</span></div>
+                  <div class="rag-file-row nested"><span class="fname">河川名.xlsx</span><span class="label label-success">抽出済</span><span class="label label-default">RAG OFF</span></div>
+                  <div class="rag-file-row"><span class="fname">ハリウッド俳優 / 男性.xlsx</span><span class="label label-danger">抽出失敗</span><span class="label label-default">—</span><button class="btn btn-sm">再抽出</button></div>
+                  <div class="rag-file-row nested"><span class="fname">女性.xlsx</span><span class="label label-success">抽出済</span><span class="label label-default">RAG OFF</span></div>
+                </div>
+              </div>
+              <div id="ragPanelEnable" style="display:none">
+                <p class="rag-register-note">㋹ = AI 検索のベクトル索引に含める（有効化）。OFF のファイルは登録・閲覧のみで AI には渡しません。</p>
+                <div class="rag-file-list">
+                  <div class="rag-file-row"><span class="fname">2025年度経理データ / 2025年度.xlsx</span><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
+                  <div class="rag-file-row"><span class="fname">2026年度経理データ / 2026年度.xlsx</span><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
+                  <div class="rag-file-row"><span class="fname"><span class="rag-enabled-mark">㋹</span> ●山の自然 / 植物.pdf</span><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
+                  <div class="rag-file-row nested"><span class="fname">河川名.xlsx</span><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
+                  <div class="rag-file-row"><span class="fname"><span class="rag-enabled-mark">㋹</span> ハリウッド俳優 / 男性.xlsx</span><label><input type="checkbox" checked disabled title="抽出失敗のため不可" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
+                  <div class="rag-file-row nested"><span class="fname"><span class="rag-enabled-mark">㋹</span> 女性.xlsx</span><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
+                </div>
+                <button class="btn btn-primary btn-sm" style="margin-top:12px">有効化設定を保存</button>
+              </div>
             </div>
           </div>
+          <p class="rag-register-note" style="margin-top:16px">※ 細部グループ名・階層ルールはモック確認後に確定します。</p>
         </div>
       </div>
     </section>
@@ -1232,6 +1396,23 @@
     if (!file) return;
     fillFormFromExcel(file.name);
     excelFileInput.value = '';
+  });
+
+  document.querySelectorAll('#ragModeTabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#ragModeTabs button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const enable = btn.dataset.ragMode === 'enable';
+      document.getElementById('ragPanelBrowse').style.display = enable ? 'none' : 'block';
+      document.getElementById('ragPanelEnable').style.display = enable ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('#ragTree .rag-tree-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#ragTree .rag-tree-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
   });
 </script>
 </body>

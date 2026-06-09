@@ -11,6 +11,7 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 ### 登録
 
 - **ケース（事象）** — case registration form (Excel import integrated here).
+- **単独ファイル（参照資料）** — standalone file upload without full case metadata (nested under 登録).
 
 ### 検索
 
@@ -19,7 +20,7 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 
 ### 管理
 
-- **RAG 管理** — ingestion pipeline dashboard (extraction, embedding, sync).
+- **RAG 管理** — tree navigator (ジャンル → 細部 → ファイル) plus list/search and RAG enablement (㋹). Nested under 管理 with other admin items.
 - **モデル管理（API 連携）** — Ollama model list and role assignment via `api/ollama`.
 - **マスタ管理** — editable master lists.
 - **ユーザー・グループ管理** — planned; mock not yet implemented.
@@ -134,18 +135,38 @@ The AI screen must not show:
 - Raw vector search debug output to normal users.
 - Storage keys or direct object URLs.
 
+## Standalone File Registration Screen
+
+See [RAG Admin Guide](./16-rag-admin-guide.md).
+
+Operators register reference files that are not tied to a full case record:
+
+- Title (細部 group name), tags, viewing range.
+- File upload (Office, PDF, image, audio).
+- After save, extraction runs and the file appears under **単独ファイル（参照資料）** in the RAG tree.
+
 ## RAG Management Screen
 
 See [RAG Admin Guide](./16-rag-admin-guide.md).
 
-Operators and administrators use this screen to:
+Layout: **left tree** (ジャンル → 細部 → ファイル) and **right panel** (search + list).
 
-- View index statistics and pipeline health.
-- Monitor extraction, embedding, and sync status per case.
-- Retry failed jobs and trigger reindex.
-- View chunking and embedding settings (admin edit).
+Genres (initial):
 
-Office and PDF become searchable through case attachments; this screen monitors and controls that pipeline rather than providing a separate upload path.
+- **ケース（事象）** — files from case attachments and case-linked groups.
+- **単独ファイル（参照資料）** — files from standalone registration.
+
+Right panel modes:
+
+- **一覧・検索** — title, tag, and date filters; extraction status; RAG on/off labels.
+- **RAG 有効化** — toggle ㋹ per file (include in vector index for AI search).
+
+Registration paths (not upload on this screen):
+
+1. **ケース添付** — 登録 → ケース（事象）.
+2. **単独ファイル** — 登録 → 単独ファイル（参照資料）, or **+ 単独ファイル登録** on RAG 管理.
+
+Fine-grained hierarchy rules (細部 naming) are TBD after mock review.
 
 ## Model Management Screen
 
