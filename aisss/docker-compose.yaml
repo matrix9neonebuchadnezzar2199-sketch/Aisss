@@ -1,0 +1,125 @@
+# Aisss application stack.
+# This is a skeleton. Application images (web, api, worker) build from
+# ../apps and require source code that lands in Milestone 1.
+# Infrastructure services use pinned upstream images.
+#
+# Dify runs as a separate stack and joins the same external network.
+# See ../docs/13-deployment-docker.md and ../docs/decisions/ADR-003-docker-two-stacks.md.
+
+name: aisss
+
+networks:
+  default:
+    driver: bridge
+  aisss-shared:
+    external: true
+
+volumes:
+  aisss_postgres_data:
+  aisss_minio_data:
+  aisss_redis_data:
+  aisss_vector_data:
+
+services:
+  web:
+    build:
+      context: ../apps/web
+    env_file:
+      - .env
+    depends_on:
+      - api
+    ports:
+      - "${AISSS_WEB_PORT:-3000}:3000"
+    networks:
+      - default
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ../apps/api
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+      vector:
+        condition: service_started
+    ports:
+      - "${AISSS_API_PORT:-8000}:8000"
+    networks:
+      - default
+      - aisss-shared
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ../apps/workers
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+      vector:
+        condition: service_started
+    networks:
+      - default
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${AISSS_DB_USER:-aisss}
+      POSTGRES_PASSWORD: ${AISSS_DB_PASSWORD:?set AISSS_DB_PASSWORD in .env}
+      POSTGRES_DB: ${AISSS_DB_NAME:-aisss}
+    volumes:
+      - aisss_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AISSS_DB_USER:-aisss}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - aisss_redis_data:/data
+    networks:
+      - default
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${AISSS_MINIO_ROOT_USER:-aisss}
+      MINIO_ROOT_PASSWORD: ${AISSS_MINIO_ROOT_PASSWORD:?set AISSS_MINIO_ROOT_PASSWORD in .env}
+    volumes:
+      - aisss_minio_data:/data
+    ports:
+      - "${AISSS_MINIO_API_PORT:-9000}:9000"
+      - "${AISSS_MINIO_CONSOLE_PORT:-9001}:9001"
+    networks:
+      - default
+    restart: unless-stopped
+
+  vector:
+    image: qdrant/qdrant:latest
+    volumes:
+      - aisss_vector_data:/qdrant/storage
+    ports:
+      - "${AISSS_VECTOR_PORT:-6333}:6333"
+    networks:
+      - default
+    restart: unless-stopped

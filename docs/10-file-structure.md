@@ -20,10 +20,18 @@ Aisss/
     10-file-structure.md
     11-milestones.md
     12-foundation-materials.md
+    13-deployment-docker.md
     dev-diary.md
     decisions/
       ADR-001-primary-architecture.md
       ADR-002-rag-permission-middleware.md
+      ADR-003-docker-two-stacks.md
+  aisss/
+    docker-compose.yaml
+    .env.example
+  dify/
+    docker-compose.override.yaml
+  Makefile
   apps/
     web/
       src/

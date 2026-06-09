@@ -1,0 +1,16 @@
+# Environment files with secrets
+.env
+*.env
+!*.env.example
+aisss/.env
+
+# Dependencies and build output
+node_modules/
+dist/
+.next/
+__pycache__/
+*.pyc
+
+# Local data and volumes
+data/
+*.log

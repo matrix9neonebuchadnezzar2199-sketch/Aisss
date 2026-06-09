@@ -20,12 +20,14 @@ The central design rule is simple: the case management database is the source of
 10. [File Structure](./10-file-structure.md)
 11. [Milestones](./11-milestones.md)
 12. [Foundation Materials](./12-foundation-materials.md)
-13. [Development Diary](./dev-diary.md)
+13. [Deployment: Docker Topology](./13-deployment-docker.md)
+14. [Development Diary](./dev-diary.md)
 
 ## Architecture Decisions
 
 - [ADR-001: Primary Architecture](./decisions/ADR-001-primary-architecture.md)
 - [ADR-002: RAG Permission Middleware](./decisions/ADR-002-rag-permission-middleware.md)
+- [ADR-003: Two Docker Stacks](./decisions/ADR-003-docker-two-stacks.md)
 
 ## Key Implementation Rules
 

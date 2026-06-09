@@ -1,0 +1,23 @@
+# Aisss-side override for the official Dify Compose stack.
+#
+# Place this file next to the official Dify docker-compose.yaml, or run:
+#   docker compose -f <dify>/docker-compose.yaml -f dify/docker-compose.override.yaml up -d
+#
+# It attaches Dify's api and worker to the shared network so they can reach
+# the Aisss permissioned search middleware by service name.
+# Do NOT fork the official Dify stack; keep it upstream and only layer this override.
+# See ../docs/13-deployment-docker.md and ../docs/decisions/ADR-003-docker-two-stacks.md.
+
+networks:
+  aisss-shared:
+    external: true
+
+services:
+  api:
+    networks:
+      - default
+      - aisss-shared
+  worker:
+    networks:
+      - default
+      - aisss-shared
