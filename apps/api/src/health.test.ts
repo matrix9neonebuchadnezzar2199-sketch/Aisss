@@ -19,9 +19,18 @@ test('GET /api/health returns service payload', async (t) => {
       databaseUrl: 'postgresql://test@localhost/test',
       ollamaBaseUrl: 'http://localhost:11434',
       migrateOnStart: false,
-      migrationsDir: '/tmp'
+      migrationsDir: '/tmp',
+      devUserId: '00000000-0000-4000-8000-000000000001',
+      objectStorage: {
+        endpoint: 'http://localhost:9000',
+        bucket: 'aisss',
+        accessKey: 'test',
+        secretKey: 'test'
+      },
+      maxUploadBytes: 1024
     },
-    pool: pool as never
+    pool: pool as never,
+    storage: {} as never
   })
 
   t.after(async () => {

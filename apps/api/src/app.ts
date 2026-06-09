@@ -1,8 +1,11 @@
 import cors from '@fastify/cors'
+import multipart from '@fastify/multipart'
 import Fastify from 'fastify'
 import type pg from 'pg'
+import type { S3Client } from '@aws-sdk/client-s3'
 import { AppError, sendError } from './lib/errors.js'
 import { authPlugin } from './plugins/auth.js'
+import { attachmentRoutes } from './routes/attachments.js'
 import { aiRoutes } from './routes/ai.js'
 import { auditRoutes } from './routes/audit.js'
 import { caseRoutes } from './routes/cases.js'
@@ -16,9 +19,10 @@ import type { Settings } from './settings.js'
 export type AppDeps = {
   settings: Settings
   pool: pg.Pool
+  storage: S3Client
 }
 
-export async function buildApp ({ settings, pool }: AppDeps) {
+export async function buildApp ({ settings, pool, storage }: AppDeps) {
   const app = Fastify({ logger: true, genReqId: () => crypto.randomUUID() })
 
   await app.register(cors, { origin: true })
@@ -69,7 +73,16 @@ export async function buildApp ({ settings, pool }: AppDeps) {
     }
   })
 
+  await app.register(multipart, {
+    limits: { fileSize: settings.maxUploadBytes }
+  })
+
   await app.register(authPlugin, { pool, settings })
+  await app.register(attachmentRoutes, {
+    pool,
+    storage,
+    storageConfig: settings.objectStorage
+  })
   await app.register(caseRoutes, { pool })
   await app.register(masterRoutes, { pool })
   await app.register(permissionRoutes, { pool })

@@ -2,6 +2,7 @@ import { getPool, closePool } from './db/pool.js'
 import { runMigrations } from './db/migrate.js'
 import { buildApp } from './app.js'
 import { loadSettings } from './settings.js'
+import { createStorageClient, ensureBucket } from './services/storage.js'
 
 async function main (): Promise<void> {
   const settings = loadSettings()
@@ -14,7 +15,10 @@ async function main (): Promise<void> {
     }
   }
 
-  const app = await buildApp({ settings, pool })
+  const storage = createStorageClient(settings.objectStorage)
+  await ensureBucket(storage, settings.objectStorage.bucket)
+
+  const app = await buildApp({ settings, pool, storage })
 
   const shutdown = async () => {
     await app.close()
