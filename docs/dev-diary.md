@@ -1,5 +1,20 @@
 # Development Diary
 
+## 2026-06-09: Milestone 2 Case Management API and Web Wiring
+
+### Summary
+
+Extended PostgreSQL schema (masters, permissions joins, audit, jobs), implemented case CRUD/search with viewing-range permission checks, masters/permissions/audit/jobs/Ollama models APIs, and connected React pages for search, register, edit, and detail.
+
+### New / Updated
+
+- `infra/migrations/002_m2_schema.sql`, `003_dev_seed.sql`
+- `apps/api/src/routes/*`, `services/cases.ts`, `plugins/auth.ts`
+- `apps/web/src/pages/*`, `lib/api.ts`
+- `docs/11-milestones.md`
+
+---
+
 ## 2026-06-09: Milestone 1 Application Skeleton
 
 ### Summary

@@ -1,6 +1,11 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import { ApiStatus } from './components/ApiStatus'
-import { PlaceholderPage } from './components/PlaceholderPage'
+import { AuditPage } from './pages/AuditPage'
+import { CaseDetailPage } from './pages/CaseDetailPage'
+import { HomePage } from './pages/HomePage'
+import { MastersPage } from './pages/MastersPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { SearchPage } from './pages/SearchPage'
 import { navItems } from './routes'
 
 export function App () {
@@ -13,6 +18,7 @@ export function App () {
             <NavLink
               key={item.path}
               to={item.path}
+              end={item.path === '/'}
               className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
             >
               {item.label}
@@ -29,19 +35,12 @@ export function App () {
           <ApiStatus />
         </header>
         <Routes>
-          {navItems.map((item) => (
-            <Route
-              key={item.path}
-              path={item.path}
-              element={
-                <PlaceholderPage
-                  title={item.label}
-                  description={item.description}
-                />
-              }
-            />
-          ))}
-          <Route path="*" element={<PlaceholderPage title="Not Found" description="画面が見つかりません。" />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/cases/:displayId" element={<CaseDetailPage />} />
+          <Route path="/masters" element={<MastersPage />} />
+          <Route path="/audit" element={<AuditPage />} />
         </Routes>
       </main>
     </div>

@@ -45,7 +45,7 @@ Done when:
 - Empty WebUI and API health checks run.
 - Initial migrations apply successfully.
 
-**Implementation (started):** `apps/api` (Fastify, `/api/health`, `/api/ollama/health`, `infra/migrations/001_init.sql`), `apps/web` (Vite + React shell), `apps/workers` (heartbeat stub), `.github/workflows/ci.yml`.
+**Implementation:** M1 skeleton + M2 case API (`GET/POST/PATCH/DELETE /api/cases`), masters, permissions, audit, jobs stub; Web search/register/detail wired to API. Placeholder auth: `X-AISSS-User-Id` / `DEV_USER_ID`.
 
 ## Milestone 2: Case Management MVP
 
