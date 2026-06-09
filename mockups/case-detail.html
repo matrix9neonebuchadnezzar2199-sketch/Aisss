@@ -90,6 +90,10 @@
       color: var(--fg-default); cursor: pointer; font-family: inherit; text-decoration: none;
     }
     .btn:hover { background: #30363d; }
+    .btn-primary {
+      background: #2da44e; border-color: rgba(27, 31, 36, 0.15); color: #fff;
+    }
+    .btn-primary:hover { background: #2c974b; }
     .btn-sm { padding: 3px 10px; font-size: 12px; }
     .compare-hint {
       margin-top: 16px; padding: 10px 14px; border-radius: var(--radius);
@@ -117,6 +121,9 @@
       <div>
         <h1 id="caseTitle">—</h1>
         <span class="mono" id="caseMeta">—</span>
+      </div>
+      <div class="header-actions">
+        <a class="btn btn-sm btn-primary" id="editCaseBtn" href="webui.html">編集</a>
       </div>
       <div class="label-row" id="caseLabels"></div>
     </div>
@@ -197,6 +204,7 @@
 
   const params = new URLSearchParams(location.search);
   const caseId = params.get('case') || 'CASE-2026-00142';
+  document.getElementById('editCaseBtn').href = 'webui.html?edit=' + encodeURIComponent(caseId);
   document.getElementById('openNewTabBtn').addEventListener('click', () => {
     const url = location.href;
     const w = window.open(url, '_blank', 'noopener,noreferrer');

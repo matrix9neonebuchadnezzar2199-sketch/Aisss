@@ -72,7 +72,7 @@ Viewing range is case-level metadata. The case body, all attachments, and RAG ch
 - Display is read-only text (not a select).
 - Clicking the range or an edit affordance opens a warning dialog:
   - *閲覧範囲はケース（事象）単位で設定されています。ファイル単位では変更できません。変更する場合はケースの登録・編集画面で行ってください。*
-  - Actions: **ケースを開く** (navigate to case edit) / **閉じる**
+  - Actions: **ケースを開く** (`webui.html?edit={case_id}` — registration form in overwrite/edit mode) / **閉じる**
 - API rejects `PATCH` on `case_attachment` sources with **409 Conflict** (`change_on_case_form`).
 
 ```mermaid

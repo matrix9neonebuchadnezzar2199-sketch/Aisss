@@ -1274,14 +1274,18 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-header-title-row">
-            <h2>ケース（事象）登録</h2>
+            <h2 id="registerFormTitle">ケース（事象）登録</h2>
             <button type="button" class="btn btn-excel btn-sm" id="excelImportBtn">Excel取り込み</button>
             <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" hidden />
           </div>
           <div class="label-row">
             <span class="label label-default" id="registerStatusLabel">下書き</span>
+            <span class="label label-info" id="editCaseIdBadge" style="display:none"></span>
             <span class="label label-success" id="excelLoadedBadge" style="display:none">Excel 読込済</span>
           </div>
+          <p class="rag-register-note" id="editModeBanner" style="display:none;margin-top:10px">
+            既存ケースの<strong>上書き更新</strong>です。保存するとケース本体・閲覧範囲・添付の RAG メタデータが再同期されます（モック）。
+          </p>
         </div>
         <div class="panel-body">
           <div class="excel-toast" id="excelToast"></div>
@@ -1333,15 +1337,17 @@
           </div>
           <div class="form-section">
             <h3>添付</h3>
+            <ul class="attach-list" id="editAttachmentList" style="display:none;margin-bottom:12px"></ul>
             <div class="upload-zone">
               Office / PDF / 画像 / 音声 をドラッグ＆ドロップ、または <button class="btn btn-sm">ファイルを選択</button>
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn btn-primary">登録する</button>
-            <button class="btn">下書き保存</button>
-            <button class="btn">キャンセル</button>
+            <button type="button" class="btn btn-primary" id="registerSubmitBtn">登録する</button>
+            <button type="button" class="btn" id="registerDraftBtn">下書き保存</button>
+            <button type="button" class="btn" id="registerCancelBtn">キャンセル</button>
           </div>
+          <div class="excel-toast" id="registerActionToast"></div>
         </div>
       </div>
     </section>
@@ -1993,6 +1999,323 @@
     }
   }
 
+  const CASE_EDIT_RECORDS = {
+    'CASE-2026-00142': {
+      title: '東アジア情勢に関する月次分析（2026年1月）',
+      materialNumber: 'DOC-2026-0042',
+      materialType: '報告書',
+      classificationNumber: 'CLS-2026-142',
+      summary: '東アジアにおける主要国の政策動向を整理し、今後3ヶ月の注目点を示す。',
+      eventStart: '2026-01-01',
+      eventEnd: '2026-01-31',
+      category: '地政学',
+      region: '東アジア',
+      source: '公開情報',
+      department: '分析第一課',
+      viewingRange: '全員',
+      handling: '通常',
+      reliability: '高',
+      accuracy: '確認済',
+      rank: 'A',
+      condPrint: false,
+      condCopy: true,
+      condInquiry: false,
+      bodySummary: '東アジアにおける主要国の政策動向を整理し、今後3ヶ月の注目点を示す。',
+      bodyArticle: '各国首脳会談の結果、貿易協定の再交渉が進行中である。詳細は添付 PDF を参照。',
+      bodyAssessment: '短期的には安定、中期的に不確実性が残る。信頼性は複数ソースで裏付けあり。',
+      bodyReference: '',
+      attachments: [
+        ['monthly_report_202601.pdf', '抽出完了'],
+        ['data_tables.xlsx', 'RAG 同期済'],
+      ],
+    },
+    'CASE-2026-00138': {
+      title: '〇〇地域経済動向レポート',
+      materialNumber: 'DOC-2026-0038',
+      materialType: 'ケース',
+      classificationNumber: 'CLS-2026-138',
+      summary: '地域経済の四半期動向と主要リスク要因の整理。',
+      eventStart: '2026-01-05',
+      eventEnd: '2026-01-08',
+      category: '経済',
+      region: '東南アジア',
+      source: '内部資料',
+      department: '分析第二課',
+      viewingRange: '分析担当者のみ',
+      handling: '機微',
+      reliability: '中',
+      accuracy: '未確認',
+      rank: 'B',
+      condPrint: false,
+      condCopy: false,
+      condInquiry: true,
+      bodySummary: '地域経済の四半期動向と主要リスク要因の整理。',
+      bodyArticle: '輸出・観光・製造業の指標を横断的に比較。',
+      bodyAssessment: '為替変動の影響が顕在化。追加情報の収集を推奨。',
+      bodyReference: '',
+      attachments: [['region_economy_q1.pdf', '抽出完了']],
+    },
+    'CASE-2026-00135': {
+      title: '音声記録テキスト化（会議録）',
+      materialNumber: 'DOC-2026-0035',
+      materialType: 'ケース',
+      classificationNumber: 'CLS-2025-135',
+      summary: '定例会議の音声記録を ASR でテキスト化したもの。',
+      eventStart: '2025-12-20',
+      eventEnd: '',
+      category: '地政学',
+      region: '東アジア',
+      source: '内部資料',
+      department: '分析第一課',
+      viewingRange: '全員',
+      handling: '通常',
+      reliability: '中',
+      accuracy: '確認済',
+      rank: 'B',
+      condPrint: true,
+      condCopy: false,
+      condInquiry: false,
+      bodySummary: '定例会議の音声記録を ASR でテキスト化したもの。',
+      bodyArticle: '議題1: 情報共有フロー見直し。議題2: 次期テンプレート運用。',
+      bodyAssessment: '発言者特定は未実施。要約参照を推奨。',
+      bodyReference: '',
+      attachments: [
+        ['meeting_20251220.mp3', '抽出中'],
+        ['meeting_transcript.txt', '抽出完了'],
+      ],
+    },
+    'CASE-2025-KEIRI': {
+      title: '2025年度経理データ',
+      materialNumber: 'DOC-2025-0101',
+      materialType: '報告書',
+      classificationNumber: 'CLS-KEIRI-2025',
+      summary: '2025年度の経理関連資料一式。',
+      eventStart: '2025-04-01',
+      eventEnd: '2026-03-31',
+      category: '経済',
+      region: '東アジア',
+      source: '内部資料',
+      department: '分析第一課',
+      viewingRange: '全員',
+      handling: '通常',
+      reliability: '高',
+      accuracy: '確認済',
+      rank: 'A',
+      condPrint: false,
+      condCopy: false,
+      condInquiry: false,
+      bodySummary: '2025年度経理データの概要。',
+      bodyArticle: '添付 Excel を参照。',
+      bodyAssessment: '内部限資料。取扱注意。',
+      bodyReference: '',
+      attachments: [['2025年度.xlsx', '抽出完了']],
+    },
+    'CASE-2026-KEIRI': {
+      title: '2026年度経理データ',
+      materialNumber: 'DOC-2026-0102',
+      materialType: '報告書',
+      classificationNumber: 'CLS-KEIRI-2026',
+      summary: '2026年度の経理関連資料（埋め込み待ち）。',
+      eventStart: '2026-04-01',
+      eventEnd: '',
+      category: '経済',
+      region: '東アジア',
+      source: '内部資料',
+      department: '分析第一課',
+      viewingRange: '分析担当者のみ',
+      handling: '通常',
+      reliability: '高',
+      accuracy: '確認済',
+      rank: 'A',
+      condPrint: false,
+      condCopy: false,
+      condInquiry: false,
+      bodySummary: '2026年度経理データの概要。',
+      bodyArticle: '添付 Excel を参照。',
+      bodyAssessment: '',
+      bodyReference: '',
+      attachments: [['2026年度.xlsx', '埋め込み待ち']],
+    },
+    'CASE-YAMA': {
+      title: '●山の自然',
+      materialNumber: 'DOC-NAT-0042',
+      materialType: 'ケース',
+      classificationNumber: 'CLS-NAT-YAMA',
+      summary: '山岳・河川・植物に関する自然資料。',
+      eventStart: '2025-06-01',
+      eventEnd: '',
+      category: '地政学',
+      region: '東アジア',
+      source: '公開情報',
+      department: '分析第一課',
+      viewingRange: '分析担当者のみ',
+      handling: '通常',
+      reliability: '高',
+      accuracy: '確認済',
+      rank: 'A',
+      condPrint: false,
+      condCopy: false,
+      condInquiry: false,
+      bodySummary: '自然環境に関する参考資料群。',
+      bodyArticle: '植物・河川データを添付。',
+      bodyAssessment: 'RAG 有効ファイルあり。',
+      bodyReference: '',
+      attachments: [
+        ['植物.pdf', '抽出完了'],
+        ['河川名.xlsx', '抽出完了'],
+      ],
+    },
+    'CASE-HOLLYWOOD': {
+      title: 'ハリウッド俳優',
+      materialNumber: 'DOC-ENT-0099',
+      materialType: 'ケース',
+      classificationNumber: 'CLS-ENT-HW',
+      summary: '俳優リスト参考資料。',
+      eventStart: '2024-01-01',
+      eventEnd: '',
+      category: '経済',
+      region: '東アジア',
+      source: '公開情報',
+      department: '分析第二課',
+      viewingRange: '分析担当者のみ',
+      handling: '通常',
+      reliability: '中',
+      accuracy: '未確認',
+      rank: 'B',
+      condPrint: false,
+      condCopy: false,
+      condInquiry: false,
+      bodySummary: '俳優名簿の参考データ。',
+      bodyArticle: '男女別 Excel を添付。',
+      bodyAssessment: '1件抽出失敗あり。',
+      bodyReference: '',
+      attachments: [
+        ['男性.xlsx', '抽出失敗'],
+        ['女性.xlsx', '抽出完了'],
+      ],
+    },
+  };
+
+  let editingCaseId = null;
+
+  function fillCaseEditForm(record) {
+    document.getElementById('field-title').value = record.title || '';
+    document.getElementById('field-material-number').value = record.materialNumber || '';
+    document.getElementById('field-classification-number').value = record.classificationNumber || '';
+    document.getElementById('field-summary').value = record.summary || '';
+    document.getElementById('field-event-start').value = record.eventStart || '';
+    document.getElementById('field-event-end').value = record.eventEnd || '';
+    setSelectValue(document.getElementById('field-material-type'), record.materialType);
+    setSelectValue(document.getElementById('field-category'), record.category);
+    setSelectValue(document.getElementById('field-region'), record.region);
+    setSelectValue(document.getElementById('field-source'), record.source);
+    setSelectValue(document.getElementById('field-department'), record.department);
+    setSelectValue(document.getElementById('field-viewing-range'), record.viewingRange);
+    setSelectValue(document.getElementById('field-handling'), record.handling);
+    setSelectValue(document.getElementById('field-reliability'), record.reliability);
+    setSelectValue(document.getElementById('field-accuracy'), record.accuracy);
+    setSelectValue(document.getElementById('field-rank'), record.rank);
+    document.getElementById('cond-print').checked = !!record.condPrint;
+    document.getElementById('cond-copy').checked = !!record.condCopy;
+    document.getElementById('cond-inquiry').checked = !!record.condInquiry;
+    document.getElementById('field-body-summary').value = record.bodySummary || '';
+    document.getElementById('field-body-article').value = record.bodyArticle || '';
+    document.getElementById('field-body-assessment').value = record.bodyAssessment || '';
+    document.getElementById('field-body-reference').value = record.bodyReference || '';
+  }
+
+  function renderEditAttachments(attachments) {
+    const list = document.getElementById('editAttachmentList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!attachments || !attachments.length) {
+      list.style.display = 'none';
+      return;
+    }
+    attachments.forEach(([name, status]) => {
+      const li = document.createElement('li');
+      const statusCls = status.includes('失敗') ? 'label-danger'
+        : status.includes('待ち') || status.includes('中') ? 'label-warning' : 'label-success';
+      li.innerHTML = '<span>📄 ' + name + ' <span class="label ' + statusCls + '">' + status + '</span></span>'
+        + '<span style="font-size:11px;color:var(--fg-muted)">既存（上書き時も保持）</span>';
+      list.appendChild(li);
+    });
+    list.style.display = 'block';
+  }
+
+  function enterCaseEditMode(caseId) {
+    const record = CASE_EDIT_RECORDS[caseId];
+    if (!record) return false;
+    editingCaseId = caseId;
+    fillCaseEditForm(record);
+    renderEditAttachments(record.attachments);
+    document.getElementById('registerFormTitle').textContent = 'ケース（事象）編集';
+    document.getElementById('registerSubmitBtn').textContent = '更新する';
+    document.getElementById('registerStatusLabel').textContent = '編集モード';
+    document.getElementById('registerStatusLabel').className = 'label label-info';
+    const badge = document.getElementById('editCaseIdBadge');
+    badge.textContent = caseId + ' · 上書き更新';
+    badge.style.display = 'inline-flex';
+    document.getElementById('editModeBanner').style.display = 'block';
+    document.getElementById('excelImportBtn').style.display = 'none';
+    showView('register');
+    return true;
+  }
+
+  function exitCaseEditMode() {
+    editingCaseId = null;
+    document.getElementById('registerFormTitle').textContent = 'ケース（事象）登録';
+    document.getElementById('registerSubmitBtn').textContent = '登録する';
+    document.getElementById('registerStatusLabel').textContent = '下書き';
+    document.getElementById('registerStatusLabel').className = 'label label-default';
+    document.getElementById('editCaseIdBadge').style.display = 'none';
+    document.getElementById('editModeBanner').style.display = 'none';
+    document.getElementById('excelImportBtn').style.display = '';
+    renderEditAttachments([]);
+  }
+
+  function showRegisterToast(message) {
+    const toast = document.getElementById('registerActionToast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 4000);
+  }
+
+  document.getElementById('registerSubmitBtn')?.addEventListener('click', () => {
+    if (editingCaseId) {
+      showRegisterToast('ケース「' + editingCaseId + '」を更新しました（モック）。閲覧範囲変更時は RAG メタデータが再同期されます。');
+      setTimeout(() => {
+        window.location.href = 'case-detail.html?case=' + encodeURIComponent(editingCaseId);
+      }, 800);
+      return;
+    }
+    showRegisterToast('ケースを登録しました（モック）。');
+  });
+
+  document.getElementById('registerCancelBtn')?.addEventListener('click', () => {
+    if (editingCaseId) {
+      window.location.href = 'case-detail.html?case=' + encodeURIComponent(editingCaseId);
+      return;
+    }
+    exitCaseEditMode();
+    showView('search');
+  });
+
+  document.getElementById('registerDraftBtn')?.addEventListener('click', () => {
+    showRegisterToast(editingCaseId
+      ? 'ケース「' + editingCaseId + '」を下書き保存しました（モック）。'
+      : '下書きを保存しました（モック）。');
+  });
+
+  (function initCaseEditFromUrl() {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    if (editId && enterCaseEditMode(editId)) {
+      history.replaceState(null, '', location.pathname);
+    }
+  })();
+
   function fillFormFromExcel(fileName) {
     document.getElementById('field-title').value = 'Excel取り込み：地域経済動向レポート（2026年1月）';
     document.getElementById('field-material-number').value = 'DOC-2026-0099';
@@ -2426,7 +2749,9 @@
     if (openBtn) {
       openBtn.addEventListener('click', () => {
         if (pendingCaseId) {
-          showView('register');
+          if (!enterCaseEditMode(pendingCaseId)) {
+            showView('register');
+          }
         }
         closeCaseDialog();
       });

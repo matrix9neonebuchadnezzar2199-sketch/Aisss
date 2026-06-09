@@ -55,6 +55,15 @@ The case form should be grouped by operational meaning:
 
 The read view should join body sections into one body display with headings while preserving separate edit fields.
 
+### Case detail and edit (overwrite)
+
+- **ケース詳細** (`case-detail.html`) opens in a separate window/tab from search results.
+- **編集** navigates to `webui.html?edit={case_id}` and loads the registration form in **edit mode** (same fields as new registration).
+- Edit mode shows case ID badge, existing attachments (read-only list), **更新する** submit (maps to `PATCH /api/cases/{case_id}`), and hides Excel import.
+- **閲覧範囲** changes in edit mode apply to the whole case and all attachments; RAG admin inherits the updated range after metadata resync.
+- **キャンセル** returns to case detail without saving.
+- RAG admin “ケースを開く” uses the same `?edit=` flow.
+
 ## Case Search Screen
 
 Search filters:
