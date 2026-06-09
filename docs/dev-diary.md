@@ -1,5 +1,20 @@
 # Development Diary
 
+## 2026-06-10: Milestone 6-7 Operational Hardening and Pilot
+
+### Summary
+
+Added job monitoring with retry/DLQ workflow, enhanced audit log search/export, admin dashboard metrics, backup/restore check API, pilot feedback collection, pilot seed user/group, and the operational runbook for limited production pilot.
+
+### New / Updated
+
+- `infra/migrations/007_m6_m7_ops_pilot.sql`
+- `apps/api` — jobs stats/DLQ, audit CSV/filter extensions, `ops` routes
+- `apps/web` — `JobsPage`, `AdminDashboardPage`, `PilotPage`, enhanced audit filters
+- `docs/19-operational-runbook.md`, `docs/11-milestones.md`, `docs/00-index.md`, `docs/10-file-structure.md`
+
+---
+
 ## 2026-06-10: Milestone 5 Permissioned RAG MVP
 
 ### Summary

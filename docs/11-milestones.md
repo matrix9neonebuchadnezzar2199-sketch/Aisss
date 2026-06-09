@@ -159,7 +159,9 @@ Done when:
 - Backup restore is tested.
 - Permission tests cover major access paths.
 
-**Mock coverage:** 監査ログ and ジョブ状態 **screens implemented** (filters, tables, cross-links from search/RAG stats); live API and DLQ workflow remain M6 deliverables.
+**Implementation:** `007_m6_m7_ops_pilot.sql`; audit filters + CSV export; job stats, retry, and dead-letter APIs; `/jobs`, `/admin`, and enhanced `/audit` React pages; backup check API; permission role tests.
+
+**Mock coverage:** 監査ログ and ジョブ状態 live React pages now cover the M6 operational subset. HTML mock remains reference for detail dialogs and richer cross-links.
 
 ## Milestone 7: Production Pilot
 
@@ -179,6 +181,8 @@ Done when:
 - Pilot users can complete core workflows.
 - Permission incidents are not observed in test cases.
 - Feedback is triaged into post-MVP backlog.
+
+**Implementation:** Pilot group/user seed in `007_m6_m7_ops_pilot.sql`; `/pilot` feedback workflow; [Operational Runbook](./19-operational-runbook.md); dashboard feedback metric; known limitations recorded in app settings and runbook.
 
 ## Post-MVP Ideas
 

@@ -25,6 +25,7 @@ AISSS/
     16-rag-admin-guide.md
     17-viewing-range-permission-flow.md
     18-webui-mock-inventory-and-flows.md
+    19-operational-runbook.md
     dev-diary.md
     decisions/
       ADR-001-primary-architecture.md
@@ -105,7 +106,8 @@ AISSS/
 | `ai` | Chat completion orchestration, streaming, policy-aware prompts. |
 | `ollama` | Health, model list proxy, model role configuration. |
 | `audit` | Audit log write and operator search. |
-| `jobs` | Job dispatch, retry, status. |
+| `jobs` | Job dispatch, retry, status, dead-letter handling. |
+| `ops` | Admin dashboard, backup/restore checks, pilot feedback. |
 | `db` | Database models, migrations, transactions. |
 | `settings` | Environment and runtime configuration. |
 
@@ -137,6 +139,8 @@ Static HTML mocks today: [18-webui-mock-inventory-and-flows.md](./18-webui-mock-
 | `permission-management` | `view-permissions` | Groups and viewing ranges. |
 | `job-monitoring` | `view-jobs` | Extraction and RAG job list; links from search/RAG stats. |
 | `audit-logs` | `view-audit` | Operator audit search UI; detail dialog. |
+| `admin-dashboard` | M6 React page | Operational metrics and links into jobs, audit, RAG, and pilot feedback. |
+| `pilot-feedback` | M7 React page | Limited pilot feedback intake and triage. |
 
 ## Configuration Files
 
