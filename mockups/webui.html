@@ -224,7 +224,8 @@
     .sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
     .sidebar.collapsed .sidebar-top-title,
     .sidebar.collapsed .sidebar-label,
-    .sidebar.collapsed .sidebar-group-title {
+    .sidebar.collapsed .sidebar-group-title,
+    .sidebar.collapsed .sidebar-sub-hint {
       display: none;
     }
     .sidebar.collapsed .sidebar-top { justify-content: center; padding: 10px 8px; }
@@ -272,6 +273,27 @@
     .sidebar.collapsed a.active {
       border-left: none;
       box-shadow: inset 3px 0 0 var(--accent-fg);
+    }
+    .sidebar a.sidebar-sub {
+      padding-left: 36px;
+      font-size: 12px;
+    }
+    .sidebar a.sidebar-sub .nav-icon { font-size: 12px; width: 16px; }
+    .sidebar.collapsed a.sidebar-sub { padding-left: 8px; }
+    .sidebar a.sidebar-placeholder {
+      color: var(--fg-subtle);
+      cursor: default;
+      pointer-events: none;
+    }
+    .sidebar a.sidebar-placeholder:hover { background: transparent; }
+    .sidebar-sub-hint {
+      display: block;
+      font-size: 10px;
+      color: var(--fg-subtle);
+      padding: 0 16px 4px 36px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     /* Panels */
@@ -677,10 +699,10 @@
     </span>
   </a>
   <nav class="gh-nav" id="topNav">
-    <a href="#" data-view="search" class="active">ケース検索</a>
-    <a href="#" data-view="register">ケース登録</a>
+    <a href="#" data-view="search" class="active">検索</a>
+    <a href="#" data-view="register">登録</a>
     <a href="#" data-view="ai">AI 検索</a>
-    <a href="#" data-view="masters">マスタ管理</a>
+    <a href="#" data-view="rag-admin">管理</a>
   </nav>
   <span class="ollama-status" id="ollamaStatus" title="Ollama ホスト接続状態">
     <span class="dot"></span>
@@ -696,16 +718,23 @@
       <button type="button" class="sidebar-toggle" id="sidebarToggle" title="サイドバーを折りたたむ" aria-label="サイドバーを折りたたむ">‹</button>
     </div>
     <nav class="sidebar-nav">
-      <a href="#" data-view="search" class="active" title="ケース検索"><span class="nav-icon">🔍</span><span class="sidebar-label">ケース検索</span></a>
-      <a href="#" data-view="register" title="ケース登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース登録</span></a>
-      <a href="#" data-view="ai" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
+      <p class="sidebar-group-title">登録</p>
+      <a href="#" data-view="register" title="ケース（事象）登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース（事象）</span></a>
+
+      <p class="sidebar-group-title">検索</p>
+      <a href="#" data-view="search" class="active" title="ケース（事象）検索"><span class="nav-icon">🔍</span><span class="sidebar-label">ケース（事象）</span></a>
+      <a href="#" data-view="ai" class="sidebar-sub" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
+
       <p class="sidebar-group-title">管理</p>
       <a href="#" data-view="rag-admin" title="RAG 管理"><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
-      <a href="#" data-view="models" title="モデル管理"><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理</span></a>
-      <a href="#" data-view="masters" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
-      <a href="#" title="ユーザー・グループ"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ</span></a>
-      <a href="#" title="監査ログ"><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
-      <a href="#" title="ジョブ状態"><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
+      <a href="#" data-view="models" class="sidebar-sub" title="モデル管理（API 連携）"><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理（API 連携）</span></a>
+      <a href="#" data-view="masters" class="sidebar-sub" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
+      <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
+      <span class="sidebar-sub-hint">モック未実装</span>
+      <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
+      <span class="sidebar-sub-hint">モック未実装</span>
+      <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
+      <span class="sidebar-sub-hint">モック未実装</span>
     </nav>
   </aside>
 
@@ -721,7 +750,7 @@
       </div>
       <div class="panel">
         <div class="panel-header">
-          <h2>ケース検索</h2>
+          <h2>ケース（事象）検索</h2>
           <button class="btn btn-primary btn-sm" onclick="showView('register')">+ 新規登録</button>
         </div>
         <div class="panel-body">
@@ -810,7 +839,7 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-header-title-row">
-            <h2>ケース登録</h2>
+            <h2>ケース（事象）登録</h2>
             <button type="button" class="btn btn-excel btn-sm" id="excelImportBtn">Excel取り込み</button>
             <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" hidden />
           </div>
@@ -997,7 +1026,7 @@
     <section class="view" id="view-models">
       <div class="panel">
         <div class="panel-header">
-          <h2>モデル管理</h2>
+          <h2>モデル管理（API 連携）</h2>
           <span class="label label-success">Ollama 42ms · v0.5.4</span>
         </div>
         <div class="panel-body">

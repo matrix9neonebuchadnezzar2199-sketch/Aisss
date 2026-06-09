@@ -6,21 +6,27 @@
 
 The AISSS WebUI is the operational interface for registering, managing, searching, and governing cases. It is also the safest place to expose AI answers because it can display source permissions, handling restrictions, and audit information.
 
-## Main Navigation
+## Main Navigation (Sidebar)
 
-- Dashboard.
-- Case search.
-- Case registration.
-- AI search.
-- Master management.
+### 登録
 
-Admin / operator group:
+- **ケース（事象）** — case registration form (Excel import integrated here).
 
-- RAG management.
-- Model management.
-- User and group management.
-- Audit logs.
-- System jobs.
+### 検索
+
+- **ケース（事象）** — metadata and full-text case search.
+- **AI 検索** — permissioned RAG chat with model selector (nested under 検索).
+
+### 管理
+
+- **RAG 管理** — ingestion pipeline dashboard (extraction, embedding, sync).
+- **モデル管理（API 連携）** — Ollama model list and role assignment via `api/ollama`.
+- **マスタ管理** — editable master lists.
+- **ユーザー・グループ管理** — planned; mock not yet implemented.
+- **監査ログ** — planned; mock not yet implemented.
+- **ジョブ状態** — planned; mock not yet implemented.
+
+Items under 管理 except RAG 管理 are visually nested (indented) in the sidebar. Placeholder items are shown muted until screens exist.
 
 Excel import is integrated into case registration. Attachment and extraction status appear on case detail, case search, and RAG management.
 
