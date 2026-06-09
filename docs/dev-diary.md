@@ -1,5 +1,19 @@
 # Development Diary
 
+## 2026-06-09: Milestone 1 Application Skeleton
+
+### Summary
+
+Added runnable M1 skeleton: Fastify API with health endpoints and SQL migrations, Vite+React WebUI shell with sidebar routes and API status, worker heartbeat stub, root npm workspaces, CI workflow, and Compose build contexts updated to monorepo root.
+
+### New / Updated
+
+- `apps/api`, `apps/web`, `apps/workers`, `infra/migrations/001_init.sql`
+- `package.json`, `package-lock.json`, `.github/workflows/ci.yml`
+- `aisss/docker-compose.yaml`, `Makefile`, `aisss/.env.example`, `README.md`, `docs/11-milestones.md`
+
+---
+
 ## 2026-06-09: Mock UI Layout Sync to Design Docs
 
 ### Summary

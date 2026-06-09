@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Status](https://img.shields.io/badge/status-design%20phase-blue?style=for-the-badge)](./docs/11-milestones.md)
+[![Status](https://img.shields.io/badge/status-M1%20skeleton-orange?style=for-the-badge)](./docs/11-milestones.md)
 [![Docs](https://img.shields.io/badge/docs-16%2B%20documents-success?style=for-the-badge)](./docs/00-index.md)
 [![ADR](https://img.shields.io/badge/ADR-5%20decisions-informational?style=for-the-badge)](./docs/decisions)
 [![WebUI Mockup](https://img.shields.io/badge/WebUI-mockup-0969DA?style=for-the-badge)](./mockups/webui.html)
@@ -83,7 +83,7 @@ AISSS は **単一 Docker Compose スタック** で動作します。Ollama は
 | レイヤ | 採用候補 | 役割 |
 |---|---|---|
 | Frontend | TypeScript / React | ケース登録・検索・AI 検索・RAG/モデル管理 UI |
-| Backend API | FastAPI または Fastify | 検証・永続化・権限判定・Ollama プロキシ・AI チャット |
+| Backend API | TypeScript / Fastify | 検証・永続化・権限判定・Ollama プロキシ・AI チャット |
 | Database | PostgreSQL | メタデータ・権限・抽出テキストの正 |
 | Object Storage | MinIO | 原本ファイル |
 | Queue / Worker | Redis + 非同期ワーカー | OCR / ASR / 解析 / 埋め込み |
@@ -122,7 +122,7 @@ AISSS は **単一 Docker Compose スタック** で動作します。Ollama は
 
 ## Quick Start
 
-> 現在は **設計フェーズ** です。アプリ実装(`apps/`)は Milestone 1 以降に着手します。
+> **Milestone 1 スケルトン** — `apps/api`, `apps/web`, `apps/workers` と `infra/migrations` が入っています。
 
 ### 初回セットアップ
 
@@ -140,6 +140,25 @@ cp aisss/.env.example aisss/.env   # 値は必ず変更すること
 make up           # AISSS スタック
 make down         # 停止
 make ps           # コンテナ状態
+make test         # API / Web / workers のチェック
+make migrate      # DB マイグレーション（api コンテナ内）
+```
+
+起動後の確認:
+
+```bash
+curl http://localhost:8000/api/health
+curl http://localhost:8000/api/ollama/health
+```
+
+WebUI: http://localhost:3000 （nginx 経由で `/api` をプロキシ）
+
+ローカル開発（Compose なし）:
+
+```bash
+npm install
+npm run dev -w @aisss/api    # DATABASE_URL を設定
+npm run dev -w @aisss/web    # Vite が /api を :8000 にプロキシ
 ```
 
 Ollama は Compose に含まれません。AI 機能にはホスト上の Ollama が必要です。

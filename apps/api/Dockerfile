@@ -1,0 +1,32 @@
+FROM node:22-alpine AS build
+
+WORKDIR /repo
+
+COPY package.json package-lock.json* ./
+COPY apps/api/package.json ./apps/api/
+
+RUN npm install -w @aisss/api
+
+COPY apps/api/tsconfig.json ./apps/api/
+COPY apps/api/src ./apps/api/src
+COPY infra/migrations ./infra/migrations
+
+WORKDIR /repo/apps/api
+RUN npm run build
+
+FROM node:22-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV MIGRATIONS_DIR=/infra/migrations
+
+COPY apps/api/package.json ./
+RUN npm install --omit=dev
+
+COPY --from=build /repo/apps/api/dist ./dist
+COPY --from=build /repo/infra/migrations /infra/migrations
+
+EXPOSE 8000
+
+CMD ["node", "dist/server.js"]

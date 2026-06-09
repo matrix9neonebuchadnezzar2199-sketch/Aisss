@@ -45,6 +45,8 @@ Done when:
 - Empty WebUI and API health checks run.
 - Initial migrations apply successfully.
 
+**Implementation (started):** `apps/api` (Fastify, `/api/health`, `/api/ollama/health`, `infra/migrations/001_init.sql`), `apps/web` (Vite + React shell), `apps/workers` (heartbeat stub), `.github/workflows/ci.yml`.
+
 ## Milestone 2: Case Management MVP
 
 Goal: Register, edit, view, and search cases without AI.

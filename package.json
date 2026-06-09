@@ -1,0 +1,14 @@
+{
+  "name": "aisss",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web",
+    "apps/workers"
+  ],
+  "scripts": {
+    "build": "npm run build -w @aisss/api && npm run build -w @aisss/web",
+    "test": "npm test -w @aisss/api && npm test -w @aisss/web && npm test -w @aisss/workers",
+    "lint": "npm run lint -w @aisss/api && npm run lint -w @aisss/web"
+  }
+}
