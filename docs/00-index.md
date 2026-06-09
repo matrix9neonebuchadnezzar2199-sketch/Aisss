@@ -21,7 +21,8 @@ The central design rule is simple: the case management database is the source of
 11. [Milestones](./11-milestones.md)
 12. [Foundation Materials](./12-foundation-materials.md)
 13. [Deployment: Docker Topology](./13-deployment-docker.md)
-14. [Development Diary](./dev-diary.md)
+14. [Dify Integration Guide](./14-dify-integration-guide.md)
+15. [Development Diary](./dev-diary.md)
 
 ## Architecture Decisions
 

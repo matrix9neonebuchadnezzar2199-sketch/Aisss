@@ -9,7 +9,7 @@
 <br/>
 
 [![Status](https://img.shields.io/badge/status-design%20phase-blue?style=for-the-badge)](./docs/11-milestones.md)
-[![Docs](https://img.shields.io/badge/docs-14%20documents-success?style=for-the-badge)](./docs/00-index.md)
+[![Docs](https://img.shields.io/badge/docs-15%2B%20documents-success?style=for-the-badge)](./docs/00-index.md)
 [![ADR](https://img.shields.io/badge/ADR-3%20decisions-informational?style=for-the-badge)](./docs/decisions)
 [![License](https://img.shields.io/badge/license-TBD-lightgrey?style=for-the-badge)](#-license)
 
@@ -111,6 +111,7 @@ Aisss と Dify は **2 つの独立した Docker スタック** として動き�
 | 11 | [Milestones](./docs/11-milestones.md) | MVP → 本番までの段階 |
 | 12 | [Foundation Materials](./docs/12-foundation-materials.md) | 開発前に揃える基礎資料 |
 | 13 | [Deployment: Docker](./docs/13-deployment-docker.md) | 2 スタック構成・起動手順 |
+| 14 | [Dify Integration Guide](./docs/14-dify-integration-guide.md) | Dify 連携の初心者向け設定手順 |
 | — | [Development Diary](./docs/dev-diary.md) | 開発日記 |
 
 ---
