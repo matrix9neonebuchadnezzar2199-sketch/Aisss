@@ -311,7 +311,31 @@
       color: #fff;
     }
     .btn-primary:hover { background: #2c974b; }
+    .btn-excel {
+      background: #2da44e;
+      border-color: rgba(27, 31, 36, 0.15);
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn-excel:hover { background: #2c974b; color: #fff; }
     .btn-sm { padding: 3px 10px; font-size: 12px; }
+    .panel-header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .excel-toast {
+      display: none;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      background: var(--success-subtle);
+      border: 1px solid rgba(46, 160, 67, 0.4);
+      color: var(--success-fg);
+      font-size: 13px;
+    }
+    .excel-toast.visible { display: block; }
 
     /* Form */
     .form-grid {
@@ -620,7 +644,6 @@
     <nav class="sidebar-nav">
       <a href="#" data-view="search" class="active" title="ケース検索"><span class="nav-icon">🔍</span><span class="sidebar-label">ケース検索</span></a>
       <a href="#" data-view="register" title="ケース登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース登録</span></a>
-      <a href="#" data-view="import" title="Excel 取り込み"><span class="nav-icon">📊</span><span class="sidebar-label">Excel 取り込み</span></a>
       <a href="#" data-view="detail" title="ケース詳細"><span class="nav-icon">📄</span><span class="sidebar-label">ケース詳細</span></a>
       <a href="#" data-view="ai" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
       <p class="sidebar-group-title">管理</p>
@@ -721,56 +744,62 @@
     <section class="view" id="view-register">
       <div class="panel">
         <div class="panel-header">
-          <h2>ケース登録</h2>
+          <div class="panel-header-title-row">
+            <h2>ケース登録</h2>
+            <button type="button" class="btn btn-excel btn-sm" id="excelImportBtn">Excel取り込み</button>
+            <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" hidden />
+          </div>
           <div class="label-row">
-            <span class="label label-default">下書き</span>
+            <span class="label label-default" id="registerStatusLabel">下書き</span>
+            <span class="label label-success" id="excelLoadedBadge" style="display:none">Excel 読込済</span>
           </div>
         </div>
         <div class="panel-body">
+          <div class="excel-toast" id="excelToast"></div>
           <div class="form-section">
             <h3>基本情報</h3>
             <div class="form-grid">
-              <div class="form-group"><label>表題 *</label><input type="text" placeholder="資料の表題" /></div>
-              <div class="form-group"><label>資料番号</label><input type="text" /></div>
-              <div class="form-group"><label>資料区分</label><select><option>報告書</option><option>ケース</option></select></div>
-              <div class="form-group"><label>分類番号</label><input type="text" /></div>
+              <div class="form-group"><label>表題 *</label><input type="text" id="field-title" placeholder="資料の表題" /></div>
+              <div class="form-group"><label>資料番号</label><input type="text" id="field-material-number" /></div>
+              <div class="form-group"><label>資料区分</label><select id="field-material-type"><option>報告書</option><option>ケース</option></select></div>
+              <div class="form-group"><label>分類番号</label><input type="text" id="field-classification-number" /></div>
             </div>
-            <div class="form-group" style="margin-top:12px"><label>要約</label><textarea rows="2"></textarea></div>
+            <div class="form-group" style="margin-top:12px"><label>要約</label><textarea rows="2" id="field-summary"></textarea></div>
           </div>
           <div class="form-section">
             <h3>事象・出所</h3>
             <div class="form-grid">
-              <div class="form-group"><label>事象発生（開始）</label><input type="date" /></div>
-              <div class="form-group"><label>事象発生（終了）</label><input type="date" /></div>
-              <div class="form-group"><label>分類</label><select><option>地政学</option></select></div>
-              <div class="form-group"><label>地域</label><select><option>東アジア</option></select></div>
-              <div class="form-group"><label>資料源</label><select></select></div>
-              <div class="form-group"><label>登録部署</label><select><option>分析第一課</option></select></div>
+              <div class="form-group"><label>事象発生（開始）</label><input type="date" id="field-event-start" /></div>
+              <div class="form-group"><label>事象発生（終了）</label><input type="date" id="field-event-end" /></div>
+              <div class="form-group"><label>分類</label><select id="field-category"><option>地政学</option><option>経済</option></select></div>
+              <div class="form-group"><label>地域</label><select id="field-region"><option>東アジア</option><option>東南アジア</option></select></div>
+              <div class="form-group"><label>資料源</label><select id="field-source"><option value="">—</option><option>公開情報</option><option>内部資料</option></select></div>
+              <div class="form-group"><label>登録部署</label><select id="field-department"><option>分析第一課</option></select></div>
             </div>
           </div>
           <div class="form-section">
             <h3>取扱・閲覧</h3>
             <div class="form-grid">
-              <div class="form-group"><label>閲覧範囲</label><select><option>全員</option><option>分析担当者のみ</option></select></div>
-              <div class="form-group"><label>取扱区分</label><select><option>通常</option><option>機微</option></select></div>
-              <div class="form-group"><label>信頼性</label><select><option>高</option><option>中</option></select></div>
-              <div class="form-group"><label>正確性</label><select><option>確認済</option></select></div>
-              <div class="form-group"><label>ランク</label><select><option>A</option><option>B</option></select></div>
+              <div class="form-group"><label>閲覧範囲</label><select id="field-viewing-range"><option>全員</option><option>分析担当者のみ</option></select></div>
+              <div class="form-group"><label>取扱区分</label><select id="field-handling"><option>通常</option><option>機微</option></select></div>
+              <div class="form-group"><label>信頼性</label><select id="field-reliability"><option>高</option><option>中</option></select></div>
+              <div class="form-group"><label>正確性</label><select id="field-accuracy"><option>確認済</option><option>未確認</option></select></div>
+              <div class="form-group"><label>ランク</label><select id="field-rank"><option>A</option><option>B</option></select></div>
             </div>
             <p style="margin-top:10px;font-size:12px;color:var(--fg-muted)">条件（チェックボックス）</p>
             <div class="label-row checkbox-row" style="margin-top:6px;gap:16px">
-              <label><input type="checkbox" /> 印刷禁止</label>
-              <label><input type="checkbox" checked /> 複製禁止</label>
-              <label><input type="checkbox" /> 照会禁止</label>
+              <label><input type="checkbox" id="cond-print" /> 印刷禁止</label>
+              <label><input type="checkbox" id="cond-copy" checked /> 複製禁止</label>
+              <label><input type="checkbox" id="cond-inquiry" /> 照会禁止</label>
             </div>
           </div>
           <div class="form-section">
             <h3>本文（登録時は分割、表示時は結合）</h3>
             <div class="form-grid">
-              <div class="form-group"><label>1 要約</label><textarea></textarea></div>
-              <div class="form-group"><label>2 記事</label><textarea></textarea></div>
-              <div class="form-group"><label>3 所見</label><textarea></textarea></div>
-              <div class="form-group"><label>4 その他参考</label><textarea></textarea></div>
+              <div class="form-group"><label>1 要約</label><textarea id="field-body-summary"></textarea></div>
+              <div class="form-group"><label>2 記事</label><textarea id="field-body-article"></textarea></div>
+              <div class="form-group"><label>3 所見</label><textarea id="field-body-assessment"></textarea></div>
+              <div class="form-group"><label>4 その他参考</label><textarea id="field-body-reference"></textarea></div>
             </div>
           </div>
           <div class="form-section">
@@ -880,20 +909,6 @@
       </div>
     </section>
 
-    <!-- Excel 取り込み（簡易） -->
-    <section class="view" id="view-import">
-      <div class="panel">
-        <div class="panel-header"><h2>Excel 一括取り込み</h2></div>
-        <div class="panel-body">
-          <p style="font-size:13px;margin-bottom:12px">テンプレートをアップロード → プレビュー → 検証 → 確定登録</p>
-          <div class="upload-zone" style="padding:32px">
-            <button class="btn btn-primary">Excel をアップロード</button>
-            <p style="margin-top:8px;font-size:12px;color:var(--fg-muted)">テンプレート v1.0 · <a href="#">ダウンロード</a></p>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 </div>
 
@@ -956,6 +971,59 @@
   try {
     if (localStorage.getItem(SEARCH_FILTER_KEY) === '1') setSearchFilterCollapsed(true);
   } catch (_) {}
+
+  const excelImportBtn = document.getElementById('excelImportBtn');
+  const excelFileInput = document.getElementById('excelFileInput');
+  const excelToast = document.getElementById('excelToast');
+  const excelLoadedBadge = document.getElementById('excelLoadedBadge');
+
+  function setSelectValue(select, value) {
+    if (!select || value == null) return;
+    const opt = Array.from(select.options).find(o => o.text === value || o.value === value);
+    if (opt) select.value = opt.value;
+    else {
+      const added = new Option(value, value);
+      select.add(added);
+      select.value = value;
+    }
+  }
+
+  function fillFormFromExcel(fileName) {
+    document.getElementById('field-title').value = 'Excel取り込み：地域経済動向レポート（2026年1月）';
+    document.getElementById('field-material-number').value = 'DOC-2026-0099';
+    document.getElementById('field-classification-number').value = 'CLS-2026-042';
+    document.getElementById('field-summary').value = 'Excel 1行目から読み込んだ要約テキストです。';
+    document.getElementById('field-event-start').value = '2026-01-01';
+    document.getElementById('field-event-end').value = '2026-01-31';
+    setSelectValue(document.getElementById('field-material-type'), '報告書');
+    setSelectValue(document.getElementById('field-category'), '経済');
+    setSelectValue(document.getElementById('field-region'), '東南アジア');
+    setSelectValue(document.getElementById('field-source'), '公開情報');
+    setSelectValue(document.getElementById('field-department'), '分析第一課');
+    setSelectValue(document.getElementById('field-viewing-range'), '分析担当者のみ');
+    setSelectValue(document.getElementById('field-handling'), '通常');
+    setSelectValue(document.getElementById('field-reliability'), '高');
+    setSelectValue(document.getElementById('field-accuracy'), '確認済');
+    setSelectValue(document.getElementById('field-rank'), 'B');
+    document.getElementById('cond-print').checked = false;
+    document.getElementById('cond-copy').checked = true;
+    document.getElementById('cond-inquiry').checked = false;
+    document.getElementById('field-body-summary').value = '1. 要約セルから取り込み。主要国の経済指標を整理。';
+    document.getElementById('field-body-article').value = '2. 記事セルから取り込み。貿易・為替の動向を記載。';
+    document.getElementById('field-body-assessment').value = '3. 所見セルから取り込み。中期的な不確実性に留意。';
+    document.getElementById('field-body-reference').value = '4. 参考セルから取り込み。関連資料番号 DOC-2026-0088。';
+    excelToast.textContent = '「' + fileName + '」を読み込み、フォームに反映しました。内容を確認して登録してください。';
+    excelToast.classList.add('visible');
+    excelLoadedBadge.style.display = 'inline-flex';
+  }
+
+  excelImportBtn.addEventListener('click', () => excelFileInput.click());
+  excelFileInput.addEventListener('change', () => {
+    const file = excelFileInput.files && excelFileInput.files[0];
+    if (!file) return;
+    fillFormFromExcel(file.name);
+    excelFileInput.value = '';
+  });
 </script>
 </body>
 </html>
