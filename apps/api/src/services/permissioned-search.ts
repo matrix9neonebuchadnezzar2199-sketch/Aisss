@@ -29,6 +29,18 @@ export type PermissionedSearchResult = {
   excluded_counts: Record<string, number>
 }
 
+export type PermissionedSearchDeps = {
+  getEmbeddingModel?: (pool: pg.Pool) => Promise<string | null>
+  embed?: (baseUrl: string, model: string, text: string) => Promise<number[]>
+  search?: (
+    baseUrl: string,
+    collection: string,
+    vector: number[],
+    limit: number,
+    filter?: Record<string, unknown>
+  ) => Promise<Array<{ id: string; score: number; payload: Record<string, unknown> }>>
+}
+
 async function loadCaseConditions (
   pool: pg.Pool,
   caseId: string
@@ -124,9 +136,10 @@ export async function permissionedSearch (
   user: AuthUser,
   query: string,
   topK = 8,
-  channel = 'webui_chat'
+  channel = 'webui_chat',
+  deps: PermissionedSearchDeps = {}
 ): Promise<PermissionedSearchResult> {
-  const embeddingModel = await getDefaultEmbeddingModel(pool)
+  const embeddingModel = await (deps.getEmbeddingModel ?? getDefaultEmbeddingModel)(pool)
   if (!embeddingModel) {
     return {
       contexts: [],
@@ -135,7 +148,7 @@ export async function permissionedSearch (
     }
   }
 
-  const vector = await embedText(settings.ollamaBaseUrl, embeddingModel, query)
+  const vector = await (deps.embed ?? embedText)(settings.ollamaBaseUrl, embeddingModel, query)
   const filter = buildViewingRangeFilter(user.viewingRangeIds, isAdmin(user))
   const adminFilter = isAdmin(user)
     ? { must: [{ key: 'rag_enabled', match: { value: true } }] }
@@ -143,7 +156,7 @@ export async function permissionedSearch (
 
   let hits
   try {
-    hits = await searchPoints(
+    hits = await (deps.search ?? searchPoints)(
       settings.vectorDbUrl,
       settings.vectorCollection,
       vector,
