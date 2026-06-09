@@ -1,4 +1,4 @@
-# Aisss application stack.
+# AISSS application stack.
 # This is a skeleton. Application images (web, api, worker) build from
 # ../apps and require source code that lands in Milestone 1.
 # Infrastructure services use pinned upstream images.
@@ -52,7 +52,7 @@ services:
       - "${AISSS_API_PORT:-8000}:8000"
     networks:
       default: {}
-      # Distinct alias on the shared network so Dify can reach the Aisss
+      # Distinct alias on the shared network so Dify can reach the AISSS
       # API without colliding with Dify's own service named "api".
       aisss-shared:
         aliases:

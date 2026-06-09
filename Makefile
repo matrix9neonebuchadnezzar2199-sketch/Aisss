@@ -1,5 +1,5 @@
-# Aisss orchestration wrapper.
-# Runs Aisss and Dify as two independent Docker Compose stacks that share
+# AISSS orchestration wrapper.
+# Runs AISSS and Dify as two independent Docker Compose stacks that share
 # one external network. See docs/13-deployment-docker.md and ADR-003.
 
 SHARED_NETWORK ?= aisss-shared
@@ -12,14 +12,14 @@ DIFY_COMPOSE ?= dify/docker-compose.yaml
 help:
 	@echo "Targets:"
 	@echo "  net         Create the shared docker network (run once)"
-	@echo "  up          Start Dify stack, then Aisss stack"
+	@echo "  up          Start Dify stack, then AISSS stack"
 	@echo "  down        Stop both stacks"
-	@echo "  up-aisss    Start only the Aisss stack"
-	@echo "  down-aisss  Stop only the Aisss stack"
+	@echo "  up-aisss    Start only the AISSS stack"
+	@echo "  down-aisss  Stop only the AISSS stack"
 	@echo "  up-dify     Start only the Dify stack"
 	@echo "  down-dify   Stop only the Dify stack"
-	@echo "  ps          Show Aisss stack containers"
-	@echo "  logs-aisss  Tail Aisss stack logs"
+	@echo "  ps          Show AISSS stack containers"
+	@echo "  logs-aisss  Tail AISSS stack logs"
 
 net:
 	docker network inspect $(SHARED_NETWORK) >/dev/null 2>&1 || docker network create $(SHARED_NETWORK)

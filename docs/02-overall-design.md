@@ -2,11 +2,11 @@
 
 ## Architecture Summary
 
-Aisss consists of a case management WebUI, backend API, PostgreSQL database, object storage, asynchronous ingestion workers, vector database, permissioned search middleware, Dify workflows, and Ollama.
+AISSS consists of a case management WebUI, backend API, PostgreSQL database, object storage, asynchronous ingestion workers, vector database, permissioned search middleware, Dify workflows, and Ollama.
 
 The system separates three responsibilities:
 
-- Record management: Aisss WebUI, backend API, PostgreSQL, and object storage.
+- Record management: AISSS WebUI, backend API, PostgreSQL, and object storage.
 - Knowledge indexing: extraction workers, embedding jobs, and vector database.
 - AI interaction: Dify workflows and Ollama, fed only by permission-filtered search results.
 
@@ -14,7 +14,7 @@ The system separates three responsibilities:
 
 ```mermaid
 flowchart LR
-  user["User"] --> webui["Aisss WebUI"]
+  user["User"] --> webui["AISSS WebUI"]
   admin["Operator"] --> webui
   webui --> backend["Backend API"]
   backend --> postgres["PostgreSQL"]
@@ -55,7 +55,7 @@ Object storage is the source of truth for original files. The vector database an
 
 | Component | Responsibility | Notes |
 |---|---|---|
-| Aisss WebUI | Case registration, search, master management, import preview, permission management | Do not expose storage URLs directly. |
+| AISSS WebUI | Case registration, search, master management, import preview, permission management | Do not expose storage URLs directly. |
 | Backend API | Validation, persistence, permission checks, audit logs, job dispatch | All WebUI operations go through this API. |
 | PostgreSQL | Relational metadata, access control, audit, extracted text | Use UUID primary keys. |
 | Object Storage | Original attachments and derived artifacts | MinIO is recommended for self-hosted S3-compatible storage. |
@@ -86,13 +86,13 @@ The final stack should favor local operation, auditability, and maintainability 
 
 ## Key Design Decisions
 
-### Keep Aisss as the Permission Authority
+### Keep AISSS as the Permission Authority
 
-All user, group, viewing range, and handling condition decisions are evaluated by Aisss. Dify receives retrieved context only after the middleware has applied those rules.
+All user, group, viewing range, and handling condition decisions are evaluated by AISSS. Dify receives retrieved context only after the middleware has applied those rules.
 
 ### Treat Dify Direct Uploads as Supplemental Knowledge
 
-Dify may contain Office/PDF/text documents uploaded directly by operators. These documents must not become a permission bypass. Aisss should register a metadata shadow record for any Dify-direct source that is used in production RAG, including viewing range and handling conditions.
+Dify may contain Office/PDF/text documents uploaded directly by operators. These documents must not become a permission bypass. AISSS should register a metadata shadow record for any Dify-direct source that is used in production RAG, including viewing range and handling conditions.
 
 ### Rebuildable RAG Index
 

@@ -2,7 +2,7 @@
 
 ## Core Rule
 
-RAG must never expand a user's access. Aisss decides what the user can view before any text reaches Dify or Ollama.
+RAG must never expand a user's access. AISSS decides what the user can view before any text reaches Dify or Ollama.
 
 The permissioned search middleware is the enforcement point. It receives the authenticated user and query, calculates the accessible case scope from PostgreSQL, searches only eligible chunks, applies handling-condition rules, and returns safe context to Dify.
 
@@ -114,14 +114,14 @@ The Dify workflow should call the search middleware as an external tool or API s
 - Effective export policy.
 - Warning labels for UI display.
 
-Dify must not perform unrestricted native knowledge-base retrieval for sensitive Aisss materials.
+Dify must not perform unrestricted native knowledge-base retrieval for sensitive AISSS materials.
 
 ## Dify Direct Knowledge
 
 Documents registered directly in Dify may be useful for common manuals, public references, or low-risk material. For production use:
 
 - Public or all-user documents may remain in Dify direct knowledge if approved.
-- Permission-sensitive documents must have a shadow record in Aisss.
+- Permission-sensitive documents must have a shadow record in AISSS.
 - Shadow records must include owner, source, viewing range, handling conditions, and synchronization ID.
 - If no shadow record exists, the document must be excluded from permissioned production workflows.
 

@@ -5,7 +5,7 @@
 This structure is a starting point for implementation. It keeps WebUI, backend API, workers, infrastructure, and documentation separated.
 
 ```text
-Aisss/
+AISSS/
   docs/
     00-index.md
     01-requirements.md
@@ -31,6 +31,8 @@ Aisss/
     .env.example
   dify/
     docker-compose.override.yaml
+  mockups/
+    webui.html
   Makefile
   apps/
     web/

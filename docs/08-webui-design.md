@@ -1,8 +1,10 @@
 # WebUI Design
 
+> Interactive mockup: [mockups/webui.html](../mockups/webui.html)（GitHub 風 HTML プロトタイプ）
+
 ## Purpose
 
-The Aisss WebUI is the operational interface for registering, managing, searching, and governing cases. It is also the safest place to expose AI answers because it can display source permissions, handling restrictions, and audit information.
+The AISSS WebUI is the operational interface for registering, managing, searching, and governing cases. It is also the safest place to expose AI answers because it can display source permissions, handling restrictions, and audit information.
 
 ## Main Navigation
 

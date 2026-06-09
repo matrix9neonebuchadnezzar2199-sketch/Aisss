@@ -5,7 +5,7 @@
 ```mermaid
 sequenceDiagram
   actor User
-  participant WebUI as Aisss WebUI
+  participant WebUI as AISSS WebUI
   participant API as Backend API
   participant DB as PostgreSQL
   participant Storage as Object Storage
@@ -50,7 +50,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   actor Operator
-  participant WebUI as Aisss WebUI
+  participant WebUI as AISSS WebUI
   participant API as Backend API
   participant DB as PostgreSQL
   participant Queue as Job Queue
@@ -100,7 +100,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   actor Operator
-  participant WebUI as Aisss WebUI
+  participant WebUI as AISSS WebUI
   participant API as Backend API
   participant DB as PostgreSQL
   participant Queue as Job Queue
@@ -121,7 +121,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   actor Operator
-  participant WebUI as Aisss WebUI
+  participant WebUI as AISSS WebUI
   participant API as Backend API
   participant DB as PostgreSQL
   participant Queue as Job Queue
@@ -145,7 +145,7 @@ sequenceDiagram
 sequenceDiagram
   actor Operator
   participant Dify as Dify Admin
-  participant WebUI as Aisss WebUI
+  participant WebUI as AISSS WebUI
   participant API as Backend API
   participant DB as PostgreSQL
 

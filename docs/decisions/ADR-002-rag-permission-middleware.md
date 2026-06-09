@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-Aisss must allow AI search over cases and extracted attachment text while respecting viewing ranges and handling conditions. Some cases may be visible to all users, while others may be limited to departments,担当者, or specific groups. Conditions such as 照会禁止 and 複製禁止 affect whether content can be retrieved, quoted, or exported.
+AISSS must allow AI search over cases and extracted attachment text while respecting viewing ranges and handling conditions. Some cases may be visible to all users, while others may be limited to departments,担当者, or specific groups. Conditions such as 照会禁止 and 複製禁止 affect whether content can be retrieved, quoted, or exported.
 
 If Dify retrieves directly from a shared knowledge base, restricted documents could influence answers for unauthorized users.
 
@@ -37,7 +37,7 @@ Cons:
 - Permission changes require moving documents between collections.
 - Harder to guarantee that overlapping conditions are enforced consistently.
 
-Rejected as the primary design because Aisss needs precise case-level permissions.
+Rejected as the primary design because AISSS needs precise case-level permissions.
 
 ### Dify Native Retrieval with Prompt Instructions
 
@@ -58,7 +58,7 @@ Rejected because access control must happen before generation.
 
 Pros:
 
-- Keeps Aisss as the permission authority.
+- Keeps AISSS as the permission authority.
 - Supports user/group/case/channel-specific rules.
 - Can enforce denial before Dify and Ollama receive context.
 - Allows final PostgreSQL recheck after vector candidate retrieval.

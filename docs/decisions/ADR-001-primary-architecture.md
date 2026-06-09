@@ -1,4 +1,4 @@
-# ADR-001: Use Aisss as the Primary Case System
+# ADR-001: Use AISSS as the Primary Case System
 
 ## Status
 
@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-Aisss must manage structured case records, many metadata fields, attachments, viewing ranges, handling conditions, and AI/RAG search. Dify and Ollama are important for AI workflow and generation, but Dify alone should not own the authoritative case metadata or permission model.
+AISSS must manage structured case records, many metadata fields, attachments, viewing ranges, handling conditions, and AI/RAG search. Dify and Ollama are important for AI workflow and generation, but Dify alone should not own the authoritative case metadata or permission model.
 
 The system must support:
 
@@ -24,9 +24,9 @@ The system must support:
 
 ## Decision
 
-Use Aisss as the primary case management system.
+Use AISSS as the primary case management system.
 
-PostgreSQL stores case metadata, users, groups, viewing ranges, handling conditions, extracted text state, RAG synchronization state, and audit logs. Object storage stores original files. Dify and Ollama are used for workflow and generation after Aisss has applied permission-aware retrieval.
+PostgreSQL stores case metadata, users, groups, viewing ranges, handling conditions, extracted text state, RAG synchronization state, and audit logs. Object storage stores original files. Dify and Ollama are used for workflow and generation after AISSS has applied permission-aware retrieval.
 
 ## Alternatives Considered
 
@@ -63,7 +63,7 @@ Cons:
 
 Rejected because it does not meet the record management requirement.
 
-### Aisss Primary System with Dify as AI Layer
+### AISSS Primary System with Dify as AI Layer
 
 Pros:
 
@@ -82,7 +82,7 @@ Accepted because it best matches the requirements and reduces permission leakage
 
 ## Consequences
 
-- Implementers must build Aisss WebUI and backend before relying on production AI search.
-- Dify direct documents require governance through Aisss shadow metadata when used in sensitive workflows.
+- Implementers must build AISSS WebUI and backend before relying on production AI search.
+- Dify direct documents require governance through AISSS shadow metadata when used in sensitive workflows.
 - Vector indexes and Dify knowledge state are treated as rebuildable secondary systems.
-- Permission and audit logic stays centralized in Aisss.
+- Permission and audit logic stays centralized in AISSS.

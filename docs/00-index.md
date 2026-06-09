@@ -1,10 +1,12 @@
-# Aisss Documentation Index
+# AISSS Documentation Index
+
+**AISSS** — *Analytical Information Secure Sharing System*（分析的情報セキュア共有システム）
 
 ## Purpose
 
-Aisss is a case management and permissioned RAG platform for storing information materials, attachments, extracted text, and AI-searchable knowledge. These documents are the baseline for future implementation decisions.
+AISSS is a case management and permissioned RAG platform for storing information materials, attachments, extracted text, and AI-searchable knowledge. These documents are the baseline for future implementation decisions.
 
-The central design rule is simple: the case management database is the source of truth. Dify, Ollama, and vector search are secondary systems that must respect the permissions and handling conditions stored in Aisss.
+The central design rule is simple: the case management database is the source of truth. Dify, Ollama, and vector search are secondary systems that must respect the permissions and handling conditions stored in AISSS.
 
 ## Recommended Reading Order
 
@@ -22,7 +24,17 @@ The central design rule is simple: the case management database is the source of
 12. [Foundation Materials](./12-foundation-materials.md)
 13. [Deployment: Docker Topology](./13-deployment-docker.md)
 14. [Dify Integration Guide](./14-dify-integration-guide.md)
-15. [Development Diary](./dev-diary.md)
+15. [WebUI Mockup](../mockups/webui.html)（HTML）
+16. [Development Diary](./dev-diary.md)
+
+## Naming Convention
+
+| Context | Name |
+|---|---|
+| Product / UI / documentation | **AISSS** |
+| Full name (English) | Analytical Information Secure Sharing System |
+| Full name (Japanese) | 分析的情報セキュア共有システム |
+| Docker network / Compose project / API alias | `aisss-*` (lowercase technical IDs) |
 
 ## Architecture Decisions
 
@@ -32,7 +44,7 @@ The central design rule is simple: the case management database is the source of
 
 ## Key Implementation Rules
 
-- Do not let Dify answer from documents that the requesting user cannot view in Aisss.
+- Do not let Dify answer from documents that the requesting user cannot view in AISSS.
 - Do not store original Office, PDF, image, or audio files directly in PostgreSQL.
 - Keep original files in object storage and store only metadata, extracted text, and storage keys in the database.
 - Use asynchronous jobs for OCR, ASR, Office parsing, PDF parsing, embedding, and RAG synchronization.

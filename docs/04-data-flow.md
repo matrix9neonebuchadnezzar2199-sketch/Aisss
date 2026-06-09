@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart LR
-  inputFiles["Office PDF Image Audio Text"] --> webui["Aisss WebUI"]
+  inputFiles["Office PDF Image Audio Text"] --> webui["AISSS WebUI"]
   webui --> backend["Backend API"]
   backend --> postgres["PostgreSQL Metadata"]
   backend --> storage["Object Storage Originals"]
@@ -88,7 +88,7 @@ flowchart TD
 | Original files | Object storage | None | Download through API only. |
 | Extracted text | PostgreSQL | RAG chunks | Rebuildable from original files when parser is stable. |
 | Embeddings | Vector DB | None | Rebuildable. |
-| Dify answer history | Dify or Aisss audit | Audit log summary | Avoid storing restricted text where not governed. |
+| Dify answer history | Dify or AISSS audit | Audit log summary | Avoid storing restricted text where not governed. |
 | Audit log | PostgreSQL | Backup | Protected operator access. |
 
 ## Data Freshness Rules
@@ -109,7 +109,7 @@ flowchart TD
 ```mermaid
 flowchart LR
   difyUpload["Dify Direct Upload"] --> difyKnowledge["Dify Knowledge"]
-  difyUpload --> shadowRegistration["Aisss Shadow Registration"]
+  difyUpload --> shadowRegistration["AISSS Shadow Registration"]
   shadowRegistration --> postgres["PostgreSQL Source Metadata"]
   postgres --> permissionPolicy["Permission Policy"]
   difyKnowledge --> difyWorkflow["Dify Workflow"]
@@ -117,4 +117,4 @@ flowchart LR
   searchMw --> difyWorkflow
 ```
 
-Dify direct documents must not become part of sensitive production RAG unless Aisss has metadata that defines ownership, viewing range, and handling conditions.
+Dify direct documents must not become part of sensitive production RAG unless AISSS has metadata that defines ownership, viewing range, and handling conditions.

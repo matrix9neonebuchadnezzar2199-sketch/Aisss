@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AISSS — WebUI Mockup</title>
+  <style>
+    :root {
+      --canvas-default: #ffffff;
+      --canvas-subtle: #f6f8fa;
+      --canvas-inset: #eff2f5;
+      --border-default: #d0d7de;
+      --border-muted: #d8dee4;
+      --fg-default: #1f2328;
+      --fg-muted: #656d76;
+      --fg-subtle: #6e7781;
+      --accent-fg: #0969da;
+      --accent-emphasis: #0550ae;
+      --header-bg: #24292f;
+      --header-fg: #f0f6fc;
+      --success-fg: #1a7f37;
+      --success-subtle: #dafbe1;
+      --danger-fg: #cf222e;
+      --danger-subtle: #ffebe9;
+      --attention-fg: #9a6700;
+      --attention-subtle: #fff8c5;
+      --info-subtle: #ddf4ff;
+      --info-fg: #0969da;
+      --purple-subtle: #fbefff;
+      --purple-fg: #8250df;
+      --pink-subtle: #ffeff7;
+      --pink-fg: #bf3989;
+      --orange-subtle: #fff1e5;
+      --orange-fg: #bc4c00;
+      --shadow: 0 1px 3px rgba(31, 35, 40, 0.12);
+      --radius: 6px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--fg-default);
+      background: var(--canvas-subtle);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .gh-header {
+      background: var(--header-bg);
+      color: var(--header-fg);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid #30363d;
+    }
+    .gh-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--header-fg);
+      text-decoration: none;
+    }
+    .gh-logo-mark {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0969da, #8250df);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .gh-logo-sub {
+      font-size: 11px;
+      font-weight: 400;
+      color: #8b949e;
+      display: block;
+      line-height: 1.2;
+    }
+    .gh-nav {
+      display: flex;
+      gap: 4px;
+      margin-left: 24px;
+      flex: 1;
+    }
+    .gh-nav a {
+      color: #c9d1d9;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+    .gh-nav a:hover { background: #30363d; color: #fff; }
+    .gh-nav a.active { background: #388bfd26; color: #58a6ff; }
+    .gh-user {
+      font-size: 12px;
+      color: #8b949e;
+      padding: 4px 10px;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+    }
+
+    /* Layout */
+    .layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--canvas-default);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      padding: 12px 0;
+      height: fit-content;
+      position: sticky;
+      top: 24px;
+      box-shadow: var(--shadow);
+    }
+    .sidebar h3 {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 16px 4px;
+    }
+    .sidebar a {
+      display: block;
+      padding: 6px 16px;
+      color: var(--fg-default);
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+    }
+    .sidebar a:hover { background: var(--canvas-subtle); }
+    .sidebar a.active {
+      border-left-color: var(--accent-fg);
+      background: var(--info-subtle);
+      font-weight: 600;
+      color: var(--accent-emphasis);
+    }
+
+    /* Panels */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .panel {
+      background: var(--canvas-default);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .panel-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .panel-body { padding: 16px; }
+
+    /* Badges / Labels (GitHub style) */
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 7px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 20px;
+      border-radius: 2em;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .label-default { background: #eaeef2; color: #656d76; border-color: #d0d7de; }
+    .label-success { background: var(--success-subtle); color: var(--success-fg); }
+    .label-danger { background: var(--danger-subtle); color: var(--danger-fg); }
+    .label-warning { background: var(--attention-subtle); color: var(--attention-fg); }
+    .label-info { background: var(--info-subtle); color: var(--info-fg); }
+    .label-purple { background: var(--purple-subtle); color: var(--purple-fg); }
+    .label-pink { background: var(--pink-subtle); color: var(--pink-fg); }
+    .label-orange { background: var(--orange-subtle); color: var(--orange-fg); }
+
+    .label-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-default);
+      background: var(--canvas-subtle);
+      color: var(--fg-default);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn:hover { background: #eaeef2; }
+    .btn-primary {
+      background: #2da44e;
+      border-color: rgba(27, 31, 36, 0.15);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #2c974b; }
+    .btn-sm { padding: 3px 10px; font-size: 12px; }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--fg-default);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 5px 8px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--canvas-default);
+    }
+    .form-group textarea { min-height: 72px; resize: vertical; }
+    .form-section {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .form-section:last-child { border-bottom: none; margin-bottom: 0; }
+    .form-section h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-fg);
+      margin-bottom: 12px;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--canvas-subtle);
+      border-bottom: 1px solid var(--border-default);
+      font-weight: 600;
+      color: var(--fg-muted);
+      font-size: 12px;
+    }
+    .data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-muted);
+      vertical-align: top;
+    }
+    .data-table tr:hover td { background: #f6f8fa; }
+    .data-table a {
+      color: var(--accent-fg);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .data-table a:hover { text-decoration: underline; }
+    .mono { font-family: var(--mono); font-size: 12px; color: var(--fg-muted); }
+
+    /* Filters */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 5px 10px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      font-size: 13px;
+      min-width: 140px;
+    }
+    .filter-bar input[type="search"] { min-width: 220px; flex: 1; }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--canvas-default);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+    }
+    .stat-card .num { font-size: 22px; font-weight: 700; color: var(--accent-fg); }
+    .stat-card .lbl { font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+
+    /* Detail */
+    .detail-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px 20px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .detail-meta dt { color: var(--fg-muted); font-size: 11px; font-weight: 600; }
+    .detail-meta dd { margin: 0 0 8px; }
+    .body-block {
+      background: var(--canvas-subtle);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .body-block h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-fg);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+    }
+
+    /* Attachments */
+    .attach-list { list-style: none; }
+    .attach-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-muted);
+      font-size: 13px;
+    }
+    .attach-list li:last-child { border-bottom: none; }
+
+    /* AI Chat */
+    .chat-area {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 360px;
+    }
+    .chat-msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .chat-user {
+      align-self: flex-end;
+      background: var(--info-subtle);
+      border: 1px solid #54aeff66;
+    }
+    .chat-ai {
+      align-self: flex-start;
+      background: var(--canvas-subtle);
+      border: 1px solid var(--border-default);
+    }
+    .chat-cite {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-default);
+      font-size: 12px;
+      color: var(--fg-muted);
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-muted);
+    }
+    .chat-input-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+    .policy-banner {
+      background: var(--attention-subtle);
+      border: 1px solid #d4a72c66;
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--attention-fg);
+      margin-bottom: 12px;
+    }
+
+    .mockup-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--fg-subtle);
+      padding: 16px;
+      border-top: 1px solid var(--border-muted);
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="gh-header">
+  <a class="gh-logo" href="#">
+    <span class="gh-logo-mark">AI</span>
+    <span>
+      AISSS
+      <span class="gh-logo-sub">Analytical Information Secure Sharing System</span>
+    </span>
+  </a>
+  <nav class="gh-nav" id="topNav">
+    <a href="#" data-view="search" class="active">ケース検索</a>
+    <a href="#" data-view="register">ケース登録</a>
+    <a href="#" data-view="detail">ケース詳細</a>
+    <a href="#" data-view="ai">AI 検索</a>
+    <a href="#" data-view="masters">マスタ管理</a>
+  </nav>
+  <span class="gh-user">分析第一課 / 山田 太郎</span>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h3>メニュー</h3>
+    <a href="#" data-view="search" class="active">ケース検索</a>
+    <a href="#" data-view="register">ケース登録</a>
+    <a href="#" data-view="import">Excel 取り込み</a>
+    <a href="#" data-view="detail">ケース詳細</a>
+    <a href="#" data-view="ai">AI 検索</a>
+    <h3>管理</h3>
+    <a href="#" data-view="masters">マスタ管理</a>
+    <a href="#">ユーザー・グループ</a>
+    <a href="#">監査ログ</a>
+    <a href="#">ジョブ状態</a>
+  </aside>
+
+  <main id="mainContent">
+
+    <!-- ケース検索 -->
+    <section class="view active" id="view-search">
+      <div class="stats">
+        <div class="stat-card"><div class="num">1,247</div><div class="lbl">登録ケース</div></div>
+        <div class="stat-card"><div class="num">38</div><div class="lbl">処理待ち抽出</div></div>
+        <div class="stat-card"><div class="num">12</div><div class="lbl">RAG 同期待ち</div></div>
+        <div class="stat-card"><div class="num">5</div><div class="lbl">取り込みエラー</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>ケース検索</h2>
+          <button class="btn btn-primary btn-sm" onclick="showView('register')">+ 新規登録</button>
+        </div>
+        <div class="panel-body">
+          <div class="filter-bar">
+            <input type="search" placeholder="キーワード・全文検索…" />
+            <select><option>資料区分</option><option>報告書</option><option>ケース</option></select>
+            <select><option>登録部署</option><option>分析第一課</option></select>
+            <select><option>ランク</option><option>A</option><option>B</option></select>
+            <select><option>閲覧範囲</option></select>
+            <button class="btn btn-sm">検索</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>表示 ID</th>
+                <th>表題</th>
+                <th>区分 / 分類</th>
+                <th>タグ</th>
+                <th>日付</th>
+                <th>状態</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono"><a href="#" onclick="showView('detail');return false">CASE-2026-00142</a></td>
+                <td><a href="#" onclick="showView('detail');return false">東アジア情勢に関する月次分析（2026年1月）</a></td>
+                <td><span class="label label-info">報告書</span> <span class="label label-default">地政学</span></td>
+                <td>
+                  <span class="label label-purple">ランク A</span>
+                  <span class="label label-success">信頼性 高</span>
+                  <span class="label label-warning">複製禁止</span>
+                </td>
+                <td class="mono">2026-01-15</td>
+                <td><span class="label label-success">RAG 同期済</span></td>
+              </tr>
+              <tr>
+                <td class="mono"><a href="#">CASE-2026-00138</a></td>
+                <td><a href="#">〇〇地域経済動向レポート</a></td>
+                <td><span class="label label-info">ケース</span> <span class="label label-default">経済</span></td>
+                <td>
+                  <span class="label label-purple">ランク B</span>
+                  <span class="label label-danger">照会禁止</span>
+                  <span class="label label-orange">担当者のみ</span>
+                </td>
+                <td class="mono">2026-01-08</td>
+                <td><span class="label label-default">抽出完了</span></td>
+              </tr>
+              <tr>
+                <td class="mono"><a href="#">CASE-2026-00135</a></td>
+                <td><a href="#">音声記録テキスト化（会議録）</a></td>
+                <td><span class="label label-pink">音声</span> <span class="label label-default">会議</span></td>
+                <td>
+                  <span class="label label-warning">印刷禁止</span>
+                  <span class="label label-default">全員</span>
+                </td>
+                <td class="mono">2025-12-22</td>
+                <td><span class="label label-warning">抽出中</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ケース登録 -->
+    <section class="view" id="view-register">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>ケース登録</h2>
+          <div class="label-row">
+            <span class="label label-default">下書き</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-section">
+            <h3>基本情報</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>表題 *</label><input type="text" placeholder="資料の表題" /></div>
+              <div class="form-group"><label>資料番号</label><input type="text" /></div>
+              <div class="form-group"><label>資料区分</label><select><option>報告書</option><option>ケース</option></select></div>
+              <div class="form-group"><label>分類番号</label><input type="text" /></div>
+            </div>
+            <div class="form-group" style="margin-top:12px"><label>要約</label><textarea rows="2"></textarea></div>
+          </div>
+          <div class="form-section">
+            <h3>事象・出所</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>事象発生（開始）</label><input type="date" /></div>
+              <div class="form-group"><label>事象発生（終了）</label><input type="date" /></div>
+              <div class="form-group"><label>分類</label><select><option>地政学</option></select></div>
+              <div class="form-group"><label>地域</label><select><option>東アジア</option></select></div>
+              <div class="form-group"><label>資料源</label><select></select></div>
+              <div class="form-group"><label>登録部署</label><select><option>分析第一課</option></select></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3>取扱・閲覧</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>閲覧範囲</label><select><option>全員</option><option>分析担当者のみ</option></select></div>
+              <div class="form-group"><label>取扱区分</label><select><option>通常</option><option>機微</option></select></div>
+              <div class="form-group"><label>信頼性</label><select><option>高</option><option>中</option></select></div>
+              <div class="form-group"><label>正確性</label><select><option>確認済</option></select></div>
+              <div class="form-group"><label>ランク</label><select><option>A</option><option>B</option></select></div>
+            </div>
+            <p style="margin-top:10px;font-size:12px;color:var(--fg-muted)">条件（チェックボックス）</p>
+            <div class="label-row" style="margin-top:6px">
+              <label><input type="checkbox" /> 印刷禁止</label>
+              <label style="margin-left:12px"><input type="checkbox" checked /> 複製禁止</label>
+              <label style="margin-left:12px"><input type="checkbox" /> 照会禁止</label>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3>本文（登録時は分割、表示時は結合）</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>1 要約</label><textarea></textarea></div>
+              <div class="form-group"><label>2 記事</label><textarea></textarea></div>
+              <div class="form-group"><label>3 所見</label><textarea></textarea></div>
+              <div class="form-group"><label>4 その他参考</label><textarea></textarea></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3>添付</h3>
+            <div style="border:2px dashed var(--border-default);border-radius:var(--radius);padding:24px;text-align:center;color:var(--fg-muted);font-size:13px">
+              Office / PDF / 画像 / 音声 をドラッグ＆ドロップ、または <button class="btn btn-sm">ファイルを選択</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary">登録する</button>
+            <button class="btn">下書き保存</button>
+            <button class="btn">キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ケース詳細 -->
+    <section class="view" id="view-detail">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>東アジア情勢に関する月次分析（2026年1月）</h2>
+            <span class="mono" style="font-size:12px;color:var(--fg-muted)">CASE-2026-00142 · 資料番号 DOC-2026-0042</span>
+          </div>
+          <div class="label-row">
+            <span class="label label-purple">ランク A</span>
+            <span class="label label-success">信頼性 高</span>
+            <span class="label label-warning">複製禁止</span>
+            <span class="label label-default">全員</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <dl class="detail-meta">
+            <div><dt>資料区分</dt><dd>報告書</dd></div>
+            <div><dt>登録部署</dt><dd>分析第一課</dd></div>
+            <div><dt>事象発生</dt><dd>2026-01-01 〜 2026-01-31</dd></div>
+            <div><dt>分類 / 地域</dt><dd>地政学 / 東アジア</dd></div>
+            <div><dt>資料登録者</dt><dd>山田 太郎</dd></div>
+            <div><dt>取扱区分</dt><dd>通常</dd></div>
+          </dl>
+          <h3 style="font-size:13px;font-weight:600;margin-bottom:8px">本文（結合表示）</h3>
+          <div class="body-block"><h4>1 要約</h4>東アジアにおける主要国の政策動向を整理し、今後3ヶ月の注目点を示す。</div>
+          <div class="body-block"><h4>2 記事</h4>各国首脳会談の結果、貿易協定の再交渉が進行中である。詳細は添付 PDF を参照。</div>
+          <div class="body-block"><h4>3 所見（分析・評価）</h4>短期的には安定、中期的に不確実性が残る。信頼性は複数ソースで裏付けあり。</div>
+          <h3 style="font-size:13px;font-weight:600;margin:16px 0 8px">添付ファイル</h3>
+          <ul class="attach-list">
+            <li>
+              <span>📄 monthly_report_202601.pdf <span class="label label-success">抽出完了</span></span>
+              <button class="btn btn-sm">ダウンロード</button>
+            </li>
+            <li>
+              <span>📊 data_tables.xlsx <span class="label label-success">RAG 同期済</span></span>
+              <button class="btn btn-sm">ダウンロード</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI 検索 -->
+    <section class="view" id="view-ai">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>AI 検索（Dify 連携）</h2>
+          <span class="label label-info">権限フィルタ ON</span>
+        </div>
+        <div class="panel-body">
+          <div class="policy-banner">
+            ⚠ この画面の回答は閲覧権限と取扱条件（複製禁止・印刷禁止等）を適用しています。印刷・エクスポートは制限される場合があります。
+          </div>
+          <div class="chat-area">
+            <div class="chat-msg chat-user">2026年1月の東アジア情勢で、貿易協定に関する分析はありますか？</div>
+            <div class="chat-msg chat-ai">
+              はい。CASE-2026-00142「東アジア情勢に関する月次分析（2026年1月）」に、貿易協定の再交渉に関する記述があります。短期的には安定傾向と評価されています。
+              <div class="chat-cite">
+                引用: <span class="label label-default">CASE-2026-00142</span>
+                <span class="label label-warning">複製禁止</span> — 要約のみ表示（原文逐語転記なし）
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" placeholder="質問を入力…（権限のある資料のみ検索対象）" />
+            <button class="btn btn-primary">送信</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- マスタ管理（簡易） -->
+    <section class="view" id="view-masters">
+      <div class="panel">
+        <div class="panel-header"><h2>マスタ管理</h2><button class="btn btn-primary btn-sm">+ 値を追加</button></div>
+        <div class="panel-body">
+          <div class="filter-bar">
+            <select><option>資料区分</option><option>ランク</option><option>条件</option><option>閲覧範囲</option></select>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>名称</th><th>コード</th><th>状態</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>報告書</td><td class="mono">REPORT</td><td><span class="label label-success">有効</span></td><td><button class="btn btn-sm">編集</button></td></tr>
+              <tr><td>ケース</td><td class="mono">CASE</td><td><span class="label label-success">有効</span></td><td><button class="btn btn-sm">編集</button></td></tr>
+              <tr><td>照会禁止</td><td class="mono">NO_INQUIRY</td><td><span class="label label-success">有効</span></td><td><button class="btn btn-sm">編集</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Excel 取り込み（簡易） -->
+    <section class="view" id="view-import">
+      <div class="panel">
+        <div class="panel-header"><h2>Excel 一括取り込み</h2></div>
+        <div class="panel-body">
+          <p style="font-size:13px;margin-bottom:12px">テンプレートをアップロード → プレビュー → 検証 → 確定登録</p>
+          <div style="border:2px dashed var(--border-default);border-radius:var(--radius);padding:32px;text-align:center">
+            <button class="btn btn-primary">Excel をアップロード</button>
+            <p style="margin-top:8px;font-size:12px;color:var(--fg-muted)">テンプレート v1.0 · <a href="#">ダウンロード</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<p class="mockup-note">
+  AISSS WebUI Mockup · Analytical Information Secure Sharing System · 設計プレビュー（静的 HTML）
+</p>
+
+<script>
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById('view-' + id);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('[data-view]').forEach(a => {
+      a.classList.toggle('active', a.dataset.view === id);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('[data-view]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      showView(a.dataset.view);
+    });
+  });
+</script>
+</body>
+</html>

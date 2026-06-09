@@ -44,7 +44,7 @@ Recommended sheets:
 ```mermaid
 sequenceDiagram
   actor Operator
-  participant WebUI as Aisss WebUI
+  participant WebUI as AISSS WebUI
   participant API as Backend API
   participant DB as PostgreSQL
   participant Queue as Job Queue

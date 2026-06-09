@@ -2,7 +2,7 @@
 
 ## Goal
 
-Aisss builds a case management system and a permissioned RAG tool around Dify and Ollama. Users register cases, metadata, attachments, and extracted text through the WebUI. Authorized users can then search, summarize, and ask questions over those materials through Dify-backed workflows without bypassing case-level access control.
+AISSS builds a case management system and a permissioned RAG tool around Dify and Ollama. Users register cases, metadata, attachments, and extracted text through the WebUI. Authorized users can then search, summarize, and ask questions over those materials through Dify-backed workflows without bypassing case-level access control.
 
 ## Scope
 
@@ -22,7 +22,7 @@ Out of scope for the first implementation:
 
 - Fully automated classification of sensitive materials.
 - Native image similarity search.
-- Dify-only document-level access control without Aisss permission middleware.
+- Dify-only document-level access control without AISSS permission middleware.
 - Public internet lookup of registered indicators or document content.
 
 ## Users and Scale
@@ -98,7 +98,7 @@ Each attachment must be linked to a case UUID and must have extraction status, f
 - Dify is used as the AI workflow and chat application layer.
 - Ollama provides local LLM inference where required.
 - Vector search must be permission-filtered before content reaches Dify generation.
-- Documents registered directly in Dify must be treated as supplemental knowledge. For permission-sensitive materials, they should be imported or mirrored into Aisss metadata before they become searchable.
+- Documents registered directly in Dify must be treated as supplemental knowledge. For permission-sensitive materials, they should be imported or mirrored into AISSS metadata before they become searchable.
 - Every RAG chunk must include source metadata: case UUID, attachment ID when applicable, source type, viewing range, handling conditions, registration department, dates, rank, reliability, accuracy, and keywords.
 
 ## Non-Functional Requirements

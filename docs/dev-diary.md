@@ -1,10 +1,18 @@
 # Development Diary
 
+## 2026-06-09: Product Name and WebUI Mockup
+
+### Summary
+
+Formal product name set to **AISSS** (*Analytical Information Secure Sharing System* / 分析的情報セキュア共有システム). Updated README and documentation. Added GitHub-style HTML WebUI mockup at `mockups/webui.html`.
+
+---
+
 ## 2026-06-09: Design Baseline Created
 
 ### Summary
 
-Created the initial documentation baseline for Aisss. The design treats Aisss as a case management system with a permissioned RAG layer, using Dify and Ollama for AI workflow and generation.
+Created the initial documentation baseline for AISSS. The design treats AISSS as a case management system with a permissioned RAG layer, using Dify and Ollama for AI workflow and generation.
 
 ### Decisions
 

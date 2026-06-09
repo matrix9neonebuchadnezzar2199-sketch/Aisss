@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Before implementation, Aisss needs more than code. It needs operational definitions, master data rules, permission rules, templates, and verification data. This document lists the baseline materials that should be prepared early.
+Before implementation, AISSS needs more than code. It needs operational definitions, master data rules, permission rules, templates, and verification data. This document lists the baseline materials that should be prepared early.
 
 ## Required Operational Documents
 
