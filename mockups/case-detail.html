@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AISSS — ケース詳細</title>
+  <style>
+    :root {
+      --canvas-default: #161b22;
+      --canvas-subtle: #0d1117;
+      --canvas-inset: #21262d;
+      --border-default: #30363d;
+      --fg-default: #e6edf3;
+      --fg-muted: #8b949e;
+      --accent-fg: #58a6ff;
+      --header-bg: #010409;
+      --header-fg: #f0f6fc;
+      --success-fg: #3fb950;
+      --success-subtle: rgba(46, 160, 67, 0.15);
+      --danger-fg: #f85149;
+      --danger-subtle: rgba(248, 81, 73, 0.15);
+      --attention-fg: #d29922;
+      --attention-subtle: rgba(187, 128, 9, 0.15);
+      --info-subtle: rgba(56, 139, 253, 0.15);
+      --info-fg: #58a6ff;
+      --purple-subtle: rgba(163, 113, 247, 0.15);
+      --purple-fg: #a371f7;
+      --warning-subtle: rgba(187, 128, 9, 0.15);
+      --orange-subtle: rgba(219, 109, 40, 0.15);
+      --orange-fg: #db6d28;
+      --radius: 6px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); font-size: 14px; line-height: 1.5; color: var(--fg-default); background: var(--canvas-subtle); min-height: 100vh; }
+    .gh-header {
+      background: var(--header-bg); color: var(--header-fg); padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #30363d;
+    }
+    .gh-logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; color: var(--header-fg); text-decoration: none; }
+    .gh-logo-mark {
+      width: 32px; height: 32px; background: linear-gradient(135deg, #0969da, #8250df); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+    }
+    .gh-logo-sub { font-size: 11px; font-weight: 400; color: #8b949e; display: block; }
+    .gh-badge { font-size: 12px; color: #8b949e; padding: 4px 10px; border: 1px solid #30363d; border-radius: 20px; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px; }
+    .panel { background: var(--canvas-default); border: 1px solid var(--border-default); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(1,4,9,0.5); }
+    .panel-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border-default);
+      display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;
+    }
+    .panel-header h1 { font-size: 18px; font-weight: 600; line-height: 1.35; }
+    .panel-body { padding: 20px; }
+    .mono { font-family: var(--mono); font-size: 12px; color: var(--fg-muted); }
+    .label {
+      display: inline-flex; align-items: center; padding: 0 7px; font-size: 12px; font-weight: 500;
+      line-height: 20px; border-radius: 2em; white-space: nowrap;
+    }
+    .label-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .label-default { background: rgba(110,118,129,0.2); color: #8b949e; }
+    .label-success { background: var(--success-subtle); color: var(--success-fg); }
+    .label-danger { background: var(--danger-subtle); color: var(--danger-fg); }
+    .label-warning { background: var(--attention-subtle); color: var(--attention-fg); }
+    .label-info { background: var(--info-subtle); color: var(--info-fg); }
+    .label-purple { background: var(--purple-subtle); color: var(--purple-fg); }
+    .label-orange { background: var(--orange-subtle); color: var(--orange-fg); }
+    .detail-meta {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px 20px; font-size: 13px; margin-bottom: 20px;
+    }
+    .detail-meta dt { color: var(--fg-muted); font-size: 11px; font-weight: 600; }
+    .detail-meta dd { margin: 0 0 8px; }
+    .body-block {
+      background: var(--canvas-subtle); border: 1px solid var(--border-default); border-radius: var(--radius);
+      padding: 12px 14px; margin-bottom: 10px; font-size: 13px; line-height: 1.6;
+    }
+    .body-block h4 { font-size: 11px; font-weight: 700; color: var(--accent-fg); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+    .section-title { font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+    .attach-list { list-style: none; }
+    .attach-list li {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--border-default); font-size: 13px;
+    }
+    .attach-list li:last-child { border-bottom: none; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: 13px; font-weight: 500;
+      border-radius: var(--radius); border: 1px solid var(--border-default); background: var(--canvas-inset);
+      color: var(--fg-default); cursor: pointer; font-family: inherit; text-decoration: none;
+    }
+    .btn:hover { background: #30363d; }
+    .btn-sm { padding: 3px 10px; font-size: 12px; }
+    .compare-hint {
+      margin-top: 16px; padding: 10px 14px; border-radius: var(--radius);
+      background: var(--info-subtle); border: 1px solid rgba(56,139,253,0.35);
+      color: var(--info-fg); font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+<header class="gh-header">
+  <a class="gh-logo" href="webui.html">
+    <span class="gh-logo-mark">AI</span>
+    <span>AISSS<span class="gh-logo-sub">ケース詳細（別ウィンドウ）</span></span>
+  </a>
+  <span class="gh-badge" id="windowBadge">比較用に複数タブで開けます</span>
+</header>
+
+<div class="container">
+  <div class="panel">
+    <div class="panel-header">
+      <div>
+        <h1 id="caseTitle">—</h1>
+        <span class="mono" id="caseMeta">—</span>
+      </div>
+      <div class="label-row" id="caseLabels"></div>
+    </div>
+    <div class="panel-body">
+      <dl class="detail-meta" id="caseMetaGrid"></dl>
+      <h3 class="section-title">本文（結合表示）</h3>
+      <div id="caseBody"></div>
+      <h3 class="section-title">添付ファイル</h3>
+      <ul class="attach-list" id="caseAttachments"></ul>
+      <p class="compare-hint">💡 2件以上の記事を比較する場合は、ケース検索から表題をクリックして別タブで開き、並べて確認してください。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CASES = {
+    'CASE-2026-00142': {
+      title: '東アジア情勢に関する月次分析（2026年1月）',
+      materialNumber: 'DOC-2026-0042',
+      labels: [
+        ['label-purple', 'ランク A'],
+        ['label-success', '信頼性 高'],
+        ['label-warning', '複製禁止'],
+        ['label-default', '全員'],
+      ],
+      meta: {
+        '資料区分': '報告書', '登録部署': '分析第一課', '事象発生': '2026-01-01 〜 2026-01-31',
+        '分類 / 地域': '地政学 / 東アジア', '資料登録者': '山田 太郎', '取扱区分': '通常',
+      },
+      body: [
+        ['1 要約', '東アジアにおける主要国の政策動向を整理し、今後3ヶ月の注目点を示す。'],
+        ['2 記事', '各国首脳会談の結果、貿易協定の再交渉が進行中である。詳細は添付 PDF を参照。'],
+        ['3 所見（分析・評価）', '短期的には安定、中期的に不確実性が残る。信頼性は複数ソースで裏付けあり。'],
+      ],
+      attachments: [
+        ['monthly_report_202601.pdf', '抽出完了'],
+        ['data_tables.xlsx', 'RAG 同期済'],
+      ],
+    },
+    'CASE-2026-00138': {
+      title: '〇〇地域経済動向レポート',
+      materialNumber: 'DOC-2026-0038',
+      labels: [
+        ['label-purple', 'ランク B'],
+        ['label-danger', '照会禁止'],
+        ['label-orange', '担当者のみ'],
+      ],
+      meta: {
+        '資料区分': 'ケース', '登録部署': '分析第二課', '事象発生': '2026-01-05 〜 2026-01-08',
+        '分類 / 地域': '経済 / 東南アジア', '資料登録者': '佐藤 花子', '取扱区分': '機微',
+      },
+      body: [
+        ['1 要約', '地域経済の四半期動向と主要リスク要因の整理。'],
+        ['2 記事', '輸出・観光・製造業の指標を横断的に比較。'],
+        ['3 所見（分析・評価）', '為替変動の影響が顕在化。追加情報の収集を推奨。'],
+      ],
+      attachments: [['region_economy_q1.pdf', '抽出完了']],
+    },
+    'CASE-2026-00135': {
+      title: '音声記録テキスト化（会議録）',
+      materialNumber: 'DOC-2026-0035',
+      labels: [
+        ['label-warning', '印刷禁止'],
+        ['label-default', '全員'],
+      ],
+      meta: {
+        '資料区分': '音声', '登録部署': '分析第一課', '事象発生': '2025-12-20',
+        '分類 / 地域': '会議 / —', '資料登録者': '鈴木 一郎', '取扱区分': '通常',
+      },
+      body: [
+        ['1 要約', '定例会議の音声記録を ASR でテキスト化したもの。'],
+        ['2 記事', '議題1: 情報共有フロー見直し。議題2: 次期テンプレート運用。'],
+        ['3 所見（分析・評価）', '発言者特定は未実施。要約参照を推奨。'],
+      ],
+      attachments: [['meeting_20251220.mp3', '抽出中'], ['meeting_transcript.txt', '抽出完了']],
+    },
+  };
+
+  const params = new URLSearchParams(location.search);
+  const caseId = params.get('case') || 'CASE-2026-00142';
+  const data = CASES[caseId] || CASES['CASE-2026-00142'];
+
+  document.title = 'AISSS — ' + data.title;
+  document.getElementById('caseTitle').textContent = data.title;
+  document.getElementById('caseMeta').textContent = caseId + ' · 資料番号 ' + data.materialNumber;
+
+  const labelsEl = document.getElementById('caseLabels');
+  data.labels.forEach(([cls, text]) => {
+    const s = document.createElement('span');
+    s.className = 'label ' + cls;
+    s.textContent = text;
+    labelsEl.appendChild(s);
+  });
+
+  const grid = document.getElementById('caseMetaGrid');
+  Object.entries(data.meta).forEach(([k, v]) => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = '<dt>' + k + '</dt><dd>' + v + '</dd>';
+    grid.appendChild(wrap);
+  });
+
+  const bodyEl = document.getElementById('caseBody');
+  data.body.forEach(([h, t]) => {
+    const b = document.createElement('div');
+    b.className = 'body-block';
+    b.innerHTML = '<h4>' + h + '</h4>' + t;
+    bodyEl.appendChild(b);
+  });
+
+  const attEl = document.getElementById('caseAttachments');
+  data.attachments.forEach(([name, status]) => {
+    const li = document.createElement('li');
+    const statusCls = status.includes('中') ? 'label-warning' : 'label-success';
+    li.innerHTML = '<span>📄 ' + name + ' <span class="label ' + statusCls + '">' + status + '</span></span><button class="btn btn-sm">ダウンロード</button>';
+    attEl.appendChild(li);
+  });
+</script>
+</body>
+</html>
