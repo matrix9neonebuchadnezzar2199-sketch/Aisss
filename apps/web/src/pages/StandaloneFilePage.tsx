@@ -1,0 +1,69 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { apiFetch, uploadStandaloneFile, type MasterItem } from '../lib/api'
+
+export function StandaloneFilePage () {
+  const navigate = useNavigate()
+  const [title, setTitle] = useState('')
+  const [tags, setTags] = useState('')
+  const [viewingRangeId, setViewingRangeId] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [viewingRanges, setViewingRanges] = useState<MasterItem[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    void apiFetch<{ items: MasterItem[] }>('/api/masters/viewing-ranges')
+      .then((d) => setViewingRanges(d.items))
+      .catch((e: Error) => setError(e.message))
+  }, [])
+
+  async function onSubmit () {
+    if (!title.trim() || !viewingRangeId || !file) {
+      setError('表題、閲覧範囲、ファイルは必須です')
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      await uploadStandaloneFile({
+        title: title.trim(),
+        viewingRangeIds: [viewingRangeId],
+        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        file
+      })
+      navigate('/rag')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '登録失敗')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="page">
+      <h2>単独ファイル登録</h2>
+      <div className="form-grid">
+        <label className="full">細部 / 表題
+          <input value={title} onChange={(e) => setTitle(e.target.value)} />
+        </label>
+        <label className="full">タグ（カンマ区切り）
+          <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="参考, 条例" />
+        </label>
+        <label className="full">閲覧範囲
+          <select value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
+            <option value="">選択してください</option>
+            {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+        </label>
+        <label className="full">ファイル
+          <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </label>
+      </div>
+      {error && <p className="error">{error}</p>}
+      <button type="button" onClick={() => void onSubmit()} disabled={loading}>
+        {loading ? '登録中…' : '登録する'}
+      </button>
+    </section>
+  )
+}

@@ -136,7 +136,9 @@ Done when:
 - AI answers cite only allowed cases.
 - Permission changes update RAG behavior.
 
-**Mock coverage:** RAG 管理 **high**; standalone registration form; models screen; AI search **static demo** only.
+**Implementation:** `006_m5_rag_schema.sql`; Qdrant upsert + Ollama embeddings worker; `POST /api/rag/search`, `/api/ai/chat` (+ SSE stream), `/api/rag/*`, `PUT /api/admin/ollama/model-roles`; Web `/ai`, `/rag`, `/models`, standalone registration. ReRank stored but default off.
+
+**Mock coverage:** Live React pages replace static AI/RAG/models demos; HTML mock remains reference for tree cascade polish.
 
 ## Milestone 6: Operational Hardening
 

@@ -337,3 +337,72 @@ button.linkish {
   cursor: pointer;
   text-decoration: underline;
 }
+
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #151b23;
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.75rem;
+  background: #2a3441;
+  border-radius: 4px;
+  color: #9aa7b8;
+  text-decoration: none;
+}
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #151b23;
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+}
+
+.policy-banner {
+  padding: 0.5rem 0.75rem;
+  background: #2a2418;
+  border: 1px solid #5a4a2a;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #f0d090;
+}
+
+.chat-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #151b23;
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+}
+
+.chat-answer {
+  white-space: pre-wrap;
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+.citation-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.rerank-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}

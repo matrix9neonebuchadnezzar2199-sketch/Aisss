@@ -1,5 +1,21 @@
 # Development Diary
 
+## 2026-06-10: Milestone 5 Permissioned RAG MVP
+
+### Summary
+
+Added RAG schema (standalone files, chunks, sync state), embedding worker with Qdrant + Ollama, permissioned search middleware with condition policies, live AI chat with citations, RAG admin APIs, model role admin, and React pages for AI search, RAG management, standalone file registration, and model settings.
+
+### New / Updated
+
+- `infra/migrations/006_m5_rag_schema.sql`
+- `apps/workers` — embedding job processor, standalone extraction
+- `apps/api` — `rag`, `ai`, `admin-ollama` routes; `permissioned-search`, `qdrant`, `conditions` services
+- `apps/web` — `AiSearchPage`, `RagAdminPage`, `StandaloneFilePage`, `ModelsPage`
+- `docs/11-milestones.md`
+
+---
+
 ## 2026-06-09: Milestone 4 Excel Import
 
 ### Summary

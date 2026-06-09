@@ -1,6 +1,10 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import { ApiStatus } from './components/ApiStatus'
+import { AiSearchPage } from './pages/AiSearchPage'
 import { AuditPage } from './pages/AuditPage'
+import { ModelsPage } from './pages/ModelsPage'
+import { RagAdminPage } from './pages/RagAdminPage'
+import { StandaloneFilePage } from './pages/StandaloneFilePage'
 import { CaseDetailPage } from './pages/CaseDetailPage'
 import { HomePage } from './pages/HomePage'
 import { MastersPage } from './pages/MastersPage'
@@ -37,7 +41,11 @@ export function App () {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/ai" element={<AiSearchPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/rag" element={<RagAdminPage />} />
+          <Route path="/rag/standalone" element={<StandaloneFilePage />} />
+          <Route path="/models" element={<ModelsPage />} />
           <Route path="/cases/:displayId" element={<CaseDetailPage />} />
           <Route path="/masters" element={<MastersPage />} />
           <Route path="/audit" element={<AuditPage />} />
