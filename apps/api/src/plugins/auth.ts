@@ -63,7 +63,8 @@ const authPluginImpl: FastifyPluginAsync<{
   app.addHook('preHandler', async (request) => {
     if (
       request.url.startsWith('/api/health') ||
-      request.url.startsWith('/api/ollama/health')
+      request.url.startsWith('/api/ollama/health') ||
+      request.url.startsWith('/api/imports/excel/template')
     ) {
       return
     }

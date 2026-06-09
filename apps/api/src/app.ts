@@ -9,6 +9,7 @@ import { attachmentRoutes } from './routes/attachments.js'
 import { aiRoutes } from './routes/ai.js'
 import { auditRoutes } from './routes/audit.js'
 import { caseRoutes } from './routes/cases.js'
+import { importRoutes } from './routes/imports.js'
 import { jobRoutes } from './routes/jobs.js'
 import { masterRoutes } from './routes/masters.js'
 import { ollamaRoutes } from './routes/ollama.js'
@@ -84,6 +85,7 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
     storageConfig: settings.objectStorage
   })
   await app.register(caseRoutes, { pool })
+  await app.register(importRoutes, { pool })
   await app.register(masterRoutes, { pool })
   await app.register(permissionRoutes, { pool })
   await app.register(auditRoutes, { pool })
