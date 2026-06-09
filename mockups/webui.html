@@ -500,21 +500,22 @@
       padding: 4px 8px;
     }
     .filter-bar .tag-text { font-size: 12px; }
-    .filter-bar.rag-filter-bar {
-      flex-wrap: nowrap;
-      align-items: center;
+    .rag-filter-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       margin-bottom: 12px;
     }
-    .filter-bar.rag-filter-bar input[type="search"] {
+    .filter-bar.rag-filter-row {
+      flex-wrap: nowrap;
+      align-items: center;
+      margin-bottom: 0;
+    }
+    .filter-bar.rag-filter-row input[type="search"] {
       flex: 1 1 auto;
       min-width: 120px;
     }
-    .filter-bar.rag-filter-bar .tag-input-wrap {
-      flex: 1 1 auto;
-      min-width: 140px;
-      max-width: 220px;
-    }
-    .filter-bar.rag-filter-bar .rag-date-range {
+    .filter-bar.rag-filter-row .rag-date-range {
       display: flex;
       align-items: center;
       gap: 4px;
@@ -522,20 +523,26 @@
       max-width: 30%;
       min-width: 0;
     }
-    .filter-bar.rag-filter-bar .rag-date-range input[type="date"] {
+    .filter-bar.rag-filter-row .rag-date-range input[type="date"] {
       flex: 1 1 0;
       min-width: 0;
       width: auto;
       padding: 6px 4px;
       font-size: 12px;
     }
-    .filter-bar.rag-filter-bar .rag-date-sep {
+    .filter-bar.rag-filter-row .rag-date-sep {
       color: var(--fg-muted);
       flex-shrink: 0;
       font-size: 12px;
     }
-    .filter-bar.rag-filter-bar > .btn {
+    .filter-bar.rag-filter-row > .btn {
       flex-shrink: 0;
+    }
+    .filter-bar.rag-filter-tags .tag-input-wrap {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
     }
 
     /* Panels */
@@ -1303,21 +1310,25 @@
               <p class="rag-register-note" style="margin-bottom:8px">
                 ㋹ = AI 検索のベクトル索引に含める。パイプライン状態と RAG 有効化を同一画面で操作します。
               </p>
-              <div class="filter-bar rag-filter-bar">
-                <input type="search" placeholder="タイトル・ファイル名…" />
-                <div class="tag-input-wrap" data-tag-input data-tag-mode="filter">
-                  <div class="tag-chips"></div>
-                  <div class="tag-combobox">
-                    <input type="text" class="tag-text" placeholder="タグ（履歴検索）" autocomplete="off" />
-                    <ul class="tag-suggestions hidden"></ul>
+              <div class="rag-filter-panel">
+                <div class="filter-bar rag-filter-row">
+                  <input type="search" placeholder="タイトル・ファイル名…" />
+                  <div class="rag-date-range">
+                    <input type="date" title="期間（開始）" />
+                    <span class="rag-date-sep">〜</span>
+                    <input type="date" title="期間（終了）" />
+                  </div>
+                  <button class="btn btn-sm">検索</button>
+                </div>
+                <div class="filter-bar rag-filter-row rag-filter-tags">
+                  <div class="tag-input-wrap" data-tag-input data-tag-mode="filter">
+                    <div class="tag-chips"></div>
+                    <div class="tag-combobox">
+                      <input type="text" class="tag-text" placeholder="タグ（履歴検索）" autocomplete="off" />
+                      <ul class="tag-suggestions hidden"></ul>
+                    </div>
                   </div>
                 </div>
-                <div class="rag-date-range">
-                  <input type="date" title="期間（開始）" />
-                  <span class="rag-date-sep">〜</span>
-                  <input type="date" title="期間（終了）" />
-                </div>
-                <button class="btn btn-sm">検索</button>
               </div>
               <div class="rag-file-list">
                 <div class="rag-file-list-head">
