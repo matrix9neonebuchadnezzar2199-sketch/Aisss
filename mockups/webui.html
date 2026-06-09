@@ -887,7 +887,8 @@
       border-collapse: collapse;
       font-size: 13px;
     }
-    .data-table th {
+    .data-table th,
+    .perm-mapping-table th {
       text-align: left;
       padding: 8px 12px;
       background: var(--canvas-subtle);
@@ -896,6 +897,49 @@
       color: var(--fg-muted);
       font-size: 12px;
     }
+    .sortable-th {
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .sortable-th:hover { color: var(--fg-default); background: var(--canvas-inset); }
+    .sortable-th .sort-ind {
+      display: inline-block;
+      width: 12px;
+      margin-left: 4px;
+      font-size: 9px;
+      color: var(--fg-subtle, #6e7681);
+    }
+    .sortable-th.sort-asc .sort-ind::before { content: '▲'; color: var(--accent-fg); }
+    .sortable-th.sort-desc .sort-ind::before { content: '▼'; color: var(--accent-fg); }
+    .rag-file-list-head .sortable-col {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      cursor: pointer;
+      user-select: none;
+      text-align: inherit;
+    }
+    .rag-file-list-head .sortable-col:hover { color: var(--fg-default); }
+    .rag-file-list-head .sortable-col .sort-ind {
+      width: 10px;
+      font-size: 9px;
+      color: var(--fg-subtle, #6e7681);
+    }
+    .rag-file-list-head .sortable-col.sort-asc .sort-ind::before { content: '▲'; color: var(--accent-fg); }
+    .rag-file-list-head .sortable-col.sort-desc .sort-ind::before { content: '▼'; color: var(--accent-fg); }
+    .rag-file-list-head .sortable-col.fname { flex: 1; min-width: 0; justify-content: flex-start; }
+    .rag-file-list-head .sortable-col.col-viewing-range { width: 148px; flex-shrink: 0; }
+    .rag-file-list-head .sortable-col.col-pipeline { width: 88px; flex-shrink: 0; }
+    .rag-file-list-head .sortable-col.col-rag { width: 100px; flex-shrink: 0; }
+    .rag-file-list-head .col-actions { margin-left: auto; }
     .data-table td {
       padding: 10px 12px;
       border-bottom: 1px solid var(--border-muted);
@@ -1206,16 +1250,16 @@
               </div>
             </div>
           </div>
-          <p class="search-hint">表題クリックでケース詳細を表示。2件比較は <strong>Ctrl+クリック</strong>（Mac: <strong>⌘+クリック</strong>）で別タブ、または詳細画面の「別タブで開く」を使用。</p>
-          <table class="data-table">
+          <p class="search-hint">表題クリックでケース詳細を表示。列見出しクリックでソート。2件比較は <strong>Ctrl+クリック</strong>（Mac: <strong>⌘+クリック</strong>）で別タブ、または詳細画面の「別タブで開く」を使用。</p>
+          <table class="data-table" data-sortable-table>
             <thead>
               <tr>
-                <th>表示 ID</th>
-                <th>表題</th>
-                <th>区分 / 分類</th>
-                <th>タグ</th>
-                <th>日付</th>
-                <th>状態</th>
+                <th class="sortable-th" data-sort-type="text" scope="col">表示 ID<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">表題<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">区分 / 分類<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">タグ<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="date" scope="col">日付<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">状態<span class="sort-ind" aria-hidden="true"></span></th>
               </tr>
             </thead>
             <tbody>
@@ -1591,7 +1635,7 @@
             </div>
             <div class="rag-main">
               <p class="rag-register-note" style="margin-bottom:8px">
-                ㋹ = AI 検索のベクトル索引に含める。閲覧範囲は一覧で確認できます。ケース添付はケースから継承（変更はケース側）、単独ファイルのみここで編集できます。
+                ㋹ = AI 検索のベクトル索引に含める。列見出しクリックでソート。閲覧範囲は一覧で確認できます。ケース添付はケースから継承（変更はケース側）、単独ファイルのみここで編集できます。
               </p>
               <div class="rag-filter-panel">
                 <div class="filter-bar rag-filter-row">
@@ -1623,11 +1667,11 @@
                 </div>
               </div>
               <div class="rag-file-list" id="ragFileList">
-                <div class="rag-file-list-head">
-                  <span class="fname">細部 / ファイル</span>
-                  <span class="col-viewing-range">閲覧範囲</span>
-                  <span class="col-pipeline">パイプライン</span>
-                  <span class="col-rag">㋹ RAG</span>
+                <div class="rag-file-list-head" id="ragFileListHead">
+                  <button type="button" class="sortable-col fname" data-sort-key="fname" data-sort-type="text">細部 / ファイル<span class="sort-ind" aria-hidden="true"></span></button>
+                  <button type="button" class="sortable-col col-viewing-range" data-sort-key="viewing-range" data-sort-type="text">閲覧範囲<span class="sort-ind" aria-hidden="true"></span></button>
+                  <button type="button" class="sortable-col col-pipeline" data-sort-key="pipeline" data-sort-type="text">パイプライン<span class="sort-ind" aria-hidden="true"></span></button>
+                  <button type="button" class="sortable-col col-rag" data-sort-key="rag" data-sort-type="checkbox">㋹ RAG<span class="sort-ind" aria-hidden="true"></span></button>
                   <span class="col-actions">操作</span>
                 </div>
                 <div class="rag-file-row" data-source-kind="case_attachment" data-viewing-range="全員" data-case-id="CASE-2025-KEIRI">
@@ -1758,14 +1802,14 @@
           <div class="policy-banner" style="margin-bottom:12px">
             ホスト Ollama のモデル一覧（<code>GET /api/ollama/models</code>）。pull / delete はホスト CLI で実施。ロール割当は管理者が WebUI で設定。
           </div>
-          <table class="data-table">
+          <table class="data-table" data-sortable-table>
             <thead>
               <tr>
-                <th>モデル名</th>
-                <th>サイズ</th>
-                <th>用途</th>
-                <th>チャット選択</th>
-                <th></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">モデル名<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="size" scope="col">サイズ<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">用途<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">チャット選択<span class="sort-ind" aria-hidden="true"></span></th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
@@ -1830,8 +1874,13 @@
             <button type="button" data-perm-tab="mapping">閲覧範囲マッピング</button>
           </div>
           <div class="perm-panel active" id="permPanelUsers" data-perm-panel="users">
-            <table class="data-table">
-              <thead><tr><th>氏名</th><th>部署</th><th>所属グループ</th><th></th></tr></thead>
+            <table class="data-table" data-sortable-table>
+              <thead><tr>
+                <th class="sortable-th" data-sort-type="text" scope="col">氏名<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">部署<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">所属グループ<span class="sort-ind" aria-hidden="true"></span></th>
+                <th scope="col"></th>
+              </tr></thead>
               <tbody>
                 <tr><td>山田 太郎</td><td>分析第一課</td><td>分析担当者, 全員閲覧</td><td><button class="btn btn-sm">編集</button></td></tr>
                 <tr><td>鈴木 花子</td><td>分析第二課</td><td>分析第一課</td><td><button class="btn btn-sm">編集</button></td></tr>
@@ -1839,8 +1888,13 @@
             </table>
           </div>
           <div class="perm-panel" id="permPanelGroups" data-perm-panel="groups">
-            <table class="data-table">
-              <thead><tr><th>グループ名</th><th>メンバー数</th><th>説明</th><th></th></tr></thead>
+            <table class="data-table" data-sortable-table>
+              <thead><tr>
+                <th class="sortable-th" data-sort-type="text" scope="col">グループ名<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="number" scope="col">メンバー数<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">説明<span class="sort-ind" aria-hidden="true"></span></th>
+                <th scope="col"></th>
+              </tr></thead>
               <tbody>
                 <tr><td>分析担当者</td><td>12</td><td>分析担当者のみ（A）に対応</td><td><button class="btn btn-sm">編集</button></td></tr>
                 <tr><td>分析第一課</td><td>8</td><td>分析第一課（B）に対応</td><td><button class="btn btn-sm">編集</button></td></tr>
@@ -1849,9 +1903,13 @@
             </table>
           </div>
           <div class="perm-panel" id="permPanelMapping" data-perm-panel="mapping">
-            <table class="perm-mapping-table">
+            <table class="perm-mapping-table" data-sortable-table>
               <thead>
-                <tr><th>閲覧範囲（マスタ）</th><th>許可グループ</th><th>備考</th></tr>
+                <tr>
+                  <th class="sortable-th" data-sort-type="text" scope="col">閲覧範囲（マスタ）<span class="sort-ind" aria-hidden="true"></span></th>
+                  <th class="sortable-th" data-sort-type="text" scope="col">許可グループ<span class="sort-ind" aria-hidden="true"></span></th>
+                  <th class="sortable-th" data-sort-type="text" scope="col">備考<span class="sort-ind" aria-hidden="true"></span></th>
+                </tr>
               </thead>
               <tbody>
                 <tr>
@@ -1898,8 +1956,13 @@
           <div class="filter-bar">
             <select><option>資料区分</option><option>ランク</option><option>条件</option><option>閲覧範囲</option></select>
           </div>
-          <table class="data-table">
-            <thead><tr><th>名称</th><th>コード</th><th>状態</th><th></th></tr></thead>
+          <table class="data-table" data-sortable-table>
+            <thead><tr>
+              <th class="sortable-th" data-sort-type="text" scope="col">名称<span class="sort-ind" aria-hidden="true"></span></th>
+              <th class="sortable-th" data-sort-type="text" scope="col">コード<span class="sort-ind" aria-hidden="true"></span></th>
+              <th class="sortable-th" data-sort-type="text" scope="col">状態<span class="sort-ind" aria-hidden="true"></span></th>
+              <th scope="col"></th>
+            </tr></thead>
             <tbody>
               <tr><td>報告書</td><td class="mono">REPORT</td><td><span class="label label-success">有効</span></td><td><button class="btn btn-sm">編集</button></td></tr>
               <tr><td>ケース</td><td class="mono">CASE</td><td><span class="label label-success">有効</span></td><td><button class="btn btn-sm">編集</button></td></tr>
@@ -2775,6 +2838,122 @@
         panels.forEach(p => p.classList.toggle('active', p.dataset.permPanel === id));
       });
     });
+  })();
+
+  (function initSortableLists() {
+    function parseSize(text) {
+      const t = (text || '').trim();
+      if (!t || t === '—') return -1;
+      const m = t.match(/^([\d.]+)\s*(GB|MB|KB)/i);
+      if (!m) return 0;
+      const n = parseFloat(m[1]);
+      const unit = m[2].toUpperCase();
+      if (unit === 'GB') return n * 1024;
+      if (unit === 'MB') return n;
+      if (unit === 'KB') return n / 1024;
+      return n;
+    }
+
+    function compareValues(a, b, type) {
+      if (type === 'number') return (parseFloat(a) || 0) - (parseFloat(b) || 0);
+      if (type === 'date') return String(a).localeCompare(String(b));
+      if (type === 'size') return parseSize(a) - parseSize(b);
+      if (type === 'checkbox') return (a === '1' ? 1 : 0) - (b === '1' ? 1 : 0);
+      return String(a).localeCompare(String(b), 'ja');
+    }
+
+    function tableCellValue(row, colIdx) {
+      const cell = row.cells[colIdx];
+      if (!cell) return '';
+      if (cell.dataset.sortValue != null) return cell.dataset.sortValue;
+      const link = cell.querySelector('a');
+      if (link && colIdx === 1) return link.textContent.trim();
+      const label = cell.querySelector('.label');
+      if (label && cell.querySelectorAll('.label').length === 1) return label.textContent.trim();
+      return cell.textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    function setSortState(headers, activeHeader, dir) {
+      headers.forEach(h => {
+        h.classList.remove('sort-asc', 'sort-desc');
+        h.removeAttribute('aria-sort');
+      });
+      if (!activeHeader) return;
+      activeHeader.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      activeHeader.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : 'descending');
+    }
+
+    document.querySelectorAll('[data-sortable-table]').forEach(table => {
+      const thead = table.tHead;
+      const tbody = table.tBodies[0];
+      if (!thead || !tbody) return;
+      const headers = Array.from(thead.querySelectorAll('.sortable-th'));
+      if (!headers.length) return;
+
+      headers.forEach(th => {
+        th.addEventListener('click', () => {
+          const colIdx = th.cellIndex;
+          const type = th.dataset.sortType || 'text';
+          const nextDir = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+          const rows = Array.from(tbody.rows);
+          rows.sort((ra, rb) => {
+            const cmp = compareValues(
+              tableCellValue(ra, colIdx),
+              tableCellValue(rb, colIdx),
+              type
+            );
+            return nextDir === 'asc' ? cmp : -cmp;
+          });
+          rows.forEach(r => tbody.appendChild(r));
+          setSortState(headers, th, nextDir);
+        });
+      });
+    });
+
+    const ragList = document.getElementById('ragFileList');
+    const ragHead = document.getElementById('ragFileListHead');
+    if (ragList && ragHead) {
+      const ragHeaders = Array.from(ragHead.querySelectorAll('.sortable-col'));
+
+      function ragRowValue(row, key, type) {
+        if (key === 'fname') {
+          return (row.querySelector('.fname')?.textContent || '').replace(/㋹/g, '').replace(/\s+/g, ' ').trim();
+        }
+        if (key === 'viewing-range') {
+          return row.dataset.viewingRange
+            || row.querySelector('.rag-viewing-select')?.value
+            || row.querySelector('.rag-viewing-readonly')?.textContent.replace(/ケース継承/g, '').trim()
+            || '';
+        }
+        if (key === 'pipeline') {
+          return row.querySelector('.col-pipeline .label')?.textContent.trim() || '';
+        }
+        if (key === 'rag') {
+          const cb = row.querySelector('.col-rag input[type="checkbox"]');
+          return cb?.checked ? '1' : '0';
+        }
+        return '';
+      }
+
+      ragHeaders.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.sortKey;
+          const type = btn.dataset.sortType || 'text';
+          const nextDir = btn.classList.contains('sort-asc') ? 'desc' : 'asc';
+          const rows = Array.from(ragList.querySelectorAll('.rag-file-row'));
+          rows.sort((a, b) => {
+            const cmp = compareValues(
+              ragRowValue(a, key, type),
+              ragRowValue(b, key, type),
+              type
+            );
+            return nextDir === 'asc' ? cmp : -cmp;
+          });
+          rows.forEach(r => ragList.appendChild(r));
+          setSortState(ragHeaders, btn, nextDir);
+        });
+      });
+    }
   })();
 </script>
 </body>
