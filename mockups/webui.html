@@ -6,34 +6,42 @@
   <title>AISSS — WebUI Mockup</title>
   <style>
     :root {
-      --canvas-default: #ffffff;
-      --canvas-subtle: #f6f8fa;
-      --canvas-inset: #eff2f5;
-      --border-default: #d0d7de;
-      --border-muted: #d8dee4;
-      --fg-default: #1f2328;
-      --fg-muted: #656d76;
-      --fg-subtle: #6e7781;
-      --accent-fg: #0969da;
-      --accent-emphasis: #0550ae;
-      --header-bg: #24292f;
+      /* GitHub dark dimmed */
+      --canvas-default: #161b22;
+      --canvas-subtle: #0d1117;
+      --canvas-inset: #21262d;
+      --border-default: #30363d;
+      --border-muted: #21262d;
+      --fg-default: #e6edf3;
+      --fg-muted: #8b949e;
+      --fg-subtle: #6e7681;
+      --accent-fg: #58a6ff;
+      --accent-emphasis: #79c0ff;
+      --header-bg: #010409;
       --header-fg: #f0f6fc;
-      --success-fg: #1a7f37;
-      --success-subtle: #dafbe1;
-      --danger-fg: #cf222e;
-      --danger-subtle: #ffebe9;
-      --attention-fg: #9a6700;
-      --attention-subtle: #fff8c5;
-      --info-subtle: #ddf4ff;
-      --info-fg: #0969da;
-      --purple-subtle: #fbefff;
-      --purple-fg: #8250df;
-      --pink-subtle: #ffeff7;
-      --pink-fg: #bf3989;
-      --orange-subtle: #fff1e5;
-      --orange-fg: #bc4c00;
-      --shadow: 0 1px 3px rgba(31, 35, 40, 0.12);
+      /* Inputs: light gray on dark chrome */
+      --input-bg: #e8eaed;
+      --input-fg: #1f2328;
+      --input-border: #c9d1d9;
+      --input-placeholder: #656d76;
+      --success-fg: #3fb950;
+      --success-subtle: rgba(46, 160, 67, 0.15);
+      --danger-fg: #f85149;
+      --danger-subtle: rgba(248, 81, 73, 0.15);
+      --attention-fg: #d29922;
+      --attention-subtle: rgba(187, 128, 9, 0.15);
+      --info-subtle: rgba(56, 139, 253, 0.15);
+      --info-fg: #58a6ff;
+      --purple-subtle: rgba(163, 113, 247, 0.15);
+      --purple-fg: #a371f7;
+      --pink-subtle: rgba(219, 97, 162, 0.15);
+      --pink-fg: #db61a2;
+      --orange-subtle: rgba(219, 109, 40, 0.15);
+      --orange-fg: #db6d28;
+      --shadow: 0 1px 3px rgba(1, 4, 9, 0.5);
       --radius: 6px;
+      --sidebar-width: 220px;
+      --sidebar-collapsed: 52px;
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
       --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     }
@@ -116,47 +124,119 @@
       margin: 0 auto;
       padding: 24px;
       display: grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: var(--sidebar-width) 1fr;
       gap: 24px;
+      transition: grid-template-columns 0.2s ease;
+    }
+    .layout.sidebar-collapsed {
+      grid-template-columns: var(--sidebar-collapsed) 1fr;
     }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
     }
 
-    /* Sidebar */
+    /* Sidebar (collapsible) */
     .sidebar {
       background: var(--canvas-default);
       border: 1px solid var(--border-default);
       border-radius: var(--radius);
-      padding: 12px 0;
       height: fit-content;
       position: sticky;
       top: 24px;
       box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: width 0.2s ease;
     }
-    .sidebar h3 {
+    .sidebar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-default);
+      min-height: 40px;
+    }
+    .sidebar-top-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity 0.15s;
+    }
+    .sidebar-toggle {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      background: var(--canvas-inset);
+      color: var(--fg-muted);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, transform 0.2s;
+    }
+    .sidebar-toggle:hover {
+      background: #30363d;
+      color: var(--fg-default);
+    }
+    .sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
+    .sidebar.collapsed .sidebar-top-title,
+    .sidebar.collapsed .sidebar-label,
+    .sidebar.collapsed .sidebar-group-title {
+      display: none;
+    }
+    .sidebar.collapsed .sidebar-top { justify-content: center; padding: 10px 8px; }
+    .sidebar-nav { padding: 8px 0; }
+    .sidebar-group-title {
       font-size: 11px;
       font-weight: 600;
       color: var(--fg-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       padding: 8px 16px 4px;
+      white-space: nowrap;
+      transition: opacity 0.15s;
     }
     .sidebar a {
-      display: block;
-      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
       color: var(--fg-default);
       text-decoration: none;
       font-size: 13px;
       border-left: 2px solid transparent;
+      white-space: nowrap;
     }
-    .sidebar a:hover { background: var(--canvas-subtle); }
+    .sidebar a .nav-icon {
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+    .sidebar a:hover { background: var(--canvas-inset); }
     .sidebar a.active {
       border-left-color: var(--accent-fg);
       background: var(--info-subtle);
       font-weight: 600;
       color: var(--accent-emphasis);
+    }
+    .sidebar.collapsed a {
+      justify-content: center;
+      padding: 10px 8px;
+      border-left: none;
+    }
+    .sidebar.collapsed a.active {
+      border-left: none;
+      box-shadow: inset 3px 0 0 var(--accent-fg);
     }
 
     /* Panels */
@@ -198,7 +278,7 @@
       white-space: nowrap;
       border: 1px solid transparent;
     }
-    .label-default { background: #eaeef2; color: #656d76; border-color: #d0d7de; }
+    .label-default { background: rgba(110, 118, 129, 0.2); color: #8b949e; border-color: #30363d; }
     .label-success { background: var(--success-subtle); color: var(--success-fg); }
     .label-danger { background: var(--danger-subtle); color: var(--danger-fg); }
     .label-warning { background: var(--attention-subtle); color: var(--attention-fg); }
@@ -219,12 +299,12 @@
       font-weight: 500;
       border-radius: var(--radius);
       border: 1px solid var(--border-default);
-      background: var(--canvas-subtle);
+      background: var(--canvas-inset);
       color: var(--fg-default);
       cursor: pointer;
       font-family: inherit;
     }
-    .btn:hover { background: #eaeef2; }
+    .btn:hover { background: #30363d; border-color: #8b949e; }
     .btn-primary {
       background: #2da44e;
       border-color: rgba(27, 31, 36, 0.15);
@@ -248,14 +328,27 @@
     }
     .form-group input,
     .form-group select,
-    .form-group textarea {
+    .form-group textarea,
+    .filter-bar input,
+    .filter-bar select,
+    .chat-input-row input {
       width: 100%;
-      padding: 5px 8px;
-      border: 1px solid var(--border-default);
+      padding: 6px 10px;
+      border: 1px solid var(--input-border);
       border-radius: var(--radius);
       font-size: 13px;
       font-family: inherit;
-      background: var(--canvas-default);
+      background: var(--input-bg);
+      color: var(--input-fg);
+    }
+    .form-group input::placeholder,
+    .filter-bar input::placeholder,
+    .chat-input-row input::placeholder {
+      color: var(--input-placeholder);
+    }
+    .form-group select,
+    .filter-bar select {
+      cursor: pointer;
     }
     .form-group textarea { min-height: 72px; resize: vertical; }
     .form-section {
@@ -291,7 +384,7 @@
       border-bottom: 1px solid var(--border-muted);
       vertical-align: top;
     }
-    .data-table tr:hover td { background: #f6f8fa; }
+    .data-table tr:hover td { background: var(--canvas-inset); }
     .data-table a {
       color: var(--accent-fg);
       text-decoration: none;
@@ -307,11 +400,8 @@
       gap: 8px;
       margin-bottom: 12px;
     }
-    .filter-bar input, .filter-bar select {
-      padding: 5px 10px;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius);
-      font-size: 13px;
+    .filter-bar input,
+    .filter-bar select {
       min-width: 140px;
     }
     .filter-bar input[type="search"] { min-width: 220px; flex: 1; }
@@ -390,12 +480,14 @@
     .chat-user {
       align-self: flex-end;
       background: var(--info-subtle);
-      border: 1px solid #54aeff66;
+      border: 1px solid rgba(56, 139, 253, 0.4);
+      color: var(--fg-default);
     }
     .chat-ai {
       align-self: flex-start;
-      background: var(--canvas-subtle);
+      background: var(--canvas-inset);
       border: 1px solid var(--border-default);
+      color: var(--fg-default);
     }
     .chat-cite {
       margin-top: 8px;
@@ -411,21 +503,26 @@
       padding-top: 12px;
       border-top: 1px solid var(--border-muted);
     }
-    .chat-input-row input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius);
-      font-size: 13px;
-    }
+    .chat-input-row input { flex: 1; }
     .policy-banner {
       background: var(--attention-subtle);
-      border: 1px solid #d4a72c66;
+      border: 1px solid rgba(187, 128, 9, 0.4);
       border-radius: var(--radius);
       padding: 8px 12px;
       font-size: 12px;
       color: var(--attention-fg);
       margin-bottom: 12px;
+    }
+    .panel-body a { color: var(--accent-fg); }
+    .checkbox-row label { color: var(--fg-default); font-size: 13px; }
+    .upload-zone {
+      border: 2px dashed var(--border-default);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      color: var(--fg-muted);
+      font-size: 13px;
+      background: var(--canvas-subtle);
     }
 
     .mockup-note {
@@ -458,19 +555,24 @@
   <span class="gh-user">分析第一課 / 山田 太郎</span>
 </header>
 
-<div class="layout">
-  <aside class="sidebar">
-    <h3>メニュー</h3>
-    <a href="#" data-view="search" class="active">ケース検索</a>
-    <a href="#" data-view="register">ケース登録</a>
-    <a href="#" data-view="import">Excel 取り込み</a>
-    <a href="#" data-view="detail">ケース詳細</a>
-    <a href="#" data-view="ai">AI 検索</a>
-    <h3>管理</h3>
-    <a href="#" data-view="masters">マスタ管理</a>
-    <a href="#">ユーザー・グループ</a>
-    <a href="#">監査ログ</a>
-    <a href="#">ジョブ状態</a>
+<div class="layout" id="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <span class="sidebar-top-title">メニュー</span>
+      <button type="button" class="sidebar-toggle" id="sidebarToggle" title="サイドバーを折りたたむ" aria-label="サイドバーを折りたたむ">‹</button>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" data-view="search" class="active" title="ケース検索"><span class="nav-icon">🔍</span><span class="sidebar-label">ケース検索</span></a>
+      <a href="#" data-view="register" title="ケース登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース登録</span></a>
+      <a href="#" data-view="import" title="Excel 取り込み"><span class="nav-icon">📊</span><span class="sidebar-label">Excel 取り込み</span></a>
+      <a href="#" data-view="detail" title="ケース詳細"><span class="nav-icon">📄</span><span class="sidebar-label">ケース詳細</span></a>
+      <a href="#" data-view="ai" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
+      <p class="sidebar-group-title">管理</p>
+      <a href="#" data-view="masters" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
+      <a href="#" title="ユーザー・グループ"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ</span></a>
+      <a href="#" title="監査ログ"><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
+      <a href="#" title="ジョブ状態"><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
+    </nav>
   </aside>
 
   <main id="mainContent">
@@ -591,10 +693,10 @@
               <div class="form-group"><label>ランク</label><select><option>A</option><option>B</option></select></div>
             </div>
             <p style="margin-top:10px;font-size:12px;color:var(--fg-muted)">条件（チェックボックス）</p>
-            <div class="label-row" style="margin-top:6px">
+            <div class="label-row checkbox-row" style="margin-top:6px;gap:16px">
               <label><input type="checkbox" /> 印刷禁止</label>
-              <label style="margin-left:12px"><input type="checkbox" checked /> 複製禁止</label>
-              <label style="margin-left:12px"><input type="checkbox" /> 照会禁止</label>
+              <label><input type="checkbox" checked /> 複製禁止</label>
+              <label><input type="checkbox" /> 照会禁止</label>
             </div>
           </div>
           <div class="form-section">
@@ -608,7 +710,7 @@
           </div>
           <div class="form-section">
             <h3>添付</h3>
-            <div style="border:2px dashed var(--border-default);border-radius:var(--radius);padding:24px;text-align:center;color:var(--fg-muted);font-size:13px">
+            <div class="upload-zone">
               Office / PDF / 画像 / 音声 をドラッグ＆ドロップ、または <button class="btn btn-sm">ファイルを選択</button>
             </div>
           </div>
@@ -719,7 +821,7 @@
         <div class="panel-header"><h2>Excel 一括取り込み</h2></div>
         <div class="panel-body">
           <p style="font-size:13px;margin-bottom:12px">テンプレートをアップロード → プレビュー → 検証 → 確定登録</p>
-          <div style="border:2px dashed var(--border-default);border-radius:var(--radius);padding:32px;text-align:center">
+          <div class="upload-zone" style="padding:32px">
             <button class="btn btn-primary">Excel をアップロード</button>
             <p style="margin-top:8px;font-size:12px;color:var(--fg-muted)">テンプレート v1.0 · <a href="#">ダウンロード</a></p>
           </div>
@@ -750,6 +852,27 @@
       showView(a.dataset.view);
     });
   });
+
+  const sidebar = document.getElementById('sidebar');
+  const layout = document.getElementById('layout');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const STORAGE_KEY = 'aisss-sidebar-collapsed';
+
+  function setSidebarCollapsed(collapsed) {
+    sidebar.classList.toggle('collapsed', collapsed);
+    layout.classList.toggle('sidebar-collapsed', collapsed);
+    sidebarToggle.title = collapsed ? 'サイドバーを展開' : 'サイドバーを折りたたむ';
+    sidebarToggle.setAttribute('aria-label', sidebarToggle.title);
+    try { localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); } catch (_) {}
+  }
+
+  sidebarToggle.addEventListener('click', () => {
+    setSidebarCollapsed(!sidebar.classList.contains('collapsed'));
+  });
+
+  try {
+    if (localStorage.getItem(STORAGE_KEY) === '1') setSidebarCollapsed(true);
+  } catch (_) {}
 </script>
 </body>
 </html>
