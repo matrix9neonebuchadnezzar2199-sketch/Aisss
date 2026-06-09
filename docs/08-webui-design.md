@@ -16,7 +16,7 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 ### 検索
 
 - **ケース（事象）** — metadata and full-text case search.
-- **AI 検索** — permissioned RAG chat with model selector (visually nested under 検索 via tree indent).
+- **AI 検索** — permissioned RAG chat with model selector (same indent as other items: one full-width lead space before icon).
 
 ### 管理
 
