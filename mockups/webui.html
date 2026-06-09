@@ -393,12 +393,68 @@
     .data-table a:hover { text-decoration: underline; }
     .mono { font-family: var(--mono); font-size: 12px; color: var(--fg-muted); }
 
-    /* Filters */
+    /* Filters (collapsible on case search) */
+    .filter-panel {
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      background: var(--canvas-subtle);
+      overflow: hidden;
+    }
+    .filter-panel-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--canvas-inset);
+      border: none;
+      border-bottom: 1px solid transparent;
+      color: var(--fg-default);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .filter-panel-toggle:hover { background: #30363d; }
+    .filter-panel:not(.collapsed) .filter-panel-toggle {
+      border-bottom-color: var(--border-default);
+    }
+    .filter-chevron {
+      display: inline-block;
+      font-size: 10px;
+      color: var(--fg-muted);
+      transition: transform 0.2s ease;
+    }
+    .filter-panel.collapsed .filter-chevron { transform: rotate(-90deg); }
+    .filter-collapsed-hint {
+      display: none;
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--fg-muted);
+    }
+    .filter-panel.collapsed .filter-collapsed-hint { display: inline; }
+    .filter-panel-body {
+      padding: 12px;
+      max-height: 160px;
+      overflow: hidden;
+      transition: max-height 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
+      opacity: 1;
+    }
+    .filter-panel.collapsed .filter-panel-body {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+    }
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 0;
     }
     .filter-bar input,
     .filter-bar select {
@@ -591,13 +647,22 @@
           <button class="btn btn-primary btn-sm" onclick="showView('register')">+ 新規登録</button>
         </div>
         <div class="panel-body">
-          <div class="filter-bar">
-            <input type="search" placeholder="キーワード・全文検索…" />
-            <select><option>資料区分</option><option>報告書</option><option>ケース</option></select>
-            <select><option>登録部署</option><option>分析第一課</option></select>
-            <select><option>ランク</option><option>A</option><option>B</option></select>
-            <select><option>閲覧範囲</option></select>
-            <button class="btn btn-sm">検索</button>
+          <div class="filter-panel" id="searchFilterPanel">
+            <button type="button" class="filter-panel-toggle" id="searchFilterToggle" aria-expanded="true" aria-controls="searchFilterBody">
+              <span class="filter-chevron">▼</span>
+              <span>検索条件</span>
+              <span class="filter-collapsed-hint">クリックで展開</span>
+            </button>
+            <div class="filter-panel-body" id="searchFilterBody">
+              <div class="filter-bar">
+                <input type="search" placeholder="キーワード・全文検索…" />
+                <select><option>資料区分</option><option>報告書</option><option>ケース</option></select>
+                <select><option>登録部署</option><option>分析第一課</option></select>
+                <select><option>ランク</option><option>A</option><option>B</option></select>
+                <select><option>閲覧範囲</option></select>
+                <button class="btn btn-sm">検索</button>
+              </div>
+            </div>
           </div>
           <table class="data-table">
             <thead>
@@ -872,6 +937,24 @@
 
   try {
     if (localStorage.getItem(STORAGE_KEY) === '1') setSidebarCollapsed(true);
+  } catch (_) {}
+
+  const searchFilterPanel = document.getElementById('searchFilterPanel');
+  const searchFilterToggle = document.getElementById('searchFilterToggle');
+  const SEARCH_FILTER_KEY = 'aisss-search-filter-collapsed';
+
+  function setSearchFilterCollapsed(collapsed) {
+    searchFilterPanel.classList.toggle('collapsed', collapsed);
+    searchFilterToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    try { localStorage.setItem(SEARCH_FILTER_KEY, collapsed ? '1' : '0'); } catch (_) {}
+  }
+
+  searchFilterToggle.addEventListener('click', () => {
+    setSearchFilterCollapsed(!searchFilterPanel.classList.contains('collapsed'));
+  });
+
+  try {
+    if (localStorage.getItem(SEARCH_FILTER_KEY) === '1') setSearchFilterCollapsed(true);
   } catch (_) {}
 </script>
 </body>
