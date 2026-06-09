@@ -6,6 +6,14 @@ RAG must never expand a user's access. AISSS decides what the user can view befo
 
 The permissioned search middleware is the enforcement point. It receives the authenticated user and query, calculates the accessible case scope from PostgreSQL, searches only eligible chunks, applies handling-condition rules, and returns safe context to the AI chat layer (`/api/ai/chat`).
 
+### Administrator Override
+
+AISSS intentionally treats `admin` as an all-case operational authority for RAG administration and AI search. This is required so the system remains manageable when ordinary groups lose access to a case or viewing range by mistake.
+
+The override is not a bypass of handling conditions: `照会禁止` and other `search_policy = deny` rules still exclude content before generation. It only bypasses viewing-range membership checks.
+
+This behavior is covered by tests so future changes do not accidentally remove the operational override or turn it into a condition-policy bypass.
+
 ## Query Flow
 
 ```mermaid

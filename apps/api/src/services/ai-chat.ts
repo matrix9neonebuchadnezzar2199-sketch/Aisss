@@ -11,6 +11,8 @@ import { getDefaultChatModel, getModelDefaults } from './model-roles.js'
 import { writeAuditLog } from './audit.js'
 import { checkOllamaHealth } from './ollama-health.js'
 
+const WEBUI_CHAT_CHANNEL = 'webui_chat'
+
 function buildSystemPrompt (
   contexts: Array<{ citation: string; text: string }>,
   quoteHint: string
@@ -53,7 +55,14 @@ export async function runAiChat (
   }
 
   const queryId = randomUUID()
-  const search = await permissionedSearch(pool, settings, user, input.message.trim())
+  const search = await permissionedSearch(
+    pool,
+    settings,
+    user,
+    input.message.trim(),
+    8,
+    WEBUI_CHAT_CHANNEL
+  )
   const quoteHint = buildQuoteSystemHint(search.effective_policies)
   const systemPrompt = buildSystemPrompt(
     search.contexts.map((c) => ({ citation: c.citation, text: c.text })),
@@ -76,7 +85,8 @@ export async function runAiChat (
     details: {
       model,
       retrieved_case_ids: search.contexts.map((c) => c.case_id).filter(Boolean),
-      channel: 'webui_chat'
+      excluded_counts: search.excluded_counts,
+      channel: WEBUI_CHAT_CHANNEL
     }
   })
 
@@ -113,14 +123,44 @@ export async function* streamAiChat (
   if (!model) {
     throw new AppError('validation_error', 'No chat model configured.', 400)
   }
+  if (
+    !isAdmin(user) &&
+    defaults.enabled_chat_models.length > 0 &&
+    !defaults.enabled_chat_models.includes(model)
+  ) {
+    throw new AppError('validation_error', 'Selected model is not enabled for chat.', 400)
+  }
 
   const queryId = randomUUID()
-  const search = await permissionedSearch(pool, settings, user, input.message.trim())
+  const search = await permissionedSearch(
+    pool,
+    settings,
+    user,
+    input.message.trim(),
+    8,
+    WEBUI_CHAT_CHANNEL
+  )
   const quoteHint = buildQuoteSystemHint(search.effective_policies)
   const systemPrompt = buildSystemPrompt(
     search.contexts.map((c) => ({ citation: c.citation, text: c.text })),
     quoteHint
   )
+
+  await writeAuditLog(pool, {
+    userId: user.id,
+    action: 'ai.chat',
+    resourceType: 'ai_query',
+    resourceId: queryId,
+    queryId,
+    details: {
+      model,
+      retrieved_case_ids: search.contexts.map((c) => c.case_id).filter(Boolean),
+      excluded_counts: search.excluded_counts,
+      channel: WEBUI_CHAT_CHANNEL,
+      streaming: true,
+      phase: 'started'
+    }
+  })
 
   yield {
     type: 'meta' as const,
@@ -143,15 +183,6 @@ export async function* streamAiChat (
   )) {
     yield { type: 'token' as const, content: token }
   }
-
-  await writeAuditLog(pool, {
-    userId: user.id,
-    action: 'ai.chat',
-    resourceType: 'ai_query',
-    resourceId: queryId,
-    queryId,
-    details: { model, channel: 'webui_chat', streaming: true }
-  })
 
   yield { type: 'done' as const }
 }

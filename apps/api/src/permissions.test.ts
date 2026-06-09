@@ -44,6 +44,10 @@ test('canAccessCase respects viewing range overlap', () => {
   assert.equal(canAccessCase(analyst, ['vr-other']), false)
 })
 
+test('admin intentionally has all viewing-range access for operations', () => {
+  assert.equal(canAccessCase(admin, ['vr-never-assigned']), true)
+})
+
 test('isOperator gates operational screens to elevated roles', () => {
   assert.equal(isOperator(admin), true)
   assert.equal(isOperator(analyst), true)

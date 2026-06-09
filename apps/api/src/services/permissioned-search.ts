@@ -26,6 +26,7 @@ export type SearchContext = {
 export type PermissionedSearchResult = {
   contexts: SearchContext[]
   effective_policies: EffectivePolicies
+  excluded_counts: Record<string, number>
 }
 
 async function loadCaseConditions (
@@ -57,10 +58,11 @@ async function loadCaseViewingRanges (
 async function authorizeChunk (
   pool: pg.Pool,
   user: AuthUser,
-  payload: Record<string, unknown>
-): Promise<SearchContext | null> {
+  payload: Record<string, unknown>,
+  channel: string
+): Promise<{ context: SearchContext | null; excluded_reason?: string }> {
   const ragEnabled = payload.rag_enabled === true
-  if (!ragEnabled) return null
+  if (!ragEnabled) return { context: null, excluded_reason: 'rag_disabled' }
 
   const chunkId = String(payload.chunk_id ?? '')
   const caseId = payload.case_id ? String(payload.case_id) : null
@@ -72,11 +74,15 @@ async function authorizeChunk (
 
   if (caseId) {
     const viewingRangeIds = await loadCaseViewingRanges(pool, caseId)
-    if (!canAccessCase(user, viewingRangeIds)) return null
+    if (!canAccessCase(user, viewingRangeIds)) {
+      return { context: null, excluded_reason: 'viewing_range' }
+    }
     const conditions = await loadCaseConditions(pool, caseId)
-    if (isSearchDenied(conditions)) return null
+    if (isSearchDenied(conditions, channel)) {
+      return { context: null, excluded_reason: 'search_policy' }
+    }
     const policies = computeEffectivePolicies(conditions)
-    return {
+    return { context: {
       chunk_id: chunkId,
       case_id: caseId,
       display_id: displayId,
@@ -85,7 +91,7 @@ async function authorizeChunk (
       source_type: sourceType,
       citation: displayId ? `${displayId} / ${title}` : title,
       policies
-    }
+    } }
   }
 
   if (standaloneId) {
@@ -94,8 +100,10 @@ async function authorizeChunk (
       [standaloneId]
     )
     const viewingRangeIds = rows.map((r) => r.viewing_range_id)
-    if (!canAccessCase(user, viewingRangeIds)) return null
-    return {
+    if (!canAccessCase(user, viewingRangeIds)) {
+      return { context: null, excluded_reason: 'viewing_range' }
+    }
+    return { context: {
       chunk_id: chunkId,
       case_id: null,
       display_id: null,
@@ -104,10 +112,10 @@ async function authorizeChunk (
       source_type: sourceType,
       citation: title,
       policies: computeEffectivePolicies([])
-    }
+    } }
   }
 
-  return null
+  return { context: null, excluded_reason: 'unknown_source' }
 }
 
 export async function permissionedSearch (
@@ -122,7 +130,8 @@ export async function permissionedSearch (
   if (!embeddingModel) {
     return {
       contexts: [],
-      effective_policies: computeEffectivePolicies([])
+      effective_policies: computeEffectivePolicies([]),
+      excluded_counts: { embedding_model_missing: 1 }
     }
   }
 
@@ -144,20 +153,27 @@ export async function permissionedSearch (
   } catch {
     return {
       contexts: [],
-      effective_policies: computeEffectivePolicies([])
+      effective_policies: computeEffectivePolicies([]),
+      excluded_counts: { vector_search_error: 1 }
     }
   }
 
   const contexts: SearchContext[] = []
   const policyAccumulator: ConditionRow[] = []
+  const excludedCounts: Record<string, number> = {}
 
   for (const hit of hits) {
-    const ctx = await authorizeChunk(pool, user, {
+    const authorized = await authorizeChunk(pool, user, {
       ...hit.payload,
       chunk_id: hit.id,
       chunk_text: hit.payload.chunk_text
-    })
-    if (!ctx) continue
+    }, channel)
+    const ctx = authorized.context
+    if (!ctx) {
+      const reason = authorized.excluded_reason ?? 'unknown'
+      excludedCounts[reason] = (excludedCounts[reason] ?? 0) + 1
+      continue
+    }
     contexts.push(ctx)
     for (const name of ctx.policies.condition_names) {
       policyAccumulator.push({
@@ -173,6 +189,7 @@ export async function permissionedSearch (
 
   return {
     contexts,
-    effective_policies: computeEffectivePolicies(policyAccumulator)
+    effective_policies: computeEffectivePolicies(policyAccumulator),
+    excluded_counts: excludedCounts
   }
 }

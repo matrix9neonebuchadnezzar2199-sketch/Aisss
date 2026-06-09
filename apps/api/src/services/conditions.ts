@@ -30,14 +30,10 @@ const EXPORT_RANK: Record<string, number> = {
 
 export function isSearchDenied (
   conditions: ConditionRow[],
-  channel = 'webui_chat'
+  _channel = 'webui_chat'
 ): boolean {
   for (const c of conditions) {
     if (c.search_policy === 'deny') return true
-    if (c.search_policy === 'restricted' && channel === 'webui_chat') {
-      // 照会禁止-style restricted defaults to deny for chat
-      if (c.name === '照会禁止') return true
-    }
   }
   return false
 }

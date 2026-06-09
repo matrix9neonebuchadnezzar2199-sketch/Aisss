@@ -18,6 +18,19 @@ test('照会禁止 denies search', () => {
   )
 })
 
+test('restricted search policy is not denied by localized condition name', () => {
+  assert.equal(
+    isSearchDenied([{
+      name: '照会禁止',
+      search_policy: 'restricted',
+      quote_policy: 'summarize_only',
+      export_policy: 'deny_all',
+      priority: 20
+    }]),
+    false
+  )
+})
+
 test('computeEffectivePolicies picks most restrictive', () => {
   const policies = computeEffectivePolicies([
     {
