@@ -1,7 +1,8 @@
 import pg from 'pg'
 import { loadConfig } from './config.js'
 import { createStorageClient } from './storage.js'
-import { claimNextJob, processJob } from './processor.js'
+import { claimNextJob, processExtractionJob } from './processor.js'
+import { processEmbeddingJob } from './embedding.js'
 
 const { Pool } = pg
 
@@ -10,15 +11,31 @@ async function main () {
   const pool = new Pool({ connectionString: config.databaseUrl })
   const storage = createStorageClient(config.objectStorage)
 
-  console.log('[aisss-worker] extraction worker started')
+  console.log('[aisss-worker] started (extraction + embedding)')
 
   const loop = async () => {
     try {
-      const job = await claimNextJob(pool)
-      if (job) {
-        console.log('[aisss-worker] processing job', job.id, job.attachment_id)
-        const result = await processJob(pool, storage, config.objectStorage, job)
-        console.log('[aisss-worker] job done', job.id, result.status)
+      const extractionJob = await claimNextJob(pool, 'extraction')
+      if (extractionJob) {
+        console.log('[aisss-worker] extraction', extractionJob.id)
+        const result = await processExtractionJob(pool, storage, config.objectStorage, extractionJob)
+        console.log('[aisss-worker] extraction done', extractionJob.id, result.status)
+      }
+
+      const embeddingJob = await claimNextJob(pool, 'embedding')
+      if (embeddingJob) {
+        console.log('[aisss-worker] embedding', embeddingJob.id)
+        try {
+          const result = await processEmbeddingJob(pool, config, embeddingJob)
+          console.log('[aisss-worker] embedding done', embeddingJob.id, result.status)
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'embedding failed'
+          await pool.query(
+            `UPDATE jobs SET status = 'failed', error = $2, updated_at = NOW(), completed_at = NOW() WHERE id = $1`,
+            [embeddingJob.id, message]
+          )
+          console.error('[aisss-worker] embedding failed', embeddingJob.id, message)
+        }
       }
     } catch (error) {
       console.error('[aisss-worker] loop error', error)
