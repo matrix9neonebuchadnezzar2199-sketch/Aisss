@@ -25,8 +25,9 @@ The central design rule is simple: the case management database is the source of
 13. [Deployment: Docker Topology](./13-deployment-docker.md)
 14. [Ollama Integration Guide](./15-ollama-integration.md)
 15. [RAG Admin Guide](./16-rag-admin-guide.md)
-16. [WebUI Mockup](../mockups/webui.html)（HTML）
-17. [Development Diary](./dev-diary.md)
+16. [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)
+17. [WebUI Mockup](../mockups/webui.html)（HTML）
+18. [Development Diary](./dev-diary.md)
 
 ## Naming Convention
 

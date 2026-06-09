@@ -11,7 +11,7 @@ Files enter the system through two registration paths. RAG 管理 does not repla
 | Path | Where to register | Appears in RAG tree as |
 |---|---|---|
 | Case attachment | 登録 → **ケース（事象）** (attach on case form) | **ケース（事象）** → 細部 group → file |
-| Standalone reference file | 登録 → **単独ファイル（参照資料）**, or **+ 単独ファイル登録** on RAG 管理 | **単独ファイル（参照資料）** → 細部 group → file |
+| Standalone reference file | **+ 単独ファイル登録** on RAG 管理 | **単独ファイル（参照資料）** → 細部 group → file |
 
 Both paths run the same pipeline: store file → extract text → embed → optional RAG enablement.
 
@@ -22,11 +22,11 @@ Standalone files carry minimal metadata (title/group, tags, viewing range) but s
 ```text
 [RAG 管理]
 ├── Stats (chunks, queue, failures)
-├── Left: Tree — ジャンル → 細部 → ファイル
-└── Right: Unified list (title, tag, date filters + pipeline status + ㋹ toggle per file)
+├── Left: **RAGの体系管理** (genre → group → file tree with ㋹ checkboxes)
+└── Right: Unified list (title, tag, date, 閲覧範囲 filters + 閲覧範囲 column + pipeline + ㋹ toggle)
 ```
 
-### Tree levels
+### RAGの体系管理 (left tree)
 
 | Level | Example | Notes |
 |---|---|---|
@@ -34,13 +34,18 @@ Standalone files carry minimal metadata (title/group, tags, viewing range) but s
 | 細部 | 2025年度経理データ, ●山の自然 | Grouping folder; may map to case title or standalone title |
 | ファイル | 2025年度.xlsx, 植物.pdf | Leaf; nested siblings allowed (e.g. 河川名.xlsx under same 細部) |
 
+Each tree row has a ㋹ checkbox. Checking a parent (e.g. **●山の自然**) cascades to all enabled file children (e.g. 植物.pdf, 河川名.xlsx) and syncs the file list on the right. Parent shows indeterminate when only some children are enabled.
+
 ### File list (unified)
 
-- Filter by title, tags, date range (same bar as before).
-- Each row shows pipeline status and ㋹ RAG toggle together.
+- Filter by title, tags, date range, and **閲覧範囲**.
+- Each row shows **閲覧範囲**, pipeline status, and ㋹ RAG toggle together.
+- Case attachments show inherited viewing range with **ケース継承** badge; click warns to change on case form.
+- Standalone files allow editing viewing range in the list (save triggers metadata resync).
 - Only files with successful extraction (and embedding when required) can enable ㋹.
 - Enabled files are synced to Qdrant; disabled files remain stored but excluded from AI retrieval.
 - Failed extraction shows **再抽出** on the same row.
+- Every row has **削除**; confirmation warns that registration, extracted text, and Qdrant vectors are permanently removed.
 
 ## Pipeline Overview
 
@@ -73,6 +78,7 @@ flowchart LR
 | `GET` | `/api/rag/files` | Filtered file list |
 | `PATCH` | `/api/rag/files/{id}/enable` | Set RAG 有効化 (㋹) |
 | `POST` | `/api/rag/standalone-files` | Standalone file registration |
+| `PATCH` | `/api/rag/standalone-files/{id}/viewing-ranges` | Update standalone viewing range from RAG admin |
 | `POST` | `/api/cases/{case_id}/reindex` | Re-embed case attachments |
 | `POST` | `/api/jobs/{job_id}/retry` | Retry failed extraction |
 
@@ -88,10 +94,17 @@ flowchart LR
 
 ### Register a standalone file
 
-1. 登録 → 単独ファイル（参照資料） (or RAG 管理 → + 単独ファイル登録).
+1. RAG 管理 → **+ 単独ファイル登録**.
 2. Enter title (細部), tags, viewing range; upload file.
 3. Save; extraction job starts.
 4. Enable ㋹ on the file row when ready for AI search.
+
+### Verify viewing range after registration
+
+1. Register a case with viewing range A and attachments (step 1 in [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)).
+2. Register a standalone file with viewing range B.
+3. Open RAG 管理 → check **閲覧範囲** column (A + ケース継承 / B editable).
+4. Use **閲覧範囲** filter to show only A or B.
 
 ### Extraction failed
 
@@ -105,6 +118,7 @@ Find the file in the list → **再抽出** → re-enable ㋹ after success.
 
 ## Related
 
+- [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)
 - [WebUI Design](./08-webui-design.md)
 - [Ingestion Design](./07-ingestion-design.md)
 - [Ollama Integration Guide](./15-ollama-integration.md)

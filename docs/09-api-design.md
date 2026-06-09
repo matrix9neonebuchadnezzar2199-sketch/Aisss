@@ -162,7 +162,52 @@ Rules:
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/rag/status` | Index statistics and queue depth. |
+| `GET` | `/api/rag/tree` | Genre / group / file tree for RAGの体系管理. |
+| `GET` | `/api/rag/files` | Filtered file list with pipeline, RAG toggle, and viewing range metadata. |
+| `PATCH` | `/api/rag/files/{id}/enable` | Set RAG 有効化 (㋹). |
+| `POST` | `/api/rag/standalone-files` | Standalone file registration. |
+| `PATCH` | `/api/rag/standalone-files/{id}/viewing-ranges` | Update standalone file viewing range from RAG admin. |
 | `GET` | `/api/rag/cases/{case_id}/sync-state` | Per-case pipeline state. |
+
+### `GET /api/rag/files` response (per item)
+
+Each row includes:
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | UUID | Attachment or standalone file ID. |
+| `source_kind` | string | `case_attachment` or `standalone`. |
+| `case_id` | UUID, nullable | Parent case for attachments; used for “open case” navigation. |
+| `viewing_range_ids` | UUID[] | Effective viewing range IDs. |
+| `viewing_range_labels` | string[] | Display labels (e.g. `分析担当者のみ`). |
+| `editable_viewing_range` | boolean | `true` only when `source_kind = standalone`. |
+| `pipeline_status` | string | Extraction / embedding state. |
+| `rag_enabled` | boolean | ㋹ state. |
+
+Case attachments inherit `viewing_range_ids` from `case_viewing_ranges`. They are never editable via this API.
+
+### `PATCH /api/rag/standalone-files/{id}/viewing-ranges`
+
+Request:
+
+```json
+{
+  "viewing_range_ids": ["uuid-of-range-b"]
+}
+```
+
+Response: updated file row. Triggers audit log and RAG metadata resync job.
+
+Attempts to PATCH viewing range on a `case_attachment` ID must return **409 Conflict**:
+
+```json
+{
+  "error": {
+    "code": "change_on_case_form",
+    "message": "Viewing range for case attachments must be changed on the case form."
+  }
+}
+```
 
 ## Ollama APIs
 

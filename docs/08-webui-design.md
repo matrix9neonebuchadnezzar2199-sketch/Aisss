@@ -11,7 +11,8 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 ### 登録
 
 - **ケース（事象）** — case registration form (Excel import integrated here).
-- **単独ファイル（参照資料）** — standalone file upload without full case metadata (peer with ケース（事象） under 登録).
+
+Standalone reference files are registered from **RAG 管理 → + 単独ファイル登録** (not a sidebar item).
 
 ### 検索
 
@@ -23,7 +24,7 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 - **RAG 管理** — tree navigator (ジャンル → 細部 → ファイル) plus list/search and RAG enablement (㋹). Nested under 管理 with other admin items.
 - **モデル管理（API 連携）** — Ollama model list and role assignment via `api/ollama`.
 - **マスタ管理** — editable master lists.
-- **ユーザー・グループ管理** — planned; mock not yet implemented.
+- **ユーザー・グループ管理** — users, groups, viewing-range-to-group mapping (mock implemented).
 - **監査ログ** — planned; mock not yet implemented.
 - **ジョブ状態** — planned; mock not yet implemented.
 
@@ -139,6 +140,8 @@ The AI screen must not show:
 
 See [RAG Admin Guide](./16-rag-admin-guide.md).
 
+Opened from **RAG 管理 → + 単独ファイル登録** (no sidebar entry under 登録).
+
 Operators register reference files that are not tied to a full case record:
 
 - Title (細部 group name), tags (new entry + history search; chips with per-tag × remove), viewing range.
@@ -149,7 +152,7 @@ Operators register reference files that are not tied to a full case record:
 
 See [RAG Admin Guide](./16-rag-admin-guide.md).
 
-Layout: **left tree** (ジャンル → 細部 → ファイル) and **right panel** (search + list).
+Layout: **left panel「RAGの体系管理」** (genre / group / file tree with cascading ㋹ checkboxes) and **right panel** (search + list).
 
 Genres (initial):
 
@@ -158,14 +161,19 @@ Genres (initial):
 
 Right panel (single view):
 
-- Title, tag chips (history search, multi-select, × remove), and date filters.
-- File table: pipeline status (抽出済 / 埋め込み待ち / 抽出失敗) and ㋹ RAG toggle per row in one screen.
-- Retry extraction on failed rows; save applies RAG enablement changes.
+- Title, tag chips (history search, multi-select, × remove), date filters, and **閲覧範囲** filter.
+- File table columns: 細部/ファイル, **閲覧範囲**, パイプライン, ㋹ RAG, 操作.
+- **閲覧範囲** display:
+  - Case attachments: inherited label + **ケース継承** badge (read-only). Click opens warning dialog; **ケースを開く** navigates to case form.
+  - Standalone files: editable select; save applies `PATCH /api/rag/standalone-files/{id}/viewing-ranges`.
+- Per-row **削除** (warning dialog); retry extraction on failed rows; save applies RAG enablement changes.
+
+See [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md) for the full operator flow (register with A/B → verify in RAG admin).
 
 Registration paths (not upload on this screen):
 
 1. **ケース添付** — 登録 → ケース（事象）.
-2. **単独ファイル** — 登録 → 単独ファイル（参照資料）, or **+ 単独ファイル登録** on RAG 管理.
+2. **単独ファイル** — **+ 単独ファイル登録** on RAG 管理.
 
 Fine-grained hierarchy rules (細部 naming) are TBD after mock review.
 
@@ -208,16 +216,15 @@ Each master value should support active/inactive status rather than hard deletio
 
 ## Permission Management
 
+See [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md).
+
 Operators can manage:
 
-- Users.
-- Groups.
-- Group membership.
-- Viewing range definitions.
-- Viewing range to group mapping.
+- Users and group membership (tabs: ユーザー / グループ).
+- **閲覧範囲マッピング** — which groups may access each viewing range (`group_viewing_ranges`).
 - Roles for admin, operator, reviewer, and general user.
 
-Permission changes should trigger RAG metadata update or reindex jobs.
+**マスタ管理** defines viewing range *labels*; **ユーザー・グループ管理** defines *who* can access each range. Permission changes should trigger RAG metadata update or reindex jobs.
 
 ## Audit Log Screen
 

@@ -24,6 +24,9 @@ erDiagram
   keywords ||--o{ case_keywords : labels
   cases ||--o{ extracted_texts : has
   attachments ||--o{ extracted_texts : produces
+  standalone_files ||--o{ standalone_file_viewing_ranges : has
+  viewing_ranges ||--o{ standalone_file_viewing_ranges : selected
+  standalone_files ||--o{ extracted_texts : produces
   extracted_texts ||--o{ rag_chunks : split_into
   rag_chunks ||--o{ rag_sync_states : indexed_as
   cases ||--o{ audit_logs : audited_by
@@ -87,13 +90,41 @@ erDiagram
 | `extraction_status` | Text | `pending`, `running`, `succeeded`, `failed`, `skipped`. |
 | `extraction_error` | Text | Last error summary. |
 
+Case attachments do **not** store their own viewing range. They inherit from `case_viewing_ranges` on the parent case.
+
+### `standalone_files`
+
+Reference files registered without a full case record (RAG 管理 → + 単独ファイル登録).
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID | Primary key. |
+| `title` | Text | 細部 group name / display title. |
+| `genre` | Text | Initial value: `standalone_reference`. |
+| `file_name` | Text | Original file name. |
+| `storage_key` | Text | Object storage key. |
+| `content_type` | Text | MIME type. |
+| `file_size` | Bigint | Bytes. |
+| `sha256` | Text | Deduplication and audit. |
+| `registered_by` | UUID | FK to users. |
+| `registered_at` | Timestamp | Server timestamp. |
+| `extraction_status` | Text | `pending`, `running`, `succeeded`, `failed`, `skipped`. |
+| `extraction_error` | Text | Last error summary. |
+| `rag_enabled` | Boolean | ㋹ toggle state. |
+| `created_at` | Timestamp | Server timestamp. |
+| `updated_at` | Timestamp | Server timestamp. |
+| `deleted_at` | Timestamp, nullable | Soft delete. |
+
+Viewing range is stored in `standalone_file_viewing_ranges`, not on the file row directly.
+
 ### `extracted_texts`
 
 | Column | Type | Notes |
 |---|---|---|
 | `id` | UUID | Primary key. |
-| `case_id` | UUID | FK to `cases`. |
-| `attachment_id` | UUID, nullable | Null for case body derived text. |
+| `case_id` | UUID, nullable | FK to `cases`; null for standalone-only text. |
+| `attachment_id` | UUID, nullable | Null for case body or standalone file text. |
+| `standalone_file_id` | UUID, nullable | FK to `standalone_files` when source is standalone. |
 | `source_type` | Text | `case_body`, `office_parse`, `pdf_parse`, `ocr`, `asr`, `manual_text`. |
 | `text` | Text | Extracted or joined text. |
 | `language` | Text | Example: `ja`. |
@@ -105,8 +136,9 @@ erDiagram
 | Column | Type | Notes |
 |---|---|---|
 | `id` | UUID | Primary key. |
-| `case_id` | UUID | FK to `cases`. |
-| `attachment_id` | UUID, nullable | Preserves source. |
+| `case_id` | UUID, nullable | FK to `cases`; null for standalone chunks. |
+| `attachment_id` | UUID, nullable | Preserves attachment source. |
+| `standalone_file_id` | UUID, nullable | Preserves standalone file source. |
 | `extracted_text_id` | UUID | FK to `extracted_texts`. |
 | `chunk_index` | Integer | Stable order. |
 | `chunk_text` | Text | Text sent for embedding. |
@@ -164,6 +196,7 @@ Initial master tables:
 |---|---|
 | `case_conditions` | Multi-select handling conditions. |
 | `case_viewing_ranges` | Allowed viewing ranges for a case. |
+| `standalone_file_viewing_ranges` | Allowed viewing ranges for a standalone file. |
 | `case_keywords` | Normalized keywords from keyword1-6. |
 | `case_collectors` | Multi-value 情報収集者. |
 | `user_groups` | User membership in groups. |

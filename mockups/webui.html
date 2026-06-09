@@ -318,40 +318,74 @@
     }
     .rag-tree-head {
       padding: 10px 12px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
-      color: var(--fg-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      color: var(--fg-default);
       border-bottom: 1px solid var(--border-default);
     }
     .rag-tree { list-style: none; padding: 6px 0; margin: 0; font-size: 13px; }
-    .rag-tree ul { list-style: none; padding-left: 14px; margin: 0; }
+    .rag-tree ul { list-style: none; padding-left: 10px; margin: 0; }
     .rag-tree li { margin: 0; }
+    .rag-tree-node.collapsed > ul { display: none; }
+    .rag-tree-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-left: 2px solid transparent;
+    }
+    .rag-tree-item:hover .rag-tree-btn { background: var(--canvas-inset); }
+    .rag-tree-item.active {
+      background: var(--info-subtle);
+      border-left-color: var(--accent-fg);
+    }
+    .rag-tree-item.active .rag-tree-btn {
+      color: var(--accent-emphasis);
+      font-weight: 600;
+    }
+    .rag-tree-check-wrap {
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      padding: 6px 0 6px 8px;
+      cursor: pointer;
+    }
+    .rag-tree-check-wrap input {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--success-fg);
+    }
     .rag-tree-btn {
       display: flex;
       align-items: center;
       gap: 6px;
-      width: 100%;
-      padding: 6px 10px;
+      flex: 1;
+      min-width: 0;
+      padding: 6px 10px 6px 2px;
       border: none;
       background: transparent;
       color: var(--fg-default);
       font: inherit;
       text-align: left;
       cursor: pointer;
-      border-left: 2px solid transparent;
     }
-    .rag-tree-btn:hover { background: var(--canvas-inset); }
-    .rag-tree-btn.active {
-      background: var(--info-subtle);
-      border-left-color: var(--accent-fg);
-      color: var(--accent-emphasis);
-      font-weight: 600;
+    .rag-tree-btn .chev { color: var(--fg-subtle); font-size: 10px; width: 12px; flex-shrink: 0; }
+    .rag-tree-btn .rag-tree-label {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .rag-tree-btn .chev { color: var(--fg-subtle); font-size: 10px; width: 12px; }
-    .rag-tree-btn.file { padding-left: 28px; font-size: 12px; color: var(--fg-muted); }
-    .rag-tree-btn.file.active { color: var(--accent-emphasis); }
+    .rag-tree-btn .rag-tree-count {
+      flex-shrink: 0;
+      color: var(--fg-muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .rag-tree-item.file .rag-tree-btn { font-size: 12px; color: var(--fg-muted); }
+    .rag-tree-item.file.active .rag-tree-btn { color: var(--accent-emphasis); }
     .rag-file-list { font-size: 13px; }
     .rag-file-list-head {
       display: flex;
@@ -364,9 +398,10 @@
       border-bottom: 1px solid var(--border-default);
     }
     .rag-file-list-head .fname { flex: 1; }
+    .rag-file-list-head .col-viewing-range { width: 148px; }
     .rag-file-list-head .col-pipeline { width: 88px; }
     .rag-file-list-head .col-rag { width: 100px; }
-    .rag-file-list-head .col-actions { width: 72px; }
+    .rag-file-list-head .col-actions { width: 120px; text-align: right; }
     .rag-file-row {
       display: flex;
       align-items: center;
@@ -376,9 +411,18 @@
     }
     .rag-file-row:hover { background: var(--canvas-inset); }
     .rag-file-row .fname { flex: 1; min-width: 0; }
+    .rag-file-row .col-viewing-range { width: 148px; flex-shrink: 0; }
     .rag-file-row .col-pipeline { width: 88px; flex-shrink: 0; }
     .rag-file-row .col-rag { width: 100px; flex-shrink: 0; }
-    .rag-file-row .col-actions { width: 72px; flex-shrink: 0; }
+    .rag-file-row .col-actions {
+      width: 120px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
     .rag-file-row .col-rag label {
       display: inline-flex;
       align-items: center;
@@ -388,6 +432,88 @@
       white-space: nowrap;
     }
     .rag-file-row.nested { padding-left: 28px; }
+    .rag-file-row.hidden-by-filter { display: none; }
+    .rag-viewing-readonly {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--fg-default);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .rag-viewing-readonly:hover { color: var(--accent-emphasis); text-decoration: underline; }
+    .rag-viewing-inherit { font-size: 10px; padding: 1px 5px; }
+    .rag-viewing-select {
+      width: 100%;
+      max-width: 140px;
+      font-size: 12px;
+      padding: 3px 6px;
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius);
+      background: var(--input-bg);
+      color: var(--fg-default);
+      font-family: inherit;
+    }
+    .filter-bar.rag-filter-viewing {
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-bar.rag-filter-viewing label {
+      font-size: 12px;
+      color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+    .filter-bar.rag-filter-viewing select {
+      flex: 1;
+      max-width: 280px;
+      font-size: 13px;
+      padding: 5px 8px;
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius);
+      background: var(--input-bg);
+      color: var(--fg-default);
+      font-family: inherit;
+    }
+    .rag-case-viewing-dialog h3 { color: var(--attention-fg); }
+    .perm-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-default);
+      padding-bottom: 0;
+    }
+    .perm-tabs button {
+      padding: 8px 14px;
+      border: none;
+      background: transparent;
+      color: var(--fg-muted);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .perm-tabs button.active {
+      color: var(--fg-default);
+      font-weight: 600;
+      border-bottom-color: var(--accent-fg);
+    }
+    .perm-panel { display: none; }
+    .perm-panel.active { display: block; }
+    .perm-mapping-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+    .perm-mapping-table th,
+    .perm-mapping-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-muted);
+      text-align: left;
+    }
+    .perm-mapping-table th { color: var(--fg-muted); font-size: 11px; font-weight: 600; }
     .rag-enabled-mark { color: var(--success-fg); font-weight: 700; }
     .rag-register-note {
       font-size: 12px;
@@ -625,6 +751,67 @@
     }
     .btn-excel:hover { background: #2c974b; color: #fff; }
     .btn-sm { padding: 3px 10px; font-size: 12px; }
+    .btn-danger {
+      background: transparent;
+      border-color: var(--danger-fg);
+      color: var(--danger-fg);
+    }
+    .btn-danger:hover {
+      background: var(--danger-subtle);
+      border-color: var(--danger-fg);
+      color: var(--danger-fg);
+    }
+
+    /* RAG file delete confirm */
+    .rag-delete-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(1, 4, 9, 0.6);
+      padding: 16px;
+    }
+    .rag-delete-overlay.hidden { display: none; }
+    .rag-delete-dialog {
+      width: min(420px, 100%);
+      background: var(--canvas-default);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg, 8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      padding: 20px;
+    }
+    .rag-delete-dialog h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: var(--danger-fg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rag-delete-dialog .rag-delete-target {
+      margin: 0 0 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg-default);
+      word-break: break-all;
+    }
+    .rag-delete-dialog .rag-delete-warn {
+      margin: 0 0 16px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--fg-muted);
+      padding: 10px 12px;
+      background: var(--danger-subtle);
+      border: 1px solid rgba(248, 81, 73, 0.35);
+      border-radius: var(--radius);
+    }
+    .rag-delete-dialog .rag-delete-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
     .panel-header-title-row {
       display: flex;
       align-items: center;
@@ -969,7 +1156,6 @@
     <nav class="sidebar-nav">
       <p class="sidebar-group-title">登録</p>
       <a href="#" data-view="register" title="ケース（事象）登録"><span class="nav-lead">　</span><span class="nav-icon">✏️</span><span class="sidebar-label">ケース（事象）</span></a>
-      <a href="#" data-view="standalone-file" title="単独ファイル（参照資料）"><span class="nav-lead">　</span><span class="nav-icon">📎</span><span class="sidebar-label">単独ファイル（参照資料）</span></a>
 
       <p class="sidebar-group-title">検索</p>
       <a href="#" data-view="search" class="active" title="ケース（事象）検索"><span class="nav-lead">　</span><span class="nav-icon">🔍</span><span class="sidebar-label">ケース（事象）</span></a>
@@ -979,8 +1165,7 @@
       <a href="#" data-view="rag-admin" title="RAG 管理"><span class="nav-lead">　</span><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
       <a href="#" data-view="models" title="モデル管理（API 連携）"><span class="nav-lead">　</span><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理（API 連携）</span></a>
       <a href="#" data-view="masters" title="マスタ管理"><span class="nav-lead">　</span><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
-      <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-lead">　</span><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
-      <span class="sidebar-sub-hint">モック未実装</span>
+      <a href="#" data-view="permissions" title="ユーザー・グループ管理"><span class="nav-lead">　</span><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
       <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-lead">　</span><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
       <span class="sidebar-sub-hint">モック未実装</span>
       <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-lead">　</span><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
@@ -1259,56 +1444,148 @@
           <p class="rag-register-note">
             <strong>ファイルの登録方法:</strong>
             ① <strong>ケース添付</strong> — 登録 → ケース（事象）でファイルを添付。
-            ② <strong>単独ファイル</strong> — 登録 → 単独ファイル（参照資料）、または本画面の「+ 単独ファイル登録」。
-            いずれも左ツリー（ジャンル → 細部 → ファイル）に表示され、ここで抽出状態の確認と RAG 有効化を行います。
+            ② <strong>単独ファイル</strong> — 本画面の「+ 単独ファイル登録」。
+            いずれも左の「RAGの体系管理」に表示され、ここで抽出状態の確認と RAG 有効化を行います。
           </p>
           <div class="rag-layout">
             <div class="rag-tree-panel">
-              <div class="rag-tree-head">ジャンル → 細部 → ファイル</div>
+              <div class="rag-tree-head">RAGの体系管理</div>
               <ul class="rag-tree" id="ragTree">
-                <li>
-                  <button type="button" class="rag-tree-btn active" data-rag-genre="case">
-                    <span class="chev">▼</span> ケース（事象）
-                  </button>
+                <li class="rag-tree-node" data-rag-node="genre-case">
+                  <div class="rag-tree-item active">
+                    <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                      <input type="checkbox" class="rag-tree-check" />
+                    </label>
+                    <button type="button" class="rag-tree-btn" data-rag-genre="case">
+                      <span class="chev">▼</span> ケース（事象）
+                    </button>
+                  </div>
                   <ul>
-                    <li>
-                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 2025年度経理データ</button>
+                    <li class="rag-tree-node" data-rag-node="group-2025">
+                      <div class="rag-tree-item">
+                        <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                          <input type="checkbox" class="rag-tree-check" />
+                        </label>
+                        <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 2025年度経理データ</button>
+                      </div>
                       <ul>
-                        <li><button type="button" class="rag-tree-btn file">2025年度.xlsx</button></li>
+                        <li class="rag-tree-node" data-rag-file="file-2025">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-2025" />
+                            </label>
+                            <button type="button" class="rag-tree-btn">2025年度.xlsx</button>
+                          </div>
+                        </li>
                       </ul>
                     </li>
-                    <li>
-                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 2026年度経理データ</button>
+                    <li class="rag-tree-node" data-rag-node="group-2026">
+                      <div class="rag-tree-item">
+                        <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                          <input type="checkbox" class="rag-tree-check" />
+                        </label>
+                        <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 2026年度経理データ</button>
+                      </div>
                       <ul>
-                        <li><button type="button" class="rag-tree-btn file">2026年度.xlsx</button></li>
+                        <li class="rag-tree-node" data-rag-file="file-2026">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG（埋め込み待ち）">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-2026" disabled />
+                            </label>
+                            <button type="button" class="rag-tree-btn">2026年度.xlsx</button>
+                          </div>
+                        </li>
                       </ul>
                     </li>
-                    <li>
-                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> ●山の自然</button>
+                    <li class="rag-tree-node" data-rag-node="group-yama">
+                      <div class="rag-tree-item">
+                        <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                          <input type="checkbox" class="rag-tree-check" />
+                        </label>
+                        <button type="button" class="rag-tree-btn"><span class="chev">▼</span> ●山の自然</button>
+                      </div>
                       <ul>
-                        <li><button type="button" class="rag-tree-btn file">植物.pdf</button></li>
-                        <li><button type="button" class="rag-tree-btn file">河川名.xlsx</button></li>
+                        <li class="rag-tree-node" data-rag-file="file-plant">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-plant" checked />
+                            </label>
+                            <button type="button" class="rag-tree-btn">植物.pdf</button>
+                          </div>
+                        </li>
+                        <li class="rag-tree-node" data-rag-file="file-river">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-river" />
+                            </label>
+                            <button type="button" class="rag-tree-btn">河川名.xlsx</button>
+                          </div>
+                        </li>
                       </ul>
                     </li>
-                    <li>
-                      <button type="button" class="rag-tree-btn"><span class="chev">▼</span> ハリウッド俳優</button>
+                    <li class="rag-tree-node" data-rag-node="group-hollywood">
+                      <div class="rag-tree-item">
+                        <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                          <input type="checkbox" class="rag-tree-check" />
+                        </label>
+                        <button type="button" class="rag-tree-btn"><span class="chev">▼</span> ハリウッド俳優</button>
+                      </div>
                       <ul>
-                        <li><button type="button" class="rag-tree-btn file">男性.xlsx</button></li>
-                        <li><button type="button" class="rag-tree-btn file">女性.xlsx</button></li>
+                        <li class="rag-tree-node" data-rag-file="file-actor-m">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG（抽出失敗）">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-actor-m" disabled />
+                            </label>
+                            <button type="button" class="rag-tree-btn">男性.xlsx</button>
+                          </div>
+                        </li>
+                        <li class="rag-tree-node" data-rag-file="file-actor-f">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-actor-f" checked />
+                            </label>
+                            <button type="button" class="rag-tree-btn">女性.xlsx</button>
+                          </div>
+                        </li>
                       </ul>
                     </li>
                   </ul>
                 </li>
-                <li>
-                  <button type="button" class="rag-tree-btn" data-rag-genre="standalone">
-                    <span class="chev">▸</span> 単独ファイル（参照資料）
-                  </button>
+                <li class="rag-tree-node" data-rag-node="genre-standalone">
+                  <div class="rag-tree-item">
+                    <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                      <input type="checkbox" class="rag-tree-check" />
+                    </label>
+                    <button type="button" class="rag-tree-btn" data-rag-genre="standalone">
+                      <span class="chev">▼</span> 単独ファイル（参照資料）
+                    </button>
+                  </div>
+                  <ul>
+                    <li class="rag-tree-node" data-rag-node="group-ref2026">
+                      <div class="rag-tree-item">
+                        <label class="rag-tree-check-wrap" title="㋹ 配下を一括選択">
+                          <input type="checkbox" class="rag-tree-check" />
+                        </label>
+                        <button type="button" class="rag-tree-btn"><span class="chev">▼</span> 参考資料2026</button>
+                      </div>
+                      <ul>
+                        <li class="rag-tree-node" data-rag-file="file-standalone-1">
+                          <div class="rag-tree-item file">
+                            <label class="rag-tree-check-wrap" title="㋹ RAG">
+                              <input type="checkbox" class="rag-tree-check" data-rag-file-id="file-standalone-1" />
+                            </label>
+                            <button type="button" class="rag-tree-btn">条例案.pdf</button>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </div>
             <div class="rag-main">
               <p class="rag-register-note" style="margin-bottom:8px">
-                ㋹ = AI 検索のベクトル索引に含める。パイプライン状態と RAG 有効化を同一画面で操作します。
+                ㋹ = AI 検索のベクトル索引に含める。閲覧範囲は一覧で確認できます。ケース添付はケースから継承（変更はケース側）、単独ファイルのみここで編集できます。
               </p>
               <div class="rag-filter-panel">
                 <div class="filter-bar rag-filter-row">
@@ -1329,52 +1606,134 @@
                     </div>
                   </div>
                 </div>
+                <div class="filter-bar rag-filter-row rag-filter-viewing">
+                  <label for="ragViewingRangeFilter">閲覧範囲</label>
+                  <select id="ragViewingRangeFilter">
+                    <option value="">すべて</option>
+                    <option value="分析担当者のみ">分析担当者のみ（A）</option>
+                    <option value="分析第一課">分析第一課（B）</option>
+                    <option value="全員">全員</option>
+                  </select>
+                </div>
               </div>
-              <div class="rag-file-list">
+              <div class="rag-file-list" id="ragFileList">
                 <div class="rag-file-list-head">
                   <span class="fname">細部 / ファイル</span>
+                  <span class="col-viewing-range">閲覧範囲</span>
                   <span class="col-pipeline">パイプライン</span>
                   <span class="col-rag">㋹ RAG</span>
-                  <span class="col-actions"></span>
+                  <span class="col-actions">操作</span>
                 </div>
-                <div class="rag-file-row">
+                <div class="rag-file-row" data-source-kind="case_attachment" data-viewing-range="全員" data-case-id="CASE-2025-KEIRI">
                   <span class="fname">2025年度経理データ / 2025年度.xlsx</span>
+                  <span class="col-viewing-range">
+                    <button type="button" class="rag-viewing-readonly" data-rag-case-viewing-guard data-case-id="CASE-2025-KEIRI" title="クリックで詳細">
+                      全員 <span class="label label-purple rag-viewing-inherit">ケース継承</span>
+                    </button>
+                  </span>
                   <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
-                  <span class="col-rag"><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span></label></span>
-                  <span class="col-actions"></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-2025" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button></span>
                 </div>
-                <div class="rag-file-row">
+                <div class="rag-file-row" data-source-kind="case_attachment" data-viewing-range="分析担当者のみ" data-case-id="CASE-2026-KEIRI">
                   <span class="fname">2026年度経理データ / 2026年度.xlsx</span>
+                  <span class="col-viewing-range">
+                    <button type="button" class="rag-viewing-readonly" data-rag-case-viewing-guard data-case-id="CASE-2026-KEIRI">
+                      分析担当者のみ <span class="label label-purple rag-viewing-inherit">ケース継承</span>
+                    </button>
+                  </span>
                   <span class="col-pipeline"><span class="label label-warning">埋め込み待ち</span></span>
-                  <span class="col-rag"><label><input type="checkbox" disabled title="埋め込み完了後に有効化可能" /> <span class="rag-enabled-mark">㋹</span></label></span>
-                  <span class="col-actions"></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-2026" disabled title="埋め込み完了後に有効化可能" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button></span>
                 </div>
-                <div class="rag-file-row">
+                <div class="rag-file-row" data-source-kind="case_attachment" data-viewing-range="分析担当者のみ" data-case-id="CASE-YAMA">
                   <span class="fname"><span class="rag-enabled-mark">㋹</span> ●山の自然 / 植物.pdf</span>
+                  <span class="col-viewing-range">
+                    <button type="button" class="rag-viewing-readonly" data-rag-case-viewing-guard data-case-id="CASE-YAMA">
+                      分析担当者のみ <span class="label label-purple rag-viewing-inherit">ケース継承</span>
+                    </button>
+                  </span>
                   <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
-                  <span class="col-rag"><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span></label></span>
-                  <span class="col-actions"></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-plant" checked /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button></span>
                 </div>
-                <div class="rag-file-row nested">
+                <div class="rag-file-row nested" data-source-kind="case_attachment" data-viewing-range="分析担当者のみ" data-case-id="CASE-YAMA">
                   <span class="fname">河川名.xlsx</span>
+                  <span class="col-viewing-range">
+                    <button type="button" class="rag-viewing-readonly" data-rag-case-viewing-guard data-case-id="CASE-YAMA">
+                      分析担当者のみ <span class="label label-purple rag-viewing-inherit">ケース継承</span>
+                    </button>
+                  </span>
                   <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
-                  <span class="col-rag"><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span></label></span>
-                  <span class="col-actions"></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-river" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button></span>
                 </div>
-                <div class="rag-file-row">
+                <div class="rag-file-row" data-source-kind="case_attachment" data-viewing-range="分析担当者のみ" data-case-id="CASE-HOLLYWOOD">
                   <span class="fname">ハリウッド俳優 / 男性.xlsx</span>
+                  <span class="col-viewing-range">
+                    <button type="button" class="rag-viewing-readonly" data-rag-case-viewing-guard data-case-id="CASE-HOLLYWOOD">
+                      分析担当者のみ <span class="label label-purple rag-viewing-inherit">ケース継承</span>
+                    </button>
+                  </span>
                   <span class="col-pipeline"><span class="label label-danger">抽出失敗</span></span>
-                  <span class="col-rag"><label><input type="checkbox" disabled title="抽出失敗のため不可" /> <span class="rag-enabled-mark">㋹</span></label></span>
-                  <span class="col-actions"><button class="btn btn-sm">再抽出</button></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-actor-m" disabled title="抽出失敗のため不可" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions">
+                    <button type="button" class="btn btn-sm">再抽出</button>
+                    <button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button>
+                  </span>
                 </div>
-                <div class="rag-file-row nested">
+                <div class="rag-file-row nested" data-source-kind="case_attachment" data-viewing-range="分析担当者のみ" data-case-id="CASE-HOLLYWOOD">
                   <span class="fname"><span class="rag-enabled-mark">㋹</span> 女性.xlsx</span>
+                  <span class="col-viewing-range">
+                    <button type="button" class="rag-viewing-readonly" data-rag-case-viewing-guard data-case-id="CASE-HOLLYWOOD">
+                      分析担当者のみ <span class="label label-purple rag-viewing-inherit">ケース継承</span>
+                    </button>
+                  </span>
                   <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
-                  <span class="col-rag"><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span></label></span>
-                  <span class="col-actions"></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-actor-f" checked /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button></span>
+                </div>
+                <div class="rag-file-row" data-source-kind="standalone" data-viewing-range="分析第一課">
+                  <span class="fname">参考資料2026 / 条例案.pdf</span>
+                  <span class="col-viewing-range">
+                    <select class="rag-viewing-select" data-rag-file-id="file-standalone-1" aria-label="閲覧範囲">
+                      <option value="分析第一課" selected>分析第一課（B）</option>
+                      <option value="分析担当者のみ">分析担当者のみ（A）</option>
+                      <option value="全員">全員</option>
+                    </select>
+                  </span>
+                  <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
+                  <span class="col-rag"><label><input type="checkbox" data-rag-file-id="file-standalone-1" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button type="button" class="btn btn-sm btn-danger" data-rag-delete>削除</button></span>
                 </div>
               </div>
               <button class="btn btn-primary btn-sm" style="margin-top:12px">変更を保存</button>
+            </div>
+            <div id="ragDeleteOverlay" class="rag-delete-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="ragDeleteTitle">
+              <div class="rag-delete-dialog">
+                <h3 id="ragDeleteTitle">⚠ ファイルを削除しますか？</h3>
+                <p class="rag-delete-target" id="ragDeleteTarget"></p>
+                <p class="rag-delete-warn">
+                  この操作は取り消せません。元ファイルの登録、抽出テキスト、ベクトル索引（RAG データ）がすべて削除されます。AI 検索の対象からも除外されます。
+                </p>
+                <div class="rag-delete-actions">
+                  <button type="button" class="btn btn-sm" id="ragDeleteCancel">キャンセル</button>
+                  <button type="button" class="btn btn-sm btn-danger" id="ragDeleteConfirm">削除する</button>
+                </div>
+              </div>
+            </div>
+            <div id="ragCaseViewingOverlay" class="rag-delete-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="ragCaseViewingTitle">
+              <div class="rag-delete-dialog rag-case-viewing-dialog">
+                <h3 id="ragCaseViewingTitle">閲覧範囲はケース単位です</h3>
+                <p class="rag-delete-target" id="ragCaseViewingTarget"></p>
+                <p class="rag-delete-warn">
+                  閲覧範囲はケース（事象）単位で設定されています。ファイル単位では変更できません。変更する場合はケースの登録・編集画面で行ってください。
+                </p>
+                <div class="rag-delete-actions">
+                  <button type="button" class="btn btn-sm" id="ragCaseViewingClose">閉じる</button>
+                  <button type="button" class="btn btn-sm btn-primary" id="ragCaseViewingOpen">ケースを開く</button>
+                </div>
+              </div>
             </div>
           </div>
           <p class="rag-register-note" style="margin-top:16px">※ 細部グループ名・階層ルールはモック確認後に確定します。</p>
@@ -1443,6 +1802,83 @@
               <div class="form-group"><label>ReRank 有効</label><select><option>OFF</option><option>ON</option></select></div>
             </div>
             <button class="btn btn-primary btn-sm" style="margin-top:8px">設定を保存</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ユーザー・グループ管理 -->
+    <section class="view" id="view-permissions">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>ユーザー・グループ管理</h2>
+          <span class="label label-info">閲覧範囲 ↔ グループ連携</span>
+        </div>
+        <div class="panel-body">
+          <p class="rag-register-note" style="margin-bottom:12px">
+            閲覧範囲の<strong>名称</strong>はマスタ管理で定義し、ここでは<strong>どのグループがどの閲覧範囲にアクセスできるか</strong>を設定します。ユーザーをグループに所属させることで、ケース・単独ファイル・AI 検索の権限が決まります。
+          </p>
+          <div class="perm-tabs" role="tablist">
+            <button type="button" class="active" data-perm-tab="users">ユーザー</button>
+            <button type="button" data-perm-tab="groups">グループ</button>
+            <button type="button" data-perm-tab="mapping">閲覧範囲マッピング</button>
+          </div>
+          <div class="perm-panel active" id="permPanelUsers" data-perm-panel="users">
+            <table class="data-table">
+              <thead><tr><th>氏名</th><th>部署</th><th>所属グループ</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>山田 太郎</td><td>分析第一課</td><td>分析担当者, 全員閲覧</td><td><button class="btn btn-sm">編集</button></td></tr>
+                <tr><td>鈴木 花子</td><td>分析第二課</td><td>分析第一課</td><td><button class="btn btn-sm">編集</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="perm-panel" id="permPanelGroups" data-perm-panel="groups">
+            <table class="data-table">
+              <thead><tr><th>グループ名</th><th>メンバー数</th><th>説明</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>分析担当者</td><td>12</td><td>分析担当者のみ（A）に対応</td><td><button class="btn btn-sm">編集</button></td></tr>
+                <tr><td>分析第一課</td><td>8</td><td>分析第一課（B）に対応</td><td><button class="btn btn-sm">編集</button></td></tr>
+                <tr><td>全員閲覧</td><td>48</td><td>全員に対応</td><td><button class="btn btn-sm">編集</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="perm-panel" id="permPanelMapping" data-perm-panel="mapping">
+            <table class="perm-mapping-table">
+              <thead>
+                <tr><th>閲覧範囲（マスタ）</th><th>許可グループ</th><th>備考</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>分析担当者のみ（A）</strong></td>
+                  <td>
+                    <select style="min-width:200px">
+                      <option selected>分析担当者</option>
+                      <option>分析担当者, 全員閲覧</option>
+                    </select>
+                  </td>
+                  <td>ケース登録 step1 の「A」</td>
+                </tr>
+                <tr>
+                  <td><strong>分析第一課（B）</strong></td>
+                  <td>
+                    <select style="min-width:200px">
+                      <option selected>分析第一課</option>
+                    </select>
+                  </td>
+                  <td>単独ファイル登録 step2 の「B」</td>
+                </tr>
+                <tr>
+                  <td><strong>全員</strong></td>
+                  <td>
+                    <select style="min-width:200px">
+                      <option selected>全員閲覧</option>
+                    </select>
+                  </td>
+                  <td>全認証ユーザー</td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-primary btn-sm" style="margin-top:12px">マッピングを保存</button>
           </div>
         </div>
       </div>
@@ -1594,12 +2030,160 @@
     excelFileInput.value = '';
   });
 
-  document.querySelectorAll('#ragTree .rag-tree-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#ragTree .rag-tree-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  (function initRagTree() {
+    const tree = document.getElementById('ragTree');
+    if (!tree) return;
+
+    function listCheckbox(fileId) {
+      return document.querySelector('.rag-file-row input[data-rag-file-id="' + fileId + '"]');
+    }
+
+    function syncListCheckbox(fileId, checked) {
+      const listCb = listCheckbox(fileId);
+      if (listCb && !listCb.disabled) listCb.checked = checked;
+    }
+
+    function descendantChecks(nodeLi) {
+      return Array.from(nodeLi.querySelectorAll(':scope ul .rag-tree-check'));
+    }
+
+    function childNodeChecks(nodeLi) {
+      const childUl = nodeLi.querySelector(':scope > ul');
+      if (!childUl) return [];
+      return Array.from(childUl.querySelectorAll(':scope > li > .rag-tree-item > .rag-tree-check-wrap > .rag-tree-check'));
+    }
+
+    function applyParentState(nodeLi) {
+      const parentCb = nodeLi.querySelector(':scope > .rag-tree-item > .rag-tree-check-wrap > .rag-tree-check');
+      if (!parentCb || parentCb.disabled) return;
+      const children = childNodeChecks(nodeLi);
+      if (!children.length) return;
+      const enabled = children.filter(c => !c.disabled);
+      const checkedCount = enabled.filter(c => c.checked).length;
+      if (!enabled.length) return;
+      if (checkedCount === 0) {
+        parentCb.checked = false;
+        parentCb.indeterminate = false;
+      } else if (checkedCount === enabled.length) {
+        parentCb.checked = true;
+        parentCb.indeterminate = false;
+      } else {
+        parentCb.checked = false;
+        parentCb.indeterminate = true;
+      }
+    }
+
+    function bubbleParentState(startLi) {
+      let li = startLi.parentElement?.closest('#ragTree li.rag-tree-node');
+      while (li) {
+        applyParentState(li);
+        li = li.parentElement?.closest('#ragTree li.rag-tree-node');
+      }
+    }
+
+    function cascadeDown(nodeLi, checked) {
+      descendantChecks(nodeLi).forEach(cb => {
+        if (cb.disabled) return;
+        cb.checked = checked;
+        const fileId = cb.dataset.ragFileId;
+        if (fileId) syncListCheckbox(fileId, checked);
+      });
+    }
+
+    tree.querySelectorAll('.rag-tree-check').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const nodeLi = cb.closest('li.rag-tree-node');
+        if (!nodeLi) return;
+        cb.indeterminate = false;
+
+        if (cb.dataset.ragFileId) {
+          syncListCheckbox(cb.dataset.ragFileId, cb.checked);
+        } else {
+          cascadeDown(nodeLi, cb.checked);
+        }
+
+        bubbleParentState(nodeLi);
+      });
     });
-  });
+
+    document.querySelectorAll('.rag-file-row input[data-rag-file-id]').forEach(listCb => {
+      listCb.addEventListener('change', () => {
+        const treeCb = tree.querySelector('.rag-tree-check[data-rag-file-id="' + listCb.dataset.ragFileId + '"]');
+        if (treeCb && !treeCb.disabled) treeCb.checked = listCb.checked;
+        const nodeLi = treeCb?.closest('li.rag-tree-node');
+        if (nodeLi) bubbleParentState(nodeLi);
+      });
+    });
+
+    Array.from(tree.querySelectorAll('.rag-tree-node')).reverse().forEach(nodeLi => applyParentState(nodeLi));
+
+    function isExpandable(nodeLi) {
+      return !!nodeLi?.querySelector(':scope > ul');
+    }
+
+    function setExpanded(nodeLi, expanded) {
+      if (!isExpandable(nodeLi)) return;
+      nodeLi.classList.toggle('collapsed', !expanded);
+      const btn = nodeLi.querySelector(':scope > .rag-tree-item > .rag-tree-btn');
+      const chev = btn?.querySelector('.chev');
+      if (chev) chev.textContent = expanded ? '▼' : '▸';
+      if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
+
+    function toFullWidthNum(n) {
+      return String(n).replace(/\d/g, d => '０１２３４５６７８９'[Number(d)]);
+    }
+
+    function ensureTreeLabelStructure(btn) {
+      if (btn.querySelector('.rag-tree-label') || !btn.querySelector('.chev')) return;
+      const labelText = Array.from(btn.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .map(n => n.textContent.trim())
+        .join('');
+      Array.from(btn.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .forEach(n => n.remove());
+      const label = document.createElement('span');
+      label.className = 'rag-tree-label';
+      label.textContent = labelText;
+      btn.appendChild(label);
+      const countEl = document.createElement('span');
+      countEl.className = 'rag-tree-count';
+      btn.appendChild(countEl);
+    }
+
+    function updateTreeCounts() {
+      tree.querySelectorAll('li.rag-tree-node:not([data-rag-file])').forEach(nodeLi => {
+        const fileCount = nodeLi.querySelectorAll('li[data-rag-file]').length;
+        const btn = nodeLi.querySelector(':scope > .rag-tree-item > .rag-tree-btn');
+        if (!btn) return;
+        ensureTreeLabelStructure(btn);
+        const countEl = btn.querySelector('.rag-tree-count');
+        if (!countEl) return;
+        countEl.textContent = fileCount > 0 ? '\u3000' + toFullWidthNum(fileCount) : '';
+      });
+    }
+
+    tree.querySelectorAll('li.rag-tree-node').forEach(nodeLi => {
+      if (isExpandable(nodeLi)) {
+        nodeLi.classList.add('rag-tree-expandable');
+        setExpanded(nodeLi, !nodeLi.classList.contains('collapsed'));
+      }
+    });
+
+    updateTreeCounts();
+
+    tree.querySelectorAll('.rag-tree-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nodeLi = btn.closest('li.rag-tree-node');
+        if (nodeLi && isExpandable(nodeLi)) {
+          setExpanded(nodeLi, nodeLi.classList.contains('collapsed'));
+        }
+        tree.querySelectorAll('.rag-tree-item').forEach(item => item.classList.remove('active'));
+        btn.closest('.rag-tree-item')?.classList.add('active');
+      });
+    });
+  })();
 
   const TAG_HISTORY_KEY = 'aisss-tag-history';
   const DEFAULT_TAG_HISTORY = [
@@ -1741,6 +2325,132 @@
   }
 
   document.querySelectorAll('[data-tag-input]').forEach(initTagInput);
+
+  (function initRagDelete() {
+    const overlay = document.getElementById('ragDeleteOverlay');
+    const targetEl = document.getElementById('ragDeleteTarget');
+    const cancelBtn = document.getElementById('ragDeleteCancel');
+    const confirmBtn = document.getElementById('ragDeleteConfirm');
+    if (!overlay || !targetEl || !cancelBtn || !confirmBtn) return;
+
+    let pendingRow = null;
+
+    function closeDialog() {
+      overlay.classList.add('hidden');
+      pendingRow = null;
+    }
+
+    function openDialog(row) {
+      const name = row.querySelector('.fname')?.textContent?.trim() || '（名称不明）';
+      pendingRow = row;
+      targetEl.textContent = name;
+      overlay.classList.remove('hidden');
+      confirmBtn.focus();
+    }
+
+    document.querySelectorAll('[data-rag-delete]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('.rag-file-row');
+        if (row) openDialog(row);
+      });
+    });
+
+    cancelBtn.addEventListener('click', closeDialog);
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeDialog();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeDialog();
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      if (pendingRow) pendingRow.remove();
+      closeDialog();
+    });
+  })();
+
+  (function initRagViewingRange() {
+    const filter = document.getElementById('ragViewingRangeFilter');
+    const list = document.getElementById('ragFileList');
+    const overlay = document.getElementById('ragCaseViewingOverlay');
+    const targetEl = document.getElementById('ragCaseViewingTarget');
+    const closeBtn = document.getElementById('ragCaseViewingClose');
+    const openBtn = document.getElementById('ragCaseViewingOpen');
+    let pendingCaseId = null;
+
+    function applyViewingFilter() {
+      if (!filter || !list) return;
+      const value = filter.value;
+      list.querySelectorAll('.rag-file-row').forEach(row => {
+        const match = !value || row.dataset.viewingRange === value;
+        row.classList.toggle('hidden-by-filter', !match);
+      });
+    }
+
+    if (filter) {
+      filter.addEventListener('change', applyViewingFilter);
+    }
+
+    document.querySelectorAll('.rag-viewing-select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const row = sel.closest('.rag-file-row');
+        if (row) row.dataset.viewingRange = sel.value;
+      });
+    });
+
+    function closeCaseDialog() {
+      if (overlay) overlay.classList.add('hidden');
+      pendingCaseId = null;
+    }
+
+    function openCaseDialog(btn) {
+      if (!overlay || !targetEl) return;
+      const row = btn.closest('.rag-file-row');
+      const fname = row?.querySelector('.fname')?.textContent?.trim() || '';
+      pendingCaseId = btn.dataset.caseId || row?.dataset.caseId || null;
+      targetEl.textContent = fname;
+      overlay.classList.remove('hidden');
+      if (openBtn) openBtn.focus();
+    }
+
+    document.querySelectorAll('[data-rag-case-viewing-guard]').forEach(btn => {
+      btn.addEventListener('click', () => openCaseDialog(btn));
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeCaseDialog);
+    if (overlay) {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeCaseDialog();
+      });
+    }
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        if (pendingCaseId) {
+          showView('register');
+        }
+        closeCaseDialog();
+      });
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) {
+        closeCaseDialog();
+      }
+    });
+  })();
+
+  (function initPermTabs() {
+    const tabs = document.querySelectorAll('[data-perm-tab]');
+    const panels = document.querySelectorAll('[data-perm-panel]');
+    if (!tabs.length) return;
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.permTab;
+        tabs.forEach(t => t.classList.toggle('active', t === tab));
+        panels.forEach(p => p.classList.toggle('active', p.dataset.permPanel === id));
+      });
+    });
+  })();
 </script>
 </body>
 </html>
