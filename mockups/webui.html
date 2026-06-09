@@ -274,12 +274,20 @@
       border-left: none;
       box-shadow: inset 3px 0 0 var(--accent-fg);
     }
-    .sidebar a.sidebar-sub {
-      padding-left: 36px;
-      font-size: 12px;
+    .sidebar-nest {
+      margin-left: 14px;
+      padding-left: 10px;
+      border-left: 1px solid var(--border-default);
     }
-    .sidebar a.sidebar-sub .nav-icon { font-size: 12px; width: 16px; }
-    .sidebar.collapsed a.sidebar-sub { padding-left: 8px; }
+    .sidebar a.sidebar-nested {
+      font-size: 12px;
+      padding: 7px 14px;
+    }
+    .sidebar.collapsed .sidebar-nest {
+      margin-left: 0;
+      padding-left: 0;
+      border-left: none;
+    }
     .sidebar a.sidebar-placeholder {
       color: var(--fg-subtle);
       cursor: default;
@@ -290,7 +298,7 @@
       display: block;
       font-size: 10px;
       color: var(--fg-subtle);
-      padding: 0 16px 4px 36px;
+      padding: 0 16px 4px 14px;
       font-weight: 400;
       text-transform: none;
       letter-spacing: 0;
@@ -921,21 +929,23 @@
     <nav class="sidebar-nav">
       <p class="sidebar-group-title">登録</p>
       <a href="#" data-view="register" title="ケース（事象）登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース（事象）</span></a>
-      <a href="#" data-view="standalone-file" class="sidebar-sub" title="単独ファイル（参照資料）"><span class="nav-icon">📎</span><span class="sidebar-label">単独ファイル（参照資料）</span></a>
+      <a href="#" data-view="standalone-file" title="単独ファイル（参照資料）"><span class="nav-icon">📎</span><span class="sidebar-label">単独ファイル（参照資料）</span></a>
 
       <p class="sidebar-group-title">検索</p>
       <a href="#" data-view="search" class="active" title="ケース（事象）検索"><span class="nav-icon">🔍</span><span class="sidebar-label">ケース（事象）</span></a>
-      <a href="#" data-view="ai" class="sidebar-sub" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
+      <div class="sidebar-nest">
+        <a href="#" data-view="ai" class="sidebar-nested" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
+      </div>
 
       <p class="sidebar-group-title">管理</p>
-      <a href="#" data-view="rag-admin" class="sidebar-sub" title="RAG 管理"><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
-      <a href="#" data-view="models" class="sidebar-sub" title="モデル管理（API 連携）"><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理（API 連携）</span></a>
-      <a href="#" data-view="masters" class="sidebar-sub" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
-      <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
+      <a href="#" data-view="rag-admin" title="RAG 管理"><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
+      <a href="#" data-view="models" title="モデル管理（API 連携）"><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理（API 連携）</span></a>
+      <a href="#" data-view="masters" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
+      <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
       <span class="sidebar-sub-hint">モック未実装</span>
-      <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
+      <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
       <span class="sidebar-sub-hint">モック未実装</span>
-      <a href="#" class="sidebar-sub sidebar-placeholder" title="モック未実装"><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
+      <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
       <span class="sidebar-sub-hint">モック未実装</span>
     </nav>
   </aside>

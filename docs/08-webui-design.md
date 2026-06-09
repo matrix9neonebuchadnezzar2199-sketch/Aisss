@@ -11,12 +11,12 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 ### 登録
 
 - **ケース（事象）** — case registration form (Excel import integrated here).
-- **単独ファイル（参照資料）** — standalone file upload without full case metadata (nested under 登録).
+- **単独ファイル（参照資料）** — standalone file upload without full case metadata (peer with ケース（事象） under 登録).
 
 ### 検索
 
 - **ケース（事象）** — metadata and full-text case search.
-- **AI 検索** — permissioned RAG chat with model selector (nested under 検索).
+- **AI 検索** — permissioned RAG chat with model selector (visually nested under 検索 via tree indent).
 
 ### 管理
 
@@ -27,7 +27,7 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 - **監査ログ** — planned; mock not yet implemented.
 - **ジョブ状態** — planned; mock not yet implemented.
 
-Items under 管理 except RAG 管理 are visually nested (indented) in the sidebar. Placeholder items are shown muted until screens exist.
+All items under 管理 share the same left alignment. Placeholder items are shown muted until screens exist.
 
 Excel import is integrated into case registration. Attachment and extraction status appear on case detail, case search, and RAG management.
 
