@@ -415,11 +415,21 @@
       font-weight: 500;
     }
     .data-table a:hover { text-decoration: underline; }
-    .data-table a.case-link::after {
-      content: "↗";
+    .search-hint {
+      font-size: 12px;
+      color: var(--fg-muted);
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      background: var(--canvas-inset);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-default);
+    }
+    .btn-icon-tab {
+      padding: 2px 6px;
       font-size: 11px;
+      line-height: 1.4;
       margin-left: 4px;
-      opacity: 0.6;
+      vertical-align: middle;
     }
     .mono { font-family: var(--mono); font-size: 12px; color: var(--fg-muted); }
 
@@ -691,6 +701,7 @@
               </div>
             </div>
           </div>
+          <p class="search-hint">表題クリックでケース詳細を表示。2件比較は <strong>Ctrl+クリック</strong>（Mac: <strong>⌘+クリック</strong>）で別タブ、または詳細画面の「別タブで開く」を使用。</p>
           <table class="data-table">
             <thead>
               <tr>
@@ -704,8 +715,11 @@
             </thead>
             <tbody>
               <tr>
-                <td class="mono"><a href="case-detail.html?case=CASE-2026-00142" class="case-link" target="_blank" rel="noopener">CASE-2026-00142</a></td>
-                <td><a href="case-detail.html?case=CASE-2026-00142" class="case-link" target="_blank" rel="noopener">東アジア情勢に関する月次分析（2026年1月）</a></td>
+                <td class="mono"><a href="case-detail.html?case=CASE-2026-00142">CASE-2026-00142</a></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00142">東アジア情勢に関する月次分析（2026年1月）</a>
+                  <button type="button" class="btn btn-sm btn-icon-tab" title="別タブで開く" onclick="openCaseNewTab('CASE-2026-00142', event)">↗</button>
+                </td>
                 <td><span class="label label-info">報告書</span> <span class="label label-default">地政学</span></td>
                 <td>
                   <span class="label label-purple">ランク A</span>
@@ -716,8 +730,11 @@
                 <td><span class="label label-success">RAG 同期済</span></td>
               </tr>
               <tr>
-                <td class="mono"><a href="case-detail.html?case=CASE-2026-00138" class="case-link" target="_blank" rel="noopener">CASE-2026-00138</a></td>
-                <td><a href="case-detail.html?case=CASE-2026-00138" class="case-link" target="_blank" rel="noopener">〇〇地域経済動向レポート</a></td>
+                <td class="mono"><a href="case-detail.html?case=CASE-2026-00138">CASE-2026-00138</a></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00138">〇〇地域経済動向レポート</a>
+                  <button type="button" class="btn btn-sm btn-icon-tab" title="別タブで開く" onclick="openCaseNewTab('CASE-2026-00138', event)">↗</button>
+                </td>
                 <td><span class="label label-info">ケース</span> <span class="label label-default">経済</span></td>
                 <td>
                   <span class="label label-purple">ランク B</span>
@@ -728,8 +745,11 @@
                 <td><span class="label label-default">抽出完了</span></td>
               </tr>
               <tr>
-                <td class="mono"><a href="case-detail.html?case=CASE-2026-00135" class="case-link" target="_blank" rel="noopener">CASE-2026-00135</a></td>
-                <td><a href="case-detail.html?case=CASE-2026-00135" class="case-link" target="_blank" rel="noopener">音声記録テキスト化（会議録）</a></td>
+                <td class="mono"><a href="case-detail.html?case=CASE-2026-00135">CASE-2026-00135</a></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00135">音声記録テキスト化（会議録）</a>
+                  <button type="button" class="btn btn-sm btn-icon-tab" title="別タブで開く" onclick="openCaseNewTab('CASE-2026-00135', event)">↗</button>
+                </td>
                 <td><span class="label label-pink">音声</span> <span class="label label-default">会議</span></td>
                 <td>
                   <span class="label label-warning">印刷禁止</span>
@@ -878,6 +898,16 @@
 </p>
 
 <script>
+  function openCaseNewTab(caseId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const url = 'case-detail.html?case=' + encodeURIComponent(caseId);
+    const w = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!w) {
+      window.location.href = url;
+    }
+  }
+
   function showView(id) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const el = document.getElementById('view-' + id);

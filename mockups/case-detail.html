@@ -96,6 +96,7 @@
       background: var(--info-subtle); border: 1px solid rgba(56,139,253,0.35);
       color: var(--info-fg); font-size: 12px;
     }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
   </style>
 </head>
 <body>
@@ -104,7 +105,10 @@
     <span class="gh-logo-mark">AI</span>
     <span>AISSS<span class="gh-logo-sub">ケース詳細（別ウィンドウ）</span></span>
   </a>
-  <span class="gh-badge" id="windowBadge">比較用に複数タブで開けます</span>
+  <div class="header-actions">
+    <a class="btn btn-sm" href="webui.html">← 検索に戻る</a>
+    <button type="button" class="btn btn-sm" id="openNewTabBtn">別タブで開く</button>
+  </div>
 </header>
 
 <div class="container">
@@ -122,7 +126,7 @@
       <div id="caseBody"></div>
       <h3 class="section-title">添付ファイル</h3>
       <ul class="attach-list" id="caseAttachments"></ul>
-      <p class="compare-hint">💡 2件以上の記事を比較する場合は、ケース検索から表題をクリックして別タブで開き、並べて確認してください。</p>
+      <p class="compare-hint">💡 2件比較: 検索画面に戻り、別の表題を開く。別タブが使えない環境では Ctrl+クリック（Mac: ⌘+クリック）をお試しください。</p>
     </div>
   </div>
 </div>
@@ -193,6 +197,11 @@
 
   const params = new URLSearchParams(location.search);
   const caseId = params.get('case') || 'CASE-2026-00142';
+  document.getElementById('openNewTabBtn').addEventListener('click', () => {
+    const url = location.href;
+    const w = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!w) alert('別タブを開けませんでした。ブラウザのアドレスバーの URL を複製して新しいタブに貼り付けてください。');
+  });
   const data = CASES[caseId] || CASES['CASE-2026-00142'];
 
   document.title = 'AISSS — ' + data.title;
