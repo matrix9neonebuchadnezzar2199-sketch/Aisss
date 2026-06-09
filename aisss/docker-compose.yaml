@@ -51,8 +51,12 @@ services:
     ports:
       - "${AISSS_API_PORT:-8000}:8000"
     networks:
-      - default
-      - aisss-shared
+      default: {}
+      # Distinct alias on the shared network so Dify can reach the Aisss
+      # API without colliding with Dify's own service named "api".
+      aisss-shared:
+        aliases:
+          - aisss-api
     restart: unless-stopped
 
   worker:

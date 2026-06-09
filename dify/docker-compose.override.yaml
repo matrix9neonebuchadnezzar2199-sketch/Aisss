@@ -15,8 +15,12 @@ networks:
 services:
   api:
     networks:
-      - default
-      - aisss-shared
+      default: {}
+      # Distinct alias so Aisss can reach the Dify API as "dify-api"
+      # without colliding with the Aisss service also named "api".
+      aisss-shared:
+        aliases:
+          - dify-api
   worker:
     networks:
       - default
