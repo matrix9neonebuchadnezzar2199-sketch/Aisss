@@ -23,6 +23,8 @@ AISSS/
     13-deployment-docker.md
     15-ollama-integration.md
     16-rag-admin-guide.md
+    17-viewing-range-permission-flow.md
+    18-webui-mock-inventory-and-flows.md
     dev-diary.md
     decisions/
       ADR-001-primary-architecture.md
@@ -35,6 +37,7 @@ AISSS/
     .env.example
   mockups/
     webui.html
+    case-detail.html
   Makefile
   apps/
     web/
@@ -117,20 +120,23 @@ AISSS/
 
 ## Frontend Feature Areas
 
-| Feature | Notes |
-|---|---|
-| `case-registration` | Form sections matching the data model. |
-| `case-search` | Metadata and text filters. |
-| `case-detail` | Joined body view, attachment panel, audit markers. |
-| `excel-import` | Preview, errors, confirm (integrated in registration). |
-| `ai-search` | Native chat with model selector, citations, restrictions. |
-| `rag-admin` | Pipeline dashboard, reindex, job retry. |
-| `model-management` | Ollama models, roles, ReRank toggle. |
-| `ollama-status` | Global health indicator component. |
-| `master-management` | Editable lists. |
-| `permission-management` | Groups and viewing ranges. |
-| `job-monitoring` | Extraction and RAG state. |
-| `audit-logs` | Operator-only audit search. |
+Static HTML mocks today: [18-webui-mock-inventory-and-flows.md](./18-webui-mock-inventory-and-flows.md).
+
+| Feature | Mock view / file | Notes |
+|---|---|---|
+| `case-registration` | `view-register` | Form sections matching the data model; body fields in `form-body-stack` (vertical; 記事 tallest); edit via `?edit=`. See [18 § Layout Conventions](./18-webui-mock-inventory-and-flows.md#mock-layout-conventions). |
+| `case-search` | `view-search` | 4-row collapsible filter panel (`search-filter-panel`); five filter controls in mock. |
+| `case-detail` | `case-detail.html` | Joined body view, attachment panel; audit markers planned. |
+| `excel-import` | `view-register` (button) | Preview, errors, confirm — mock has autofill only. |
+| `ai-search` | `view-ai` | Native chat with model selector; mock is static demo. |
+| `rag-admin` | `view-rag-admin` | Pipeline dashboard, tree, list; high mock coverage. |
+| `standalone-file` | `view-standalone-file` | Opened from RAG 管理. |
+| `model-management` | `view-models` | Ollama models, roles, ReRank toggle. |
+| `ollama-status` | header / `view-ai` | Global health indicator component. |
+| `master-management` | `view-masters` | Editable lists. |
+| `permission-management` | `view-permissions` | Groups and viewing ranges. |
+| `job-monitoring` | `view-jobs` | Extraction and RAG job list; links from search/RAG stats. |
+| `audit-logs` | `view-audit` | Operator audit search UI; detail dialog. |
 
 ## Configuration Files
 

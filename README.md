@@ -105,6 +105,7 @@ AISSS は **単一 Docker Compose スタック** で動作します。Ollama は
 | 06 | [RAG Permission Design](./docs/06-rag-permission-design.md) | 権限制御・条件別 AI 利用ルール |
 | 07 | [Ingestion Design](./docs/07-ingestion-design.md) | Excel / OCR / ASR / 解析 |
 | 08 | [WebUI Design](./docs/08-webui-design.md) | 画面設計 |
+| 18 | [WebUI Mock Inventory](./docs/18-webui-mock-inventory-and-flows.md) | モック棚卸し・画面フロー・API 早見 |
 | 09 | [API Design](./docs/09-api-design.md) | API 境界・主要エンドポイント |
 | 10 | [File Structure](./docs/10-file-structure.md) | 推奨ディレクトリ構成 |
 | 11 | [Milestones](./docs/11-milestones.md) | MVP → 本番までの段階 |
@@ -112,8 +113,10 @@ AISSS は **単一 Docker Compose スタック** で動作します。Ollama は
 | 13 | [Deployment: Docker](./docs/13-deployment-docker.md) | 単一スタック構成・起動手順 |
 | 15 | [Ollama Integration](./docs/15-ollama-integration.md) | Ollama 連携・モデル・チャット API |
 | 16 | [RAG Admin Guide](./docs/16-rag-admin-guide.md) | RAG 管理画面の運用 |
+| 17 | [Viewing Range Flow](./docs/17-viewing-range-permission-flow.md) | 閲覧範囲の運用フロー |
 | — | [Development Diary](./docs/dev-diary.md) | 開発日記 |
 | — | [WebUI Mockup](./mockups/webui.html) | GitHub 風 UI モックアップ(HTML) |
+| — | [Case Detail Mockup](./mockups/case-detail.html) | ケース詳細モック(HTML) |
 
 ---
 
@@ -148,7 +151,7 @@ Ollama は Compose に含まれません。AI 機能にはホスト上の Ollama
 ```text
 AISSS/
 ├─ docs/                     # 設計資料
-├─ mockups/                  # WebUI モックアップ(HTML)
+├─ mockups/                  # WebUI モックアップ(webui.html, case-detail.html)
 ├─ aisss/                    # AISSS アプリスタック(Compose。技術IDは小文字)
 ├─ apps/                     # web / api / workers
 ├─ Makefile

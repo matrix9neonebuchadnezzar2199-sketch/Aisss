@@ -1,5 +1,7 @@
 # RAG Admin Guide
 
+> Mock: `view-rag-admin` in [webui.html](../mockups/webui.html). Operator flow: [18 § Flow C](./18-webui-mock-inventory-and-flows.md#flow-c-standalone-file--rag--ai-citation).
+
 ## Purpose
 
 The **RAG 管理** screen is the operator dashboard for browsing registered files, monitoring extraction/embedding, and toggling which files are included in the vector index (AI search).
@@ -116,9 +118,22 @@ Find the file in the list → **再抽出** → re-enable ㋹ after success.
 - Whether ㋹ default is ON or OFF for new files.
 - Tree API shape and pagination for large corpora.
 
+## Mock Tree Structure (demo)
+
+The HTML mock uses two top-level genres under **RAGの体系管理**:
+
+| ジャンル | Example 細部 groups | Example files |
+|---|---|---|
+| ケース（事象） | 2025年度経理データ, ●山の自然, ハリウッド俳優 | `.xlsx`, `.pdf` attachments |
+| 単独ファイル（参照資料） | 参考資料2026 | 条例案.pdf |
+
+Demo case IDs for **ケースを開く**: `CASE-YAMA`, `CASE-HOLLYWOOD`, `CASE-2025-KEIRI`, `CASE-2026-KEIRI` — see [18 cross-reference](./18-webui-mock-inventory-and-flows.md#demo-display-id-cross-reference).
+
 ## Related
 
+- [WebUI Mock Inventory and Flows](./18-webui-mock-inventory-and-flows.md)
 - [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)
 - [WebUI Design](./08-webui-design.md)
+- [Sequence Diagrams](./03-sequence-diagrams.md) — RAG delete, standalone registration
 - [Ingestion Design](./07-ingestion-design.md)
 - [Ollama Integration Guide](./15-ollama-integration.md)

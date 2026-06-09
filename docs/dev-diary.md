@@ -1,5 +1,43 @@
 # Development Diary
 
+## 2026-06-09: Mock UI Layout Sync to Design Docs
+
+### Summary
+
+Synced recent `webui.html` layout changes into requirements and WebUI design docs: case search 4-row filter, audit log 2-row filter, registration body vertical stack with tall 記事 field, and search filter collapse CSS fix (`:not(.collapsed)` for expanded `max-height`).
+
+### New / Updated
+
+- `docs/08-webui-design.md` — filter layouts, body stack, collapse implementation note, UX rules; sidebar placeholder wording fixed
+- `docs/18-webui-mock-inventory-and-flows.md` — **Mock Layout Conventions** section; completeness matrix layout notes
+- `docs/01-requirements.md` — Body Handling: edit UI vertical vs read UI joined
+- `docs/11-milestones.md` — M2 mock coverage aligned (audit/jobs UI mocked; API still M6)
+- `docs/00-index.md`, `docs/10-file-structure.md` — links to Layout Conventions / `form-body-stack`
+
+### Prior session (same day)
+
+- 監査ログ・ジョブ状態 mocks added to `webui.html`; stats cross-links to jobs; audit ↔ cases/AI/RAG
+
+---
+
+## 2026-06-09: WebUI Mock Inventory and Flow Alignment
+
+### Summary
+
+Analyzed static HTML mocks (`webui.html`, `case-detail.html`) and added a documentation hub so screens, operator flows, APIs, and milestones cross-reference consistently. MAP search remains deferred (Post-MVP).
+
+### New / Updated
+
+- `docs/18-webui-mock-inventory-and-flows.md` — screen matrix, Flows A/B/C, demo display IDs, backlog
+- `docs/00-index.md` — flow-oriented reading paths, case-detail mock link
+- `docs/03-sequence-diagrams.md` — search/detail/edit, permission bootstrap, standalone reg, RAG delete/guard
+- `docs/04-data-flow.md` — WebUI screen map, freshness rules with triggering screens
+- `docs/08-webui-design.md` — mock status per screen, UX rules (sort, sidebar collapse)
+- `docs/11-milestones.md` — mock coverage notes per milestone; MAP deferred in Post-MVP
+- Cross-links in `09`, `10`, `16`, `17`, `README.md`
+
+---
+
 ## 2026-06-09: Dify Removed — Native Ollama AI
 
 ### Summary

@@ -18,16 +18,29 @@ The central design rule is simple: the case management database is the source of
 6. [RAG Permission Design](./06-rag-permission-design.md)
 7. [Ingestion Design](./07-ingestion-design.md)
 8. [WebUI Design](./08-webui-design.md)
-9. [API Design](./09-api-design.md)
-10. [File Structure](./10-file-structure.md)
-11. [Milestones](./11-milestones.md)
-12. [Foundation Materials](./12-foundation-materials.md)
-13. [Deployment: Docker Topology](./13-deployment-docker.md)
-14. [Ollama Integration Guide](./15-ollama-integration.md)
-15. [RAG Admin Guide](./16-rag-admin-guide.md)
-16. [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)
-17. [WebUI Mockup](../mockups/webui.html)（HTML）
-18. [Development Diary](./dev-diary.md)
+9. [WebUI Mock Inventory and Flows](./18-webui-mock-inventory-and-flows.md) — mock hub; read after 08 when exploring the HTML prototype
+10. [API Design](./09-api-design.md)
+11. [File Structure](./10-file-structure.md)
+12. [Milestones](./11-milestones.md)
+13. [Foundation Materials](./12-foundation-materials.md)
+14. [Deployment: Docker Topology](./13-deployment-docker.md)
+15. [Ollama Integration Guide](./15-ollama-integration.md)
+16. [RAG Admin Guide](./16-rag-admin-guide.md)
+17. [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)
+18. [WebUI Mockup](../mockups/webui.html)（HTML）
+19. [Case Detail Mockup](../mockups/case-detail.html)（HTML）
+20. [Development Diary](./dev-diary.md)
+
+## Flow-Oriented Reading
+
+| Question | Suggested path |
+|---|---|
+| What does each mock screen do? | [18](./18-webui-mock-inventory-and-flows.md) → [webui.html](../mockups/webui.html) → [08](./08-webui-design.md) |
+| Viewing range operations | [17](./17-viewing-range-permission-flow.md) → [18 § Flow A/B/C](./18-webui-mock-inventory-and-flows.md#operator-flows) → [06](./06-rag-permission-design.md) |
+| RAG administration | [16](./16-rag-admin-guide.md) → [18](./18-webui-mock-inventory-and-flows.md) → [07](./07-ingestion-design.md) → [09](./09-api-design.md) |
+| Implementation start | [11](./11-milestones.md) → [18 completeness matrix](./18-webui-mock-inventory-and-flows.md#screen-completeness-matrix) → [10](./10-file-structure.md) → [09](./09-api-design.md) |
+| Case search → detail → edit | [18 § Flow B](./18-webui-mock-inventory-and-flows.md#flow-b-case-lifecycle-register--search--detail--edit--rag) → [03](./03-sequence-diagrams.md) → [case-detail.html](../mockups/case-detail.html) |
+| UI layout (filters, body fields) | [18 § Layout Conventions](./18-webui-mock-inventory-and-flows.md#mock-layout-conventions) → [08](./08-webui-design.md) |
 
 ## Naming Convention
 

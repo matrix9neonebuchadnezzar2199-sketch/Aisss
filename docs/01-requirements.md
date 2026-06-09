@@ -82,6 +82,8 @@ Excel may keep the four body sections in separate cells. The database also store
 
 This preserves structure for RAG weighting while matching the requested single-body view.
 
+**Registration and edit UI:** The four body sections appear as **separate full-width fields stacked vertically** (要約 → 記事 → 所見 → その他参考). The **記事** field is the primary content area and uses the largest textarea. **Read-only case detail** continues to show the four sections as one joined body with headings (see [08 § Body field layout](./08-webui-design.md#body-field-layout-registration--edit)).
+
 ## Attachment Requirements
 
 Supported attachment types:

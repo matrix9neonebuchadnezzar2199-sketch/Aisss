@@ -4,6 +4,8 @@
 
 The API boundary keeps record management, permission enforcement, ingestion jobs, Ollama integration, and AI chat explicit. This document is a starting contract for implementation, not a final OpenAPI specification.
 
+**Triggering WebUI screens:** [18 § Screen → API](./18-webui-mock-inventory-and-flows.md#screen--api-quick-reference). **Timing:** [03-sequence-diagrams.md](./03-sequence-diagrams.md).
+
 ## API Groups
 
 - Authentication and current user.
@@ -33,73 +35,73 @@ The backend must not trust client-provided groups or roles without verification.
 
 ## Case APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/cases` | Search cases by metadata and text filters. |
-| `POST` | `/api/cases` | Create case. |
-| `GET` | `/api/cases/{case_id}` | Get case detail if authorized. |
-| `PATCH` | `/api/cases/{case_id}` | Update case. |
-| `DELETE` | `/api/cases/{case_id}` | Soft delete case and enqueue RAG cleanup. |
-| `POST` | `/api/cases/{case_id}/reindex` | Operator-triggered reindex. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/cases` | Search cases by metadata and text filters. | `view-search` |
+| `POST` | `/api/cases` | Create case. | `view-register` **登録する** |
+| `GET` | `/api/cases/{case_id}` | Get case detail if authorized. | `case-detail.html`, `view-register` edit prefill |
+| `PATCH` | `/api/cases/{case_id}` | Update case. | `view-register` **更新する** |
+| `DELETE` | `/api/cases/{case_id}` | Soft delete case and enqueue RAG cleanup. | Not in mock |
+| `POST` | `/api/cases/{case_id}/reindex` | Operator-triggered reindex. | `view-rag-admin` 一括再インデックス |
 
 Create and update requests should validate master values by ID. If label-based import is needed, resolve labels at the import layer before calling the case service.
 
 ## Attachment APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/api/cases/{case_id}/attachments` | Upload attachment and enqueue extraction. |
-| `GET` | `/api/cases/{case_id}/attachments` | List attachments. |
-| `GET` | `/api/attachments/{attachment_id}/download` | Stream file after permission check. |
-| `GET` | `/api/attachments/{attachment_id}/extracted-text` | Show extracted text if authorized. |
-| `POST` | `/api/attachments/{attachment_id}/retry-extraction` | Retry failed extraction. |
-| `DELETE` | `/api/attachments/{attachment_id}` | Delete attachment and cleanup derived chunks. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `POST` | `/api/cases/{case_id}/attachments` | Upload attachment and enqueue extraction. | `view-register` upload zone |
+| `GET` | `/api/cases/{case_id}/attachments` | List attachments. | `case-detail.html`, edit attachment list |
+| `GET` | `/api/attachments/{attachment_id}/download` | Stream file after permission check. | `case-detail.html` **ダウンロード** |
+| `GET` | `/api/attachments/{attachment_id}/extracted-text` | Show extracted text if authorized. | `case-detail.html` (planned) |
+| `POST` | `/api/attachments/{attachment_id}/retry-extraction` | Retry failed extraction. | `view-rag-admin` **再抽出** |
+| `DELETE` | `/api/attachments/{attachment_id}` | Delete attachment and cleanup derived chunks. | `view-rag-admin` **削除** |
 
 Do not expose object storage signed URLs unless the URL is short-lived and generated after an application permission check.
 
 ## Excel Import APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/api/imports/excel/preview` | Parse and validate workbook without committing. |
-| `POST` | `/api/imports/excel/{preview_id}/confirm` | Commit valid rows. |
-| `GET` | `/api/imports/{import_id}` | Get import result and row status. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `POST` | `/api/imports/excel/preview` | Parse and validate workbook without committing. | `view-register` Excel (full spec) |
+| `POST` | `/api/imports/excel/{preview_id}/confirm` | Commit valid rows. | `view-register` (full spec) |
+| `GET` | `/api/imports/{import_id}` | Get import result and row status. | `view-register` (full spec) |
 
 Preview records should expire. Confirm must verify the operator still has permission.
 
 ## Master APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/masters/{master_name}` | List active values. |
-| `POST` | `/api/masters/{master_name}` | Add value. |
-| `PATCH` | `/api/masters/{master_name}/{id}` | Update value. |
-| `POST` | `/api/masters/{master_name}/{id}/deactivate` | Disable value. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/masters/{master_name}` | List active values. | `view-masters`, form `<select>` options |
+| `POST` | `/api/masters/{master_name}` | Add value. | `view-masters` **+ 値を追加** |
+| `PATCH` | `/api/masters/{master_name}/{id}` | Update value. | `view-masters` |
+| `POST` | `/api/masters/{master_name}/{id}/deactivate` | Disable value. | `view-masters` |
 
 Master changes must be audited. Values referenced by cases should be deactivated, not deleted.
 
 ## Permission APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/users` | Operator user search. |
-| `GET` | `/api/groups` | List groups. |
-| `POST` | `/api/groups` | Create group. |
-| `PATCH` | `/api/groups/{group_id}` | Update group. |
-| `PUT` | `/api/groups/{group_id}/members` | Replace or update members. |
-| `GET` | `/api/viewing-ranges` | List viewing ranges. |
-| `POST` | `/api/viewing-ranges` | Create viewing range. |
-| `PUT` | `/api/viewing-ranges/{id}/groups` | Map viewing range to groups. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/users` | Operator user search. | `view-permissions` ユーザー tab |
+| `GET` | `/api/groups` | List groups. | `view-permissions` グループ tab |
+| `POST` | `/api/groups` | Create group. | `view-permissions` |
+| `PATCH` | `/api/groups/{group_id}` | Update group. | `view-permissions` |
+| `PUT` | `/api/groups/{group_id}/members` | Replace or update members. | `view-permissions` |
+| `GET` | `/api/viewing-ranges` | List viewing ranges. | `view-permissions` マッピング tab |
+| `POST` | `/api/viewing-ranges` | Create viewing range. | `view-masters` |
+| `PUT` | `/api/viewing-ranges/{id}/groups` | Map viewing range to groups. | `view-permissions` **マッピングを保存** |
 
 Changing group membership or viewing range mapping must invalidate permission caches.
 
 ## Job APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/jobs` | List extraction and RAG jobs. |
-| `GET` | `/api/jobs/{job_id}` | Job detail. |
-| `POST` | `/api/jobs/{job_id}/retry` | Retry failed job. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/jobs` | List extraction and RAG jobs. | ジョブ状態 (planned) |
+| `GET` | `/api/jobs/{job_id}` | Job detail. | ジョブ状態 (planned) |
+| `POST` | `/api/jobs/{job_id}/retry` | Retry failed job. | `view-rag-admin` **再抽出** |
 
 ## Permissioned Search Middleware API
 
@@ -159,15 +161,15 @@ Rules:
 
 ## RAG Administration APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/rag/status` | Index statistics and queue depth. |
-| `GET` | `/api/rag/tree` | Genre / group / file tree for RAGの体系管理. |
-| `GET` | `/api/rag/files` | Filtered file list with pipeline, RAG toggle, and viewing range metadata. |
-| `PATCH` | `/api/rag/files/{id}/enable` | Set RAG 有効化 (㋹). |
-| `POST` | `/api/rag/standalone-files` | Standalone file registration. |
-| `PATCH` | `/api/rag/standalone-files/{id}/viewing-ranges` | Update standalone file viewing range from RAG admin. |
-| `GET` | `/api/rag/cases/{case_id}/sync-state` | Per-case pipeline state. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/rag/status` | Index statistics and queue depth. | `view-rag-admin` stats |
+| `GET` | `/api/rag/tree` | Genre / group / file tree for RAGの体系管理. | `view-rag-admin` left tree |
+| `GET` | `/api/rag/files` | Filtered file list with pipeline, RAG toggle, and viewing range metadata. | `view-rag-admin` list |
+| `PATCH` | `/api/rag/files/{id}/enable` | Set RAG 有効化 (㋹). | `view-rag-admin` **変更を保存** |
+| `POST` | `/api/rag/standalone-files` | Standalone file registration. | `view-standalone-file` |
+| `PATCH` | `/api/rag/standalone-files/{id}/viewing-ranges` | Update standalone file viewing range from RAG admin. | `view-rag-admin` standalone select |
+| `GET` | `/api/rag/cases/{case_id}/sync-state` | Per-case pipeline state. | `view-rag-admin` (optional) |
 
 ### `GET /api/rag/files` response (per item)
 
@@ -211,21 +213,21 @@ Attempts to PATCH viewing range on a `case_attachment` ID must return **409 Conf
 
 ## Ollama APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/ollama/health` | Connection status and latency. |
-| `GET` | `/api/ollama/models` | Model list with AISSS role assignments. |
-| `GET` | `/api/ollama/models/{name}` | Model detail (admin). |
-| `PUT` | `/api/admin/ollama/model-roles` | Default models, enabled chat models, ReRank settings. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/ollama/health` | Connection status and latency. | Header / `view-ai` / `view-models` |
+| `GET` | `/api/ollama/models` | Model list with AISSS role assignments. | `view-models` |
+| `GET` | `/api/ollama/models/{name}` | Model detail (admin). | `view-models` |
+| `PUT` | `/api/admin/ollama/model-roles` | Default models, enabled chat models, ReRank settings. | `view-models` **設定を保存** |
 
 See [Ollama Integration Guide](./15-ollama-integration.md).
 
 ## AI Chat APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/api/ai/chat` | Permissioned RAG + Ollama completion. |
-| `POST` | `/api/ai/chat/stream` | Same flow with SSE streaming. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `POST` | `/api/ai/chat` | Permissioned RAG + Ollama completion. | `view-ai` 送信 |
+| `POST` | `/api/ai/chat/stream` | Same flow with SSE streaming. | `view-ai` (implementation) |
 
 Request:
 
@@ -240,10 +242,10 @@ Request:
 
 ## Audit APIs
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/api/audit-logs` | Operator audit search. |
-| `GET` | `/api/audit-logs/{id}` | Audit detail. |
+| Method | Path | Purpose | Triggering WebUI |
+|---|---|---|---|
+| `GET` | `/api/audit-logs` | Operator audit search. | 監査ログ (planned) |
+| `GET` | `/api/audit-logs/{id}` | Audit detail. | 監査ログ (planned) |
 
 Audit APIs require dedicated authority separate from normal case viewing.
 

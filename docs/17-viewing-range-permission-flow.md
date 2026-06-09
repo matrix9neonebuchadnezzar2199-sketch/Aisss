@@ -6,11 +6,23 @@ This document describes how **閲覧範囲** (viewing ranges) flow from administ
 
 Related documents:
 
+- [WebUI Mock Inventory and Flows](./18-webui-mock-inventory-and-flows.md) — Flow A/B/C, demo IDs
 - [RAG Permission Design](./06-rag-permission-design.md)
 - [Data Model](./05-data-model.md)
 - [WebUI Design](./08-webui-design.md)
 - [RAG Admin Guide](./16-rag-admin-guide.md)
 - [API Design](./09-api-design.md)
+- [Sequence Diagrams](./03-sequence-diagrams.md)
+
+## Mock Label Mapping (demo data)
+
+| Flow step | Viewing range label | Mock group (permissions tab) | Mock screen |
+|---|---|---|---|
+| Step 1 — case (A) | 分析担当者のみ（A） | 分析担当者 | `view-register`, RAG rows with ケース継承 |
+| Step 2 — standalone (B) | 分析第一課（B） | 分析第一課 | `view-standalone-file`, standalone RAG row |
+| All users | 全員 | 全員閲覧 | e.g. `CASE-2025-KEIRI` |
+
+Full administrator bootstrap: [18 § Flow A](./18-webui-mock-inventory-and-flows.md#flow-a-permission-bootstrap-administrator). Case lifecycle: [18 § Flow B](./18-webui-mock-inventory-and-flows.md#flow-b-case-lifecycle-register--search--detail--edit--rag).
 
 ## User Operation Flow (Steps 1–3)
 

@@ -1,5 +1,7 @@
 # Milestones
 
+> Mock coverage per milestone: [WebUI Mock Inventory and Flows](./18-webui-mock-inventory-and-flows.md#screen-completeness-matrix).
+
 ## Milestone 0: Design Baseline
 
 Goal: Make implementation decisions explicit before coding.
@@ -19,6 +21,8 @@ Done when:
 - Case fields are represented in the data model.
 - RAG permission approach is approved.
 - MVP scope is understood by implementers.
+
+**Mock coverage:** `webui.html` + `case-detail.html` define UI boundaries; [18](./18-webui-mock-inventory-and-flows.md) inventories screens and flows.
 
 ## Milestone 1: Repository and Development Environment
 
@@ -59,6 +63,8 @@ Done when:
 - Viewing ranges prevent unauthorized case detail access.
 - Operators can add master values from WebUI.
 
+**Mock coverage:** Search (4-row collapsible filter), register (vertical body stack; 記事 emphasized), detail, edit (`?edit=`), masters (stub), permissions (tabs). Audit log and job status **UI mocks exist** (filters, tables, cross-links); live `GET /api/audit-logs` / job polling remain M6.
+
 ## Milestone 3: Attachment and Extraction MVP
 
 Goal: Attach files and extract text asynchronously.
@@ -78,6 +84,8 @@ Done when:
 - Extracted text is linked to case and attachment.
 - Failed extraction is visible and retryable.
 
+**Mock coverage:** Pipeline status on search/RAG/detail; **再抽出** on RAG row; upload zone UI only (no real upload).
+
 ## Milestone 4: Excel Import
 
 Goal: Support bulk registration using controlled templates.
@@ -96,6 +104,8 @@ Done when:
 - Valid rows create or update cases.
 - Invalid rows are rejected with actionable messages.
 - Master strictness rules are enforced.
+
+**Mock coverage:** Excel button → form autofill toast only; preview/confirm UI **not** in mock.
 
 ## Milestone 5: Permissioned RAG MVP
 
@@ -120,6 +130,8 @@ Done when:
 - AI answers cite only allowed cases.
 - Permission changes update RAG behavior.
 
+**Mock coverage:** RAG 管理 **high**; standalone registration form; models screen; AI search **static demo** only.
+
 ## Milestone 6: Operational Hardening
 
 Goal: Prepare for real multi-user operation.
@@ -138,6 +150,8 @@ Done when:
 - Operators can monitor failed jobs.
 - Backup restore is tested.
 - Permission tests cover major access paths.
+
+**Mock coverage:** 監査ログ and ジョブ状態 **screens implemented** (filters, tables, cross-links from search/RAG stats); live API and DLQ workflow remain M6 deliverables.
 
 ## Milestone 7: Production Pilot
 
@@ -160,6 +174,7 @@ Done when:
 
 ## Post-MVP Ideas
 
+- MAP search (geographic case map + filters; offline tiles) — discussed but **deferred**; not in mock. See [18 § Post-MVP](./18-webui-mock-inventory-and-flows.md#post-mvp-deferred).
 - Native image similarity search.
 - Advanced ranking using reliability, accuracy, and rank.
 - Metadata-weighted ranking beyond optional ReRank.

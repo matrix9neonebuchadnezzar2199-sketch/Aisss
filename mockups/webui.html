@@ -879,6 +879,17 @@
       cursor: pointer;
     }
     .form-group textarea { min-height: 72px; resize: vertical; }
+    .form-body-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .form-body-stack .form-group textarea {
+      width: 100%;
+    }
+    .form-body-stack #field-body-article {
+      min-height: 160px;
+    }
     .form-section {
       margin-bottom: 20px;
       padding-bottom: 16px;
@@ -1066,6 +1077,116 @@
     }
     .stat-card .num { font-size: 22px; font-weight: 700; color: var(--accent-fg); }
     .stat-card .lbl { font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+    .stat-card.stat-link {
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      text-align: left;
+      font: inherit;
+      width: 100%;
+    }
+    .stat-card.stat-link:hover {
+      border-color: var(--accent-fg);
+      background: var(--canvas-inset);
+    }
+    .stat-card.stat-link .num-danger { color: var(--danger-fg); }
+    .stat-card.stat-link .num-warning { color: var(--attention-fg); }
+
+    .audit-action-chip {
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+    .jobs-status-running { color: var(--accent-fg); }
+    .job-target-link { font-size: 12px; }
+
+    .audit-filter-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .filter-bar.audit-filter-row {
+      flex-wrap: nowrap;
+      align-items: center;
+      margin-bottom: 0;
+    }
+    .filter-bar.audit-filter-row input,
+    .filter-bar.audit-filter-row select {
+      width: auto;
+      min-width: 0;
+    }
+    .filter-bar.audit-filter-row input[type="search"] {
+      min-width: 0;
+      flex: 1 1 120px;
+      max-width: 180px;
+    }
+    .filter-bar.audit-filter-row #auditUserFilter {
+      flex: 1 1 120px;
+      max-width: 180px;
+    }
+    .filter-bar.audit-filter-row #auditActionFilter {
+      flex: 1 1 160px;
+      max-width: 220px;
+    }
+    .audit-date-range {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 1 auto;
+    }
+    .audit-date-range input[type="date"] {
+      width: auto;
+      flex: 0 0 132px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+    .filter-bar.audit-filter-row #auditCaseFilter {
+      flex: 1 1 200px;
+      max-width: 360px;
+    }
+    .filter-bar.audit-filter-row > .btn {
+      flex-shrink: 0;
+    }
+
+    .search-filter-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .filter-bar.search-filter-row {
+      flex-wrap: nowrap;
+      align-items: center;
+      margin-bottom: 0;
+    }
+    .filter-bar.search-filter-row input,
+    .filter-bar.search-filter-row select {
+      width: auto;
+      min-width: 0;
+    }
+    .filter-bar.search-filter-keyword input[type="search"] {
+      width: 100%;
+      flex: 1 1 100%;
+      min-width: 0;
+      max-width: none;
+    }
+    .filter-bar.search-filter-masters select {
+      flex: 1 1 0;
+      max-width: 200px;
+      min-width: 110px;
+    }
+    .filter-bar.search-filter-viewing select {
+      width: 100%;
+      flex: 1 1 100%;
+      max-width: none;
+    }
+    .filter-bar.search-filter-actions {
+      justify-content: flex-start;
+    }
+    .filter-bar.search-filter-actions > .btn {
+      flex-shrink: 0;
+    }
+    #searchFilterPanel:not(.collapsed) .filter-panel-body {
+      max-height: 220px;
+    }
 
     /* Detail */
     .detail-meta {
@@ -1221,10 +1342,8 @@
       <a href="#" data-view="models" title="モデル管理（API 連携）"><span class="nav-lead">　</span><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理（API 連携）</span></a>
       <a href="#" data-view="masters" title="マスタ管理"><span class="nav-lead">　</span><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
       <a href="#" data-view="permissions" title="ユーザー・グループ管理"><span class="nav-lead">　</span><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ管理</span></a>
-      <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-lead">　</span><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
-      <span class="sidebar-sub-hint">モック未実装</span>
-      <a href="#" class="sidebar-placeholder" title="モック未実装"><span class="nav-lead">　</span><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
-      <span class="sidebar-sub-hint">モック未実装</span>
+      <a href="#" data-view="audit" title="監査ログ"><span class="nav-lead">　</span><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
+      <a href="#" data-view="jobs" title="ジョブ状態"><span class="nav-lead">　</span><span class="nav-icon">⏳</span><span class="sidebar-label">ジョブ状態</span></a>
     </nav>
   </aside>
 
@@ -1234,9 +1353,15 @@
     <section class="view active" id="view-search">
       <div class="stats">
         <div class="stat-card"><div class="num">1,247</div><div class="lbl">登録ケース</div></div>
-        <div class="stat-card"><div class="num">38</div><div class="lbl">処理待ち抽出</div></div>
-        <div class="stat-card"><div class="num">12</div><div class="lbl">RAG 同期待ち</div></div>
-        <div class="stat-card"><div class="num">5</div><div class="lbl">取り込みエラー</div></div>
+        <button type="button" class="stat-card stat-link" data-jobs-nav data-jobs-filter="pending" data-jobs-type="extraction" title="ジョブ状態へ">
+          <div class="num num-warning">38</div><div class="lbl">処理待ち抽出 →</div>
+        </button>
+        <button type="button" class="stat-card stat-link" data-jobs-nav data-jobs-filter="pending" data-jobs-type="embedding" title="ジョブ状態へ">
+          <div class="num num-warning">12</div><div class="lbl">RAG 同期待ち →</div>
+        </button>
+        <button type="button" class="stat-card stat-link" data-jobs-nav data-jobs-filter="failed" title="ジョブ状態へ">
+          <div class="num num-danger">5</div><div class="lbl">取り込みエラー →</div>
+        </button>
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -1251,13 +1376,21 @@
               <span class="filter-collapsed-hint">クリックで展開</span>
             </button>
             <div class="filter-panel-body" id="searchFilterBody">
-              <div class="filter-bar">
-                <input type="search" placeholder="キーワード・全文検索…" />
-                <select><option>資料区分</option><option>報告書</option><option>ケース</option></select>
-                <select><option>登録部署</option><option>分析第一課</option></select>
-                <select><option>ランク</option><option>A</option><option>B</option></select>
-                <select><option>閲覧範囲</option></select>
-                <button class="btn btn-sm">検索</button>
+              <div class="search-filter-panel">
+                <div class="filter-bar search-filter-row search-filter-keyword">
+                  <input type="search" placeholder="キーワード・全文検索…" />
+                </div>
+                <div class="filter-bar search-filter-row search-filter-masters">
+                  <select title="資料区分"><option>資料区分</option><option>報告書</option><option>ケース</option></select>
+                  <select title="登録部署"><option>登録部署</option><option>分析第一課</option></select>
+                  <select title="ランク"><option>ランク</option><option>A</option><option>B</option></select>
+                </div>
+                <div class="filter-bar search-filter-row search-filter-viewing">
+                  <select title="閲覧範囲"><option>閲覧範囲</option><option>全員</option><option>分析担当者のみ（A）</option><option>分析第一課（B）</option></select>
+                </div>
+                <div class="filter-bar search-filter-row search-filter-actions">
+                  <button class="btn btn-sm btn-primary">検索</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1383,11 +1516,11 @@
           </div>
           <div class="form-section">
             <h3>本文（登録時は分割、表示時は結合）</h3>
-            <div class="form-grid">
-              <div class="form-group"><label>1 要約</label><textarea id="field-body-summary"></textarea></div>
-              <div class="form-group"><label>2 記事</label><textarea id="field-body-article"></textarea></div>
-              <div class="form-group"><label>3 所見</label><textarea id="field-body-assessment"></textarea></div>
-              <div class="form-group"><label>4 その他参考</label><textarea id="field-body-reference"></textarea></div>
+            <div class="form-body-stack">
+              <div class="form-group"><label>1 要約</label><textarea id="field-body-summary" rows="3"></textarea></div>
+              <div class="form-group"><label>2 記事</label><textarea id="field-body-article" rows="8"></textarea></div>
+              <div class="form-group"><label>3 所見</label><textarea id="field-body-assessment" rows="3"></textarea></div>
+              <div class="form-group"><label>4 その他参考</label><textarea id="field-body-reference" rows="3"></textarea></div>
             </div>
           </div>
           <div class="form-section">
@@ -1491,9 +1624,15 @@
     <section class="view" id="view-rag-admin">
       <div class="stats">
         <div class="stat-card"><div class="num">48,291</div><div class="lbl">インデックス chunk</div></div>
-        <div class="stat-card"><div class="num">38</div><div class="lbl">抽出待ち</div></div>
-        <div class="stat-card"><div class="num">12</div><div class="lbl">埋め込み待ち</div></div>
-        <div class="stat-card"><div class="num">5</div><div class="lbl">失敗ジョブ</div></div>
+        <button type="button" class="stat-card stat-link" data-jobs-nav data-jobs-filter="pending" data-jobs-type="extraction" title="ジョブ状態へ">
+          <div class="num num-warning">38</div><div class="lbl">抽出待ち →</div>
+        </button>
+        <button type="button" class="stat-card stat-link" data-jobs-nav data-jobs-filter="pending" data-jobs-type="embedding" title="ジョブ状態へ">
+          <div class="num num-warning">12</div><div class="lbl">埋め込み待ち →</div>
+        </button>
+        <button type="button" class="stat-card stat-link" data-jobs-nav data-jobs-filter="failed" title="ジョブ状態へ">
+          <div class="num num-danger">5</div><div class="lbl">失敗ジョブ →</div>
+        </button>
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -1984,6 +2123,302 @@
       </div>
     </section>
 
+    <!-- 監査ログ -->
+    <section class="view" id="view-audit">
+      <div class="stats">
+        <div class="stat-card"><div class="num">284</div><div class="lbl">本日のイベント</div></div>
+        <div class="stat-card"><div class="num">96</div><div class="lbl">ケース操作</div></div>
+        <div class="stat-card"><div class="num">41</div><div class="lbl">AI 質問</div></div>
+        <div class="stat-card"><div class="num">12</div><div class="lbl">権限・マスタ変更</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>監査ログ</h2>
+          <span class="label label-info">GET /api/audit-logs</span>
+          <button type="button" class="btn btn-sm" data-view-link="jobs">ジョブ状態を見る</button>
+        </div>
+        <div class="panel-body">
+          <p class="rag-register-note" style="margin-bottom:12px">
+            登録・閲覧・ダウンロード・AI 質問・権限変更などの操作履歴です。制限ケースの<strong>本文は表示しません</strong>（監査権限のみ詳細参照）。行クリックまたは <strong>詳細</strong> でメタデータを表示します。
+          </p>
+          <div class="audit-filter-panel">
+            <div class="filter-bar audit-filter-row">
+              <input type="search" id="auditUserFilter" placeholder="ユーザー…" />
+              <select id="auditActionFilter">
+                <option value="">アクション（すべて）</option>
+                <option value="case">ケース操作</option>
+                <option value="attachment">添付</option>
+                <option value="ai">AI 質問</option>
+                <option value="permission">権限・マスタ</option>
+                <option value="rag">RAG・取込</option>
+              </select>
+              <div class="audit-date-range">
+                <input type="date" id="auditDateFrom" value="2026-06-08" title="開始日" />
+                <span class="rag-date-sep">〜</span>
+                <input type="date" id="auditDateTo" value="2026-06-09" title="終了日" />
+              </div>
+            </div>
+            <div class="filter-bar audit-filter-row">
+              <input type="text" id="auditCaseFilter" placeholder="表示 ID / クエリ ID…" class="mono" />
+              <button type="button" class="btn btn-sm" id="auditFilterBtn">絞り込み</button>
+            </div>
+          </div>
+          <table class="data-table" data-sortable-table id="auditTable">
+            <thead>
+              <tr>
+                <th class="sortable-th" data-sort-type="date" scope="col">日時<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">ユーザー<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">アクション<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">対象<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">結果<span class="sort-ind" aria-hidden="true"></span></th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-audit-row data-audit-cat="ai" data-audit-date="2026-06-09"
+                  data-audit-detail='{"id":"AUD-2026-00984","user":"山田 太郎","action":"ai.query","target":"AI-Q-2026-00421","case":"CASE-2026-00142","ip":"10.12.0.44","note":"権限フィルタ ON · 引用 1 件"}'>
+                <td class="mono" data-sort-value="2026-06-09T14:32">2026-06-09 14:32</td>
+                <td>山田 太郎</td>
+                <td><span class="label label-info audit-action-chip">ai.query</span></td>
+                <td>
+                  <span class="mono">AI-Q-2026-00421</span>
+                  <button type="button" class="btn btn-sm btn-icon-tab" data-view-link="ai" title="AI 検索へ">↗</button>
+                </td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="case" data-audit-date="2026-06-09"
+                  data-audit-detail='{"id":"AUD-2026-00981","user":"山田 太郎","action":"case.update","target":"CASE-2026-00142","ip":"10.12.0.44","note":"閲覧範囲・条件変更 · RAG メタデータ再同期ジョブ投入"}'>
+                <td class="mono" data-sort-value="2026-06-09T14:28">2026-06-09 14:28</td>
+                <td>山田 太郎</td>
+                <td><span class="label label-purple audit-action-chip">case.update</span></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00142">CASE-2026-00142</a>
+                  <button type="button" class="btn btn-sm btn-icon-tab" data-case-edit="CASE-2026-00142" title="編集へ">✏️</button>
+                </td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="attachment" data-audit-date="2026-06-09"
+                  data-audit-detail='{"id":"AUD-2026-00975","user":"山田 太郎","action":"attachment.download","target":"monthly_report_202601.pdf","case":"CASE-2026-00142","ip":"10.12.0.44","note":"権限 OK · ダウンロードのみ記録（内容は記録しない）"}'>
+                <td class="mono" data-sort-value="2026-06-09T13:15">2026-06-09 13:15</td>
+                <td>山田 太郎</td>
+                <td><span class="label label-default audit-action-chip">attachment.download</span></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00142">CASE-2026-00142</a>
+                  <span class="mono job-target-link">/ monthly_report_202601.pdf</span>
+                </td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="rag" data-audit-date="2026-06-09"
+                  data-audit-detail='{"id":"AUD-2026-00970","user":"山田 太郎","action":"rag.file_delete","target":"男性.xlsx","case":"CASE-HOLLYWOOD","ip":"10.12.0.44","note":"ベクトル・抽出テキスト削除 · 不可逆"}'>
+                <td class="mono" data-sort-value="2026-06-09T11:02">2026-06-09 11:02</td>
+                <td>山田 太郎</td>
+                <td><span class="label label-danger audit-action-chip">rag.file_delete</span></td>
+                <td>
+                  <button type="button" class="btn btn-sm" data-view-link="rag-admin">RAG 管理</button>
+                  <span class="mono job-target-link">ハリウッド俳優 / 男性.xlsx</span>
+                </td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="permission" data-audit-date="2026-06-09"
+                  data-audit-detail='{"id":"AUD-2026-00962","user":"管理者","action":"viewing_range.groups_update","target":"分析担当者のみ（A）","ip":"10.12.0.1","note":"group_viewing_ranges 更新 · キャッシュ無効化"}'>
+                <td class="mono" data-sort-value="2026-06-09T10:55">2026-06-09 10:55</td>
+                <td>管理者</td>
+                <td><span class="label label-warning audit-action-chip">viewing_range.groups_update</span></td>
+                <td>
+                  <button type="button" class="btn btn-sm" data-view-link="permissions">ユーザー・グループ</button>
+                  <span class="job-target-link">分析担当者のみ（A）</span>
+                </td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="rag" data-audit-date="2026-06-09"
+                  data-audit-detail='{"id":"AUD-2026-00958","user":"山田 太郎","action":"excel.import_confirm","target":"import-2026-06-09-001","ip":"10.12.0.44","note":"12 行確定 · 3 行エラー差し戻し"}'>
+                <td class="mono" data-sort-value="2026-06-09T09:30">2026-06-09 09:30</td>
+                <td>山田 太郎</td>
+                <td><span class="label label-info audit-action-chip">excel.import_confirm</span></td>
+                <td><span class="mono">import-2026-06-09-001</span>（12 行）</td>
+                <td><span class="label label-warning">部分成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="case" data-audit-date="2026-06-08"
+                  data-audit-detail='{"id":"AUD-2026-00912","user":"鈴木 花子","action":"case.view","target":"CASE-2026-00138","ip":"10.12.0.51","note":"照会禁止ケース · 本文は監査ログに含めない"}'>
+                <td class="mono" data-sort-value="2026-06-08T16:20">2026-06-08 16:20</td>
+                <td>鈴木 花子</td>
+                <td><span class="label label-default audit-action-chip">case.view</span></td>
+                <td><a href="case-detail.html?case=CASE-2026-00138">CASE-2026-00138</a></td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+              <tr data-audit-row data-audit-cat="permission" data-audit-date="2026-06-08"
+                  data-audit-detail='{"id":"AUD-2026-00905","user":"管理者","action":"master.deactivate","target":"照会禁止","ip":"10.12.0.1","note":"マスタ無効化 · 参照ケースは残存"}'>
+                <td class="mono" data-sort-value="2026-06-08T11:05">2026-06-08 11:05</td>
+                <td>管理者</td>
+                <td><span class="label label-warning audit-action-chip">master.deactivate</span></td>
+                <td>
+                  <button type="button" class="btn btn-sm" data-view-link="masters">マスタ管理</button>
+                  <span class="job-target-link">照会禁止</span>
+                </td>
+                <td><span class="label label-success">成功</span></td>
+                <td><button type="button" class="btn btn-sm" data-audit-detail>詳細</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="excel-toast" id="auditActionToast"></div>
+        </div>
+      </div>
+      <div id="auditDetailOverlay" class="rag-delete-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="auditDetailTitle">
+        <div class="rag-delete-dialog">
+          <h3 id="auditDetailTitle">監査イベント詳細</h3>
+          <p class="mono" id="auditDetailId" style="margin-bottom:8px"></p>
+          <dl class="detail-meta" id="auditDetailGrid"></dl>
+          <p class="rag-delete-warn" id="auditDetailNote"></p>
+          <div class="rag-delete-actions">
+            <button type="button" class="btn btn-sm" id="auditDetailClose">閉じる</button>
+            <button type="button" class="btn btn-sm btn-primary hidden" id="auditDetailFollow">関連画面を開く</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ジョブ状態 -->
+    <section class="view" id="view-jobs">
+      <div class="stats" id="jobsStats">
+        <div class="stat-card"><div class="num jobs-status-running" id="jobsStatRunning">2</div><div class="lbl">実行中</div></div>
+        <button type="button" class="stat-card stat-link" data-jobs-stat-filter="pending">
+          <div class="num num-warning" id="jobsStatPending">50</div><div class="lbl">待機・キュー</div>
+        </button>
+        <button type="button" class="stat-card stat-link" data-jobs-stat-filter="failed">
+          <div class="num num-danger" id="jobsStatFailed">5</div><div class="lbl">失敗 / DLQ</div>
+        </button>
+        <div class="stat-card"><div class="num">127</div><div class="lbl">本日完了</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>ジョブ状態</h2>
+          <span class="label label-info">GET /api/jobs</span>
+          <button type="button" class="btn btn-sm" data-view-link="rag-admin">RAG 管理でファイル確認</button>
+          <button type="button" class="btn btn-sm" data-view-link="audit">監査ログ</button>
+        </div>
+        <div class="panel-body">
+          <p class="rag-register-note" style="margin-bottom:12px">
+            抽出・埋め込み・RAG メタデータ再同期などの非同期ジョブです。検索画面・RAG 管理の<strong>統計カード</strong>からも遷移できます。失敗行は <strong>再試行</strong> または RAG 管理の <strong>再抽出</strong> と同じ API（<code>POST /api/jobs/{id}/retry</code>）を想定しています。
+          </p>
+          <div class="filter-bar" style="margin-bottom:12px;flex-wrap:wrap">
+            <select id="jobsTypeFilter">
+              <option value="">種別（すべて）</option>
+              <option value="extraction">extraction</option>
+              <option value="embedding">embedding</option>
+              <option value="rag_metadata_sync">rag_metadata_sync</option>
+            </select>
+            <select id="jobsStatusFilter">
+              <option value="">状態（すべて）</option>
+              <option value="running">running</option>
+              <option value="pending">pending</option>
+              <option value="failed">failed</option>
+              <option value="completed">completed</option>
+              <option value="dead_letter">dead_letter</option>
+            </select>
+            <input type="search" id="jobsTargetFilter" placeholder="ケース ID / ファイル名…" />
+            <button type="button" class="btn btn-sm" id="jobsFilterBtn">絞り込み</button>
+            <button type="button" class="btn btn-sm" id="jobsFilterReset">リセット</button>
+          </div>
+          <table class="data-table" data-sortable-table id="jobsTable">
+            <thead>
+              <tr>
+                <th class="sortable-th" data-sort-type="text" scope="col">ジョブ ID<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">種別<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">状態<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="text" scope="col">対象<span class="sort-ind" aria-hidden="true"></span></th>
+                <th class="sortable-th" data-sort-type="date" scope="col">更新<span class="sort-ind" aria-hidden="true"></span></th>
+                <th scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-job-row data-job-type="extraction" data-job-status="failed" data-job-target="CASE-HOLLYWOOD">
+                <td class="mono">JOB-2026-03798</td>
+                <td><span class="label label-default">extraction</span></td>
+                <td><span class="label label-danger job-status-label">failed</span></td>
+                <td>
+                  <a href="#" data-case-edit="CASE-HOLLYWOOD">CASE-HOLLYWOOD</a>
+                  <span class="mono job-target-link">/ 男性.xlsx</span>
+                  <button type="button" class="btn btn-sm btn-icon-tab" data-view-link="rag-admin" title="RAG 管理">↗</button>
+                </td>
+                <td class="mono" data-sort-value="2026-06-09T10:40">2026-06-09 10:40</td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-primary" data-job-retry>再試行</button>
+                  <button type="button" class="btn btn-sm" data-audit-jump data-audit-case="CASE-HOLLYWOOD">監査</button>
+                </td>
+              </tr>
+              <tr data-job-row data-job-type="extraction" data-job-status="pending" data-job-target="CASE-2026-00135">
+                <td class="mono">JOB-2026-03821</td>
+                <td><span class="label label-default">extraction</span></td>
+                <td><span class="label label-warning job-status-label">pending</span></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00135">CASE-2026-00135</a>
+                  <span class="mono job-target-link">/ meeting_20251220.mp3</span>
+                </td>
+                <td class="mono" data-sort-value="2026-06-09T14:10">2026-06-09 14:10</td>
+                <td><span class="label label-default">待機中</span></td>
+              </tr>
+              <tr data-job-row data-job-type="embedding" data-job-status="pending" data-job-target="CASE-2026-KEIRI">
+                <td class="mono">JOB-2026-03815</td>
+                <td><span class="label label-purple">embedding</span></td>
+                <td><span class="label label-warning job-status-label">pending</span></td>
+                <td>
+                  <a href="#" data-case-edit="CASE-2026-KEIRI">CASE-2026-KEIRI</a>
+                  <span class="mono job-target-link">/ 2026年度.xlsx</span>
+                  <button type="button" class="btn btn-sm btn-icon-tab" data-view-link="rag-admin" title="RAG 管理">↗</button>
+                </td>
+                <td class="mono" data-sort-value="2026-06-09T13:55">2026-06-09 13:55</td>
+                <td><span class="label label-default">待機中</span></td>
+              </tr>
+              <tr data-job-row data-job-type="rag_metadata_sync" data-job-status="running" data-job-target="CASE-YAMA">
+                <td class="mono">JOB-2026-03790</td>
+                <td><span class="label label-info">rag_metadata_sync</span></td>
+                <td><span class="label label-info job-status-label">running</span></td>
+                <td>
+                  <a href="#" data-case-edit="CASE-YAMA">CASE-YAMA</a>
+                  <span class="job-target-link">閲覧範囲変更の再同期</span>
+                </td>
+                <td class="mono" data-sort-value="2026-06-09T14:25">2026-06-09 14:25</td>
+                <td><span class="label label-info">実行中</span></td>
+              </tr>
+              <tr data-job-row data-job-type="embedding" data-job-status="completed" data-job-target="CASE-2026-00142">
+                <td class="mono">JOB-2026-03780</td>
+                <td><span class="label label-purple">embedding</span></td>
+                <td><span class="label label-success job-status-label">completed</span></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00142">CASE-2026-00142</a>
+                  <span class="mono job-target-link">/ data_tables.xlsx</span>
+                </td>
+                <td class="mono" data-sort-value="2026-06-09T12:00">2026-06-09 12:00</td>
+                <td>—</td>
+              </tr>
+              <tr data-job-row data-job-type="extraction" data-job-status="dead_letter" data-job-target="CASE-2026-00138">
+                <td class="mono">JOB-2026-03712</td>
+                <td><span class="label label-default">extraction</span></td>
+                <td><span class="label label-danger job-status-label">dead_letter</span></td>
+                <td>
+                  <a href="case-detail.html?case=CASE-2026-00138">CASE-2026-00138</a>
+                  <span class="mono job-target-link">/ region_economy_q1.pdf</span>
+                </td>
+                <td class="mono" data-sort-value="2026-06-08T18:30">2026-06-08 18:30</td>
+                <td>
+                  <button type="button" class="btn btn-sm" data-job-retry>再試行</button>
+                  <button type="button" class="btn btn-sm btn-danger" title="運用判断が必要">DLQ 確認</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="excel-toast" id="jobsActionToast" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -2387,7 +2822,262 @@
     const editId = params.get('edit');
     if (editId && enterCaseEditMode(editId)) {
       history.replaceState(null, '', location.pathname);
+      return;
     }
+    const viewId = params.get('view');
+    if (viewId && document.getElementById('view-' + viewId)) {
+      showView(viewId);
+      if (viewId === 'jobs') {
+        const status = params.get('filter') || params.get('status');
+        const type = params.get('type');
+        if (status || type) {
+          setTimeout(() => applyJobsFilter({ status, type }), 0);
+        }
+      }
+      if (viewId === 'audit') {
+        const caseId = params.get('case');
+        if (caseId) {
+          const input = document.getElementById('auditCaseFilter');
+          if (input) {
+            input.value = caseId;
+            setTimeout(() => applyAuditFilter(), 0);
+          }
+        }
+      }
+      history.replaceState(null, '', location.pathname);
+    }
+  })();
+
+  document.querySelectorAll('[data-view-link]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      showView(btn.dataset.viewLink);
+    });
+  });
+
+  document.querySelectorAll('[data-case-edit]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      const id = el.dataset.caseEdit;
+      if (id && enterCaseEditMode(id)) showView('register');
+    });
+  });
+
+  function applyJobsFilter(opts) {
+    opts = opts || {};
+    const typeSel = document.getElementById('jobsTypeFilter');
+    const statusSel = document.getElementById('jobsStatusFilter');
+    const targetInput = document.getElementById('jobsTargetFilter');
+    if (opts.type && typeSel) typeSel.value = opts.type;
+    if (opts.status && statusSel) statusSel.value = opts.status;
+    const type = typeSel ? typeSel.value : '';
+    const status = statusSel ? statusSel.value : '';
+    const targetQ = (targetInput ? targetInput.value : '').trim().toLowerCase();
+    let visible = 0;
+    document.querySelectorAll('[data-job-row]').forEach(row => {
+      const matchType = !type || row.dataset.jobType === type;
+      const matchStatus = !status || row.dataset.jobStatus === status;
+      const text = row.textContent.toLowerCase();
+      const matchTarget = !targetQ || text.includes(targetQ);
+      const show = matchType && matchStatus && matchTarget;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    const toast = document.getElementById('jobsActionToast');
+    if (toast && (type || status || targetQ)) {
+      toast.textContent = visible + ' 件表示（モック絞り込み）';
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2500);
+    }
+  }
+
+  function applyAuditFilter() {
+    const cat = document.getElementById('auditActionFilter')?.value || '';
+    const caseQ = (document.getElementById('auditCaseFilter')?.value || '').trim().toLowerCase();
+    const userQ = (document.getElementById('auditUserFilter')?.value || '').trim().toLowerCase();
+    const from = document.getElementById('auditDateFrom')?.value || '';
+    const to = document.getElementById('auditDateTo')?.value || '';
+    let visible = 0;
+    document.querySelectorAll('[data-audit-row]').forEach(row => {
+      const matchCat = !cat || row.dataset.auditCat === cat;
+      const matchUser = !userQ || row.textContent.toLowerCase().includes(userQ);
+      const matchCase = !caseQ || row.textContent.toLowerCase().includes(caseQ);
+      const d = row.dataset.auditDate || '';
+      const matchDate = (!from || d >= from) && (!to || d <= to);
+      const show = matchCat && matchUser && matchCase && matchDate;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    return visible;
+  }
+
+  function navigateToJobs(opts) {
+    showView('jobs');
+    applyJobsFilter(opts || {});
+  }
+
+  document.querySelectorAll('[data-jobs-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigateToJobs({
+        status: btn.dataset.jobsFilter || '',
+        type: btn.dataset.jobsType || '',
+      });
+    });
+  });
+
+  document.querySelectorAll('[data-jobs-stat-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyJobsFilter({ status: btn.dataset.jobsStatFilter });
+    });
+  });
+
+  const jobsFilterBtn = document.getElementById('jobsFilterBtn');
+  if (jobsFilterBtn) jobsFilterBtn.addEventListener('click', () => applyJobsFilter());
+
+  const jobsFilterReset = document.getElementById('jobsFilterReset');
+  if (jobsFilterReset) {
+    jobsFilterReset.addEventListener('click', () => {
+      const typeSel = document.getElementById('jobsTypeFilter');
+      const statusSel = document.getElementById('jobsStatusFilter');
+      const targetInput = document.getElementById('jobsTargetFilter');
+      if (typeSel) typeSel.value = '';
+      if (statusSel) statusSel.value = '';
+      if (targetInput) targetInput.value = '';
+      applyJobsFilter();
+    });
+  }
+
+  const auditFilterBtn = document.getElementById('auditFilterBtn');
+  if (auditFilterBtn) {
+    auditFilterBtn.addEventListener('click', () => {
+      const n = applyAuditFilter();
+      const toast = document.getElementById('auditActionToast');
+      if (toast) {
+        toast.textContent = n + ' 件表示（モック絞り込み）';
+        toast.classList.add('visible');
+        setTimeout(() => toast.classList.remove('visible'), 2500);
+      }
+    });
+  }
+
+  (function initAuditDetail() {
+    const overlay = document.getElementById('auditDetailOverlay');
+    const grid = document.getElementById('auditDetailGrid');
+    const noteEl = document.getElementById('auditDetailNote');
+    const idEl = document.getElementById('auditDetailId');
+    const followBtn = document.getElementById('auditDetailFollow');
+    const closeBtn = document.getElementById('auditDetailClose');
+    if (!overlay || !grid) return;
+
+    let currentAudit = null;
+
+    function openDetail(row) {
+      let data;
+      try {
+        data = JSON.parse(row.dataset.auditDetail || '{}');
+      } catch (_) {
+        return;
+      }
+      currentAudit = data;
+      idEl.textContent = data.id || '';
+      grid.innerHTML = '';
+      const fields = [
+        ['ユーザー', data.user],
+        ['アクション', data.action],
+        ['対象', data.target],
+        ['ケース', data.case || '—'],
+        ['IP', data.ip || '—'],
+      ];
+      fields.forEach(([k, v]) => {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = '<dt>' + k + '</dt><dd>' + v + '</dd>';
+        grid.appendChild(wrap);
+      });
+      noteEl.textContent = data.note || '';
+      followBtn.classList.add('hidden');
+      if (data.action && data.action.startsWith('ai.')) {
+        followBtn.textContent = 'AI 検索を開く';
+        followBtn.classList.remove('hidden');
+      } else if (data.case) {
+        followBtn.textContent = 'ケース編集を開く';
+        followBtn.classList.remove('hidden');
+      }
+      overlay.classList.remove('hidden');
+    }
+
+    function closeDetail() {
+      overlay.classList.add('hidden');
+    }
+
+    document.querySelectorAll('[data-audit-detail]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const row = btn.closest('[data-audit-row]');
+        if (row) openDetail(row);
+      });
+    });
+
+    document.querySelectorAll('[data-audit-row]').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.closest('a, button')) return;
+        openDetail(row);
+      });
+    });
+
+    closeBtn?.addEventListener('click', closeDetail);
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeDetail();
+    });
+    followBtn?.addEventListener('click', () => {
+      const data = currentAudit;
+      closeDetail();
+      if (!data) return;
+      if (data.action && data.action.startsWith('ai.')) {
+        showView('ai');
+      } else if (data.case && enterCaseEditMode(data.case)) {
+        showView('register');
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !overlay.classList.contains('hidden')) closeDetail();
+    });
+  })();
+
+  (function initJobRetry() {
+    document.querySelectorAll('[data-job-retry]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('[data-job-row]');
+        const jobId = row?.querySelector('.mono')?.textContent?.trim() || 'JOB';
+        const toast = document.getElementById('jobsActionToast');
+        if (toast) {
+          toast.textContent = jobId + ' を再試行キューに投入しました（モック · POST /api/jobs/.../retry）';
+          toast.classList.add('visible');
+        }
+        if (row) {
+          const label = row.querySelector('.job-status-label');
+          if (label) {
+            label.textContent = 'pending';
+            label.className = 'label label-warning job-status-label';
+          }
+          row.dataset.jobStatus = 'pending';
+        }
+        btn.disabled = true;
+        btn.textContent = '投入済';
+      });
+    });
+
+    document.querySelectorAll('[data-audit-jump]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const caseId = btn.dataset.auditCase || '';
+        showView('audit');
+        const input = document.getElementById('auditCaseFilter');
+        if (input && caseId) {
+          input.value = caseId;
+          applyAuditFilter();
+        }
+      });
+    });
   })();
 
   function fillFormFromExcel(fileName) {
