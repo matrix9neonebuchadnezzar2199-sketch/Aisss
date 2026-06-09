@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { AttachmentPanel } from '../components/AttachmentPanel'
 import { apiFetch, type CaseDetail, type MasterItem } from '../lib/api'
 
 const emptyForm = {
@@ -173,6 +174,13 @@ export function RegisterPage () {
       <button type="button" className="primary" onClick={() => void submit()} disabled={saving}>
         {caseId ? '更新する' : '登録する'}
       </button>
+
+      {caseId && (
+        <AttachmentPanel caseId={caseId} />
+      )}
+      {!caseId && (
+        <p className="hint">添付ファイルは登録後（編集モード）または詳細画面からアップロードできます。</p>
+      )}
     </section>
   )
 }

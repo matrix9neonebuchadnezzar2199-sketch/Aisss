@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { AttachmentPanel } from '../components/AttachmentPanel'
 import { apiFetch, type CaseDetail } from '../lib/api'
 
 function joinedBody (c: CaseDetail): string {
@@ -49,16 +50,7 @@ export function CaseDetailPage () {
       </dl>
       <h3>本文</h3>
       <pre className="joined-body">{joinedBody(item)}</pre>
-      {item.attachments && item.attachments.length > 0 && (
-        <>
-          <h3>添付</h3>
-          <ul>
-            {item.attachments.map((a) => (
-              <li key={a.id}>{a.file_name} — {a.extraction_status}</li>
-            ))}
-          </ul>
-        </>
-      )}
+      <AttachmentPanel caseId={item.id} initial={item.attachments} />
     </section>
   )
 }

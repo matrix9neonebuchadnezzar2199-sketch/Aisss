@@ -1,5 +1,21 @@
 # Development Diary
 
+## 2026-06-09: Milestone 3 Attachment and Extraction MVP
+
+### Summary
+
+Implemented attachment upload to MinIO, async extraction jobs, worker for PDF/text/DOCX parsing (OCR/ASR stubs), download and extracted-text APIs, and Web attachment panel with status polling and retry.
+
+### New / Updated
+
+- `infra/migrations/004_m3_extracted_texts.sql`
+- `apps/api` — storage service, attachment routes, multipart upload
+- `apps/workers` — job poller, pdf-parse, mammoth
+- `apps/web` — `AttachmentPanel` on register (edit) and detail
+- `aisss/.env.example`, `docs/11-milestones.md`
+
+---
+
 ## 2026-06-09: Milestone 2 Case Management API and Web Wiring
 
 ### Summary

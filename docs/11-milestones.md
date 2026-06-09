@@ -86,7 +86,9 @@ Done when:
 - Extracted text is linked to case and attachment.
 - Failed extraction is visible and retryable.
 
-**Mock coverage:** Pipeline status on search/RAG/detail; **再抽出** on RAG row; upload zone UI only (no real upload).
+**Implementation:** MinIO upload/download, `extracted_texts` table, extraction worker (PDF/TXT/DOCX; OCR/ASR stub), Web attachment panel with retry. **Mock coverage:** RAG row **再抽出** still links to jobs view.
+
+**Done when (progress):** originals in object storage; extracted text linked; failed extraction visible and retryable via API/UI.
 
 ## Milestone 4: Excel Import
 

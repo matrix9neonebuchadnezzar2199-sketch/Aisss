@@ -38,6 +38,51 @@ export type CaseListItem = {
   updated_at: string
 }
 
+export type AttachmentItem = {
+  id: string
+  file_name: string
+  extraction_status: string
+  extraction_error?: string | null
+  content_type?: string
+  file_size?: number
+  uploaded_at?: string
+}
+
+export async function uploadAttachment (caseId: string, file: File): Promise<AttachmentItem> {
+  const form = new FormData()
+  form.append('file', file)
+  const response = await fetch(`/api/cases/${caseId}/attachments`, {
+    method: 'POST',
+    headers: { 'X-AISSS-User-Id': getUserId() },
+    body: form
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(body.error?.message ?? `HTTP ${response.status}`)
+  }
+  return response.json() as Promise<AttachmentItem>
+}
+
+export async function retryExtraction (attachmentId: string): Promise<void> {
+  await apiFetch(`/api/attachments/${attachmentId}/retry-extraction`, { method: 'POST' })
+}
+
+export type ExtractedText = {
+  attachment_id: string
+  text?: string | null
+  status?: string
+  source_type?: string
+  extraction_engine?: string
+}
+
+export async function fetchExtractedText (attachmentId: string): Promise<ExtractedText> {
+  return apiFetch<ExtractedText>(`/api/attachments/${attachmentId}/extracted-text`)
+}
+
+export function attachmentDownloadUrl (attachmentId: string): string {
+  return `/api/attachments/${attachmentId}/download`
+}
+
 export type CaseDetail = CaseListItem & {
   summary?: string
   body_summary?: string
@@ -48,5 +93,5 @@ export type CaseDetail = CaseListItem & {
   registering_department_id?: string
   rank_id?: string
   viewing_ranges?: Array<{ id: string; name: string }>
-  attachments?: Array<{ id: string; file_name: string; extraction_status: string }>
+  attachments?: AttachmentItem[]
 }
