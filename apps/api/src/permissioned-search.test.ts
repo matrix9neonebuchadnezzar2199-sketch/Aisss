@@ -12,7 +12,7 @@ const admin: AuthUser = {
   departmentId: null,
   role: 'admin',
   groupIds: [],
-  viewingRangeIds: []
+  viewingRangeIds: ['restricted-range']
 }
 
 const settings: Settings = {
@@ -86,4 +86,5 @@ test('permissionedSearch excludes search_policy deny even for admin override', a
 
   assert.deepEqual(result.contexts, [])
   assert.equal(result.excluded_counts.search_policy, 1)
+  assert.equal(result.excluded_counts.viewing_range ?? 0, 0)
 })
