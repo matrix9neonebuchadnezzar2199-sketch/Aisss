@@ -500,6 +500,43 @@
       padding: 4px 8px;
     }
     .filter-bar .tag-text { font-size: 12px; }
+    .filter-bar.rag-filter-bar {
+      flex-wrap: nowrap;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .filter-bar.rag-filter-bar input[type="search"] {
+      flex: 1 1 auto;
+      min-width: 120px;
+    }
+    .filter-bar.rag-filter-bar .tag-input-wrap {
+      flex: 1 1 auto;
+      min-width: 140px;
+      max-width: 220px;
+    }
+    .filter-bar.rag-filter-bar .rag-date-range {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 0 0 30%;
+      max-width: 30%;
+      min-width: 0;
+    }
+    .filter-bar.rag-filter-bar .rag-date-range input[type="date"] {
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+      padding: 6px 4px;
+      font-size: 12px;
+    }
+    .filter-bar.rag-filter-bar .rag-date-sep {
+      color: var(--fg-muted);
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+    .filter-bar.rag-filter-bar > .btn {
+      flex-shrink: 0;
+    }
 
     /* Panels */
     .view { display: none; }
@@ -1266,7 +1303,7 @@
               <p class="rag-register-note" style="margin-bottom:8px">
                 ㋹ = AI 検索のベクトル索引に含める。パイプライン状態と RAG 有効化を同一画面で操作します。
               </p>
-              <div class="filter-bar" style="margin-bottom:12px;flex-wrap:wrap;align-items:flex-start">
+              <div class="filter-bar rag-filter-bar">
                 <input type="search" placeholder="タイトル・ファイル名…" />
                 <div class="tag-input-wrap" data-tag-input data-tag-mode="filter">
                   <div class="tag-chips"></div>
@@ -1275,9 +1312,11 @@
                     <ul class="tag-suggestions hidden"></ul>
                   </div>
                 </div>
-                <input type="date" title="期間（開始）" />
-                <span style="color:var(--fg-muted)">〜</span>
-                <input type="date" title="期間（終了）" />
+                <div class="rag-date-range">
+                  <input type="date" title="期間（開始）" />
+                  <span class="rag-date-sep">〜</span>
+                  <input type="date" title="期間（終了）" />
+                </div>
                 <button class="btn btn-sm">検索</button>
               </div>
               <div class="rag-file-list">
