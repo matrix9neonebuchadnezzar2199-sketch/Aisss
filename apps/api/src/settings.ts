@@ -10,6 +10,7 @@ export type Settings = {
   ollamaBaseUrl: string
   migrateOnStart: boolean
   migrationsDir: string
+  devUserId: string | null
 }
 
 function required (name: string): string {
@@ -27,6 +28,7 @@ export function loadSettings (): Settings {
     databaseUrl: required('DATABASE_URL'),
     ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://host.docker.internal:11434',
     migrateOnStart: (process.env.API_MIGRATE_ON_START ?? 'true').toLowerCase() !== 'false',
-    migrationsDir: process.env.MIGRATIONS_DIR ?? path.resolve(moduleDir, '../../../infra/migrations')
+    migrationsDir: process.env.MIGRATIONS_DIR ?? path.resolve(moduleDir, '../../../infra/migrations'),
+    devUserId: process.env.DEV_USER_ID ?? '00000000-0000-4000-8000-000000000001'
   }
 }
