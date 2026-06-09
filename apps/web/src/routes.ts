@@ -11,5 +11,8 @@ export const navItems: NavItem[] = [
   { path: '/rag', label: 'RAG 管理' },
   { path: '/models', label: 'モデル管理' },
   { path: '/masters', label: 'マスタ管理' },
-  { path: '/audit', label: '監査ログ' }
+  { path: '/audit', label: '監査ログ' },
+  { path: '/jobs', label: 'ジョブ状態' },
+  { path: '/admin', label: '管理ダッシュボード' },
+  { path: '/pilot', label: '本番パイロット' }
 ]

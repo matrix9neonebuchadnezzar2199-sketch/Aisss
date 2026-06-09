@@ -233,3 +233,92 @@ export async function saveModelRoles (input: {
     body: JSON.stringify(input)
   })
 }
+
+export type JobItem = {
+  id: string
+  job_type: string
+  status: string
+  case_display_id?: string | null
+  attachment_id?: string | null
+  error?: string | null
+  retry_count: number
+  max_attempts: number
+  dead_lettered_at?: string | null
+  updated_at: string
+}
+
+export type JobStats = {
+  running: number
+  pending: number
+  failed: number
+  dead_letter: number
+  completed_today: number
+  by_type: Record<string, Record<string, number>>
+}
+
+export async function fetchJobStats (): Promise<JobStats> {
+  return apiFetch('/api/jobs/stats')
+}
+
+export async function fetchJobs (params?: Record<string, string>): Promise<{ items: JobItem[]; total: number }> {
+  const qs = params ? `?${new URLSearchParams(params)}` : ''
+  return apiFetch(`/api/jobs${qs}`)
+}
+
+export async function retryJob (jobId: string): Promise<void> {
+  await apiFetch(`/api/jobs/${jobId}/retry`, { method: 'POST' })
+}
+
+export async function deadLetterJob (jobId: string, reason?: string): Promise<void> {
+  await apiFetch(`/api/jobs/${jobId}/dead-letter`, {
+    method: 'POST',
+    body: JSON.stringify({ reason })
+  })
+}
+
+export type AdminDashboard = {
+  cases: number
+  failed_extractions: number
+  failed_jobs: number
+  rag_chunks: number
+  audit_events_today: number
+  open_feedback: number
+}
+
+export async function fetchAdminDashboard (): Promise<AdminDashboard> {
+  return apiFetch('/api/admin/dashboard')
+}
+
+export type PilotFeedback = {
+  id: string
+  area: string
+  severity: string
+  title: string
+  description: string
+  status: string
+  submitted_by_name?: string
+  created_at: string
+}
+
+export async function fetchPilotFeedback (): Promise<{ items: PilotFeedback[] }> {
+  return apiFetch('/api/pilot/feedback')
+}
+
+export async function createPilotFeedback (input: {
+  area: string
+  severity: string
+  title: string
+  description: string
+}): Promise<void> {
+  await apiFetch('/api/pilot/feedback', {
+    method: 'POST',
+    body: JSON.stringify(input)
+  })
+}
+
+export async function updatePilotFeedbackStatus (id: string, status: string): Promise<void> {
+  await apiFetch(`/api/pilot/feedback/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  })
+}

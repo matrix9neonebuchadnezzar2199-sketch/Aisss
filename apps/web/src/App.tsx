@@ -1,8 +1,11 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import { ApiStatus } from './components/ApiStatus'
+import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { AiSearchPage } from './pages/AiSearchPage'
 import { AuditPage } from './pages/AuditPage'
+import { JobsPage } from './pages/JobsPage'
 import { ModelsPage } from './pages/ModelsPage'
+import { PilotPage } from './pages/PilotPage'
 import { RagAdminPage } from './pages/RagAdminPage'
 import { StandaloneFilePage } from './pages/StandaloneFilePage'
 import { CaseDetailPage } from './pages/CaseDetailPage'
@@ -49,6 +52,9 @@ export function App () {
           <Route path="/cases/:displayId" element={<CaseDetailPage />} />
           <Route path="/masters" element={<MastersPage />} />
           <Route path="/audit" element={<AuditPage />} />
+          <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/pilot" element={<PilotPage />} />
         </Routes>
       </main>
     </div>
