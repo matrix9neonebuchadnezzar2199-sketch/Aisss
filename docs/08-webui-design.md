@@ -156,10 +156,11 @@ Genres (initial):
 - **ケース（事象）** — files from case attachments and case-linked groups.
 - **単独ファイル（参照資料）** — files from standalone registration.
 
-Right panel modes:
+Right panel (single view):
 
-- **一覧・検索** — title, tag chips (history search, multi-select, × remove), and date filters; extraction status; RAG on/off labels.
-- **RAG 有効化** — toggle ㋹ per file (include in vector index for AI search).
+- Title, tag chips (history search, multi-select, × remove), and date filters.
+- File table: pipeline status (抽出済 / 埋め込み待ち / 抽出失敗) and ㋹ RAG toggle per row in one screen.
+- Retry extraction on failed rows; save applies RAG enablement changes.
 
 Registration paths (not upload on this screen):
 

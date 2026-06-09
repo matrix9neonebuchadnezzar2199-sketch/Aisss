@@ -352,31 +352,21 @@
     .rag-tree-btn .chev { color: var(--fg-subtle); font-size: 10px; width: 12px; }
     .rag-tree-btn.file { padding-left: 28px; font-size: 12px; color: var(--fg-muted); }
     .rag-tree-btn.file.active { color: var(--accent-emphasis); }
-    .rag-mode-tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid var(--border-default);
-      padding-bottom: 0;
-    }
-    .rag-mode-tabs button {
-      padding: 8px 14px;
-      border: none;
-      background: transparent;
-      color: var(--fg-muted);
-      font: inherit;
-      font-size: 13px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-    }
-    .rag-mode-tabs button:hover { color: var(--fg-default); }
-    .rag-mode-tabs button.active {
-      color: var(--accent-emphasis);
-      border-bottom-color: var(--accent-fg);
-      font-weight: 600;
-    }
     .rag-file-list { font-size: 13px; }
+    .rag-file-list-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-muted);
+      border-bottom: 1px solid var(--border-default);
+    }
+    .rag-file-list-head .fname { flex: 1; }
+    .rag-file-list-head .col-pipeline { width: 88px; }
+    .rag-file-list-head .col-rag { width: 100px; }
+    .rag-file-list-head .col-actions { width: 72px; }
     .rag-file-row {
       display: flex;
       align-items: center;
@@ -385,7 +375,18 @@
       border-bottom: 1px solid var(--border-muted);
     }
     .rag-file-row:hover { background: var(--canvas-inset); }
-    .rag-file-row .fname { flex: 1; }
+    .rag-file-row .fname { flex: 1; min-width: 0; }
+    .rag-file-row .col-pipeline { width: 88px; flex-shrink: 0; }
+    .rag-file-row .col-rag { width: 100px; flex-shrink: 0; }
+    .rag-file-row .col-actions { width: 72px; flex-shrink: 0; }
+    .rag-file-row .col-rag label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
     .rag-file-row.nested { padding-left: 28px; }
     .rag-enabled-mark { color: var(--success-fg); font-weight: 700; }
     .rag-register-note {
@@ -1262,10 +1263,9 @@
               </ul>
             </div>
             <div class="rag-main">
-              <div class="rag-mode-tabs" id="ragModeTabs">
-                <button type="button" class="active" data-rag-mode="browse">一覧・検索</button>
-                <button type="button" data-rag-mode="enable">RAG 有効化 <span class="rag-enabled-mark">㋹</span></button>
-              </div>
+              <p class="rag-register-note" style="margin-bottom:8px">
+                ㋹ = AI 検索のベクトル索引に含める。パイプライン状態と RAG 有効化を同一画面で操作します。
+              </p>
               <div class="filter-bar" style="margin-bottom:12px;flex-wrap:wrap;align-items:flex-start">
                 <input type="search" placeholder="タイトル・ファイル名…" />
                 <div class="tag-input-wrap" data-tag-input data-tag-mode="filter">
@@ -1280,28 +1280,51 @@
                 <input type="date" title="期間（終了）" />
                 <button class="btn btn-sm">検索</button>
               </div>
-              <div id="ragPanelBrowse">
-                <div class="rag-file-list">
-                  <div class="rag-file-row"><span class="fname">2025年度経理データ / 2025年度.xlsx</span><span class="label label-success">抽出済</span><span class="label label-default">RAG OFF</span></div>
-                  <div class="rag-file-row"><span class="fname">2026年度経理データ / 2026年度.xlsx</span><span class="label label-warning">埋め込み待ち</span><span class="label label-default">RAG OFF</span></div>
-                  <div class="rag-file-row"><span class="fname">●山の自然 / 植物.pdf</span><span class="label label-success">抽出済</span><span class="label label-success">RAG ON</span></div>
-                  <div class="rag-file-row nested"><span class="fname">河川名.xlsx</span><span class="label label-success">抽出済</span><span class="label label-default">RAG OFF</span></div>
-                  <div class="rag-file-row"><span class="fname">ハリウッド俳優 / 男性.xlsx</span><span class="label label-danger">抽出失敗</span><span class="label label-default">—</span><button class="btn btn-sm">再抽出</button></div>
-                  <div class="rag-file-row nested"><span class="fname">女性.xlsx</span><span class="label label-success">抽出済</span><span class="label label-default">RAG OFF</span></div>
+              <div class="rag-file-list">
+                <div class="rag-file-list-head">
+                  <span class="fname">細部 / ファイル</span>
+                  <span class="col-pipeline">パイプライン</span>
+                  <span class="col-rag">㋹ RAG</span>
+                  <span class="col-actions"></span>
+                </div>
+                <div class="rag-file-row">
+                  <span class="fname">2025年度経理データ / 2025年度.xlsx</span>
+                  <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
+                  <span class="col-rag"><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"></span>
+                </div>
+                <div class="rag-file-row">
+                  <span class="fname">2026年度経理データ / 2026年度.xlsx</span>
+                  <span class="col-pipeline"><span class="label label-warning">埋め込み待ち</span></span>
+                  <span class="col-rag"><label><input type="checkbox" disabled title="埋め込み完了後に有効化可能" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"></span>
+                </div>
+                <div class="rag-file-row">
+                  <span class="fname"><span class="rag-enabled-mark">㋹</span> ●山の自然 / 植物.pdf</span>
+                  <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
+                  <span class="col-rag"><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"></span>
+                </div>
+                <div class="rag-file-row nested">
+                  <span class="fname">河川名.xlsx</span>
+                  <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
+                  <span class="col-rag"><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"></span>
+                </div>
+                <div class="rag-file-row">
+                  <span class="fname">ハリウッド俳優 / 男性.xlsx</span>
+                  <span class="col-pipeline"><span class="label label-danger">抽出失敗</span></span>
+                  <span class="col-rag"><label><input type="checkbox" disabled title="抽出失敗のため不可" /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"><button class="btn btn-sm">再抽出</button></span>
+                </div>
+                <div class="rag-file-row nested">
+                  <span class="fname"><span class="rag-enabled-mark">㋹</span> 女性.xlsx</span>
+                  <span class="col-pipeline"><span class="label label-success">抽出済</span></span>
+                  <span class="col-rag"><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span></label></span>
+                  <span class="col-actions"></span>
                 </div>
               </div>
-              <div id="ragPanelEnable" style="display:none">
-                <p class="rag-register-note">㋹ = AI 検索のベクトル索引に含める（有効化）。OFF のファイルは登録・閲覧のみで AI には渡しません。</p>
-                <div class="rag-file-list">
-                  <div class="rag-file-row"><span class="fname">2025年度経理データ / 2025年度.xlsx</span><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
-                  <div class="rag-file-row"><span class="fname">2026年度経理データ / 2026年度.xlsx</span><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
-                  <div class="rag-file-row"><span class="fname"><span class="rag-enabled-mark">㋹</span> ●山の自然 / 植物.pdf</span><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
-                  <div class="rag-file-row nested"><span class="fname">河川名.xlsx</span><label><input type="checkbox" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
-                  <div class="rag-file-row"><span class="fname"><span class="rag-enabled-mark">㋹</span> ハリウッド俳優 / 男性.xlsx</span><label><input type="checkbox" checked disabled title="抽出失敗のため不可" /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
-                  <div class="rag-file-row nested"><span class="fname"><span class="rag-enabled-mark">㋹</span> 女性.xlsx</span><label><input type="checkbox" checked /> <span class="rag-enabled-mark">㋹</span> RAG 有効</label></div>
-                </div>
-                <button class="btn btn-primary btn-sm" style="margin-top:12px">有効化設定を保存</button>
-              </div>
+              <button class="btn btn-primary btn-sm" style="margin-top:12px">変更を保存</button>
             </div>
           </div>
           <p class="rag-register-note" style="margin-top:16px">※ 細部グループ名・階層ルールはモック確認後に確定します。</p>
@@ -1519,16 +1542,6 @@
     if (!file) return;
     fillFormFromExcel(file.name);
     excelFileInput.value = '';
-  });
-
-  document.querySelectorAll('#ragModeTabs button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#ragModeTabs button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const enable = btn.dataset.ragMode === 'enable';
-      document.getElementById('ragPanelBrowse').style.display = enable ? 'none' : 'block';
-      document.getElementById('ragPanelEnable').style.display = enable ? 'block' : 'none';
-    });
   });
 
   document.querySelectorAll('#ragTree .rag-tree-btn').forEach(btn => {

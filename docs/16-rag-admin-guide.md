@@ -23,9 +23,7 @@ Standalone files carry minimal metadata (title/group, tags, viewing range) but s
 [RAG 管理]
 ├── Stats (chunks, queue, failures)
 ├── Left: Tree — ジャンル → 細部 → ファイル
-└── Right: Tabs
-    ├── 一覧・検索 (title, tag, date filters + status list)
-    └── RAG 有効化 (㋹ toggle per file)
+└── Right: Unified list (title, tag, date filters + pipeline status + ㋹ toggle per file)
 ```
 
 ### Tree levels
@@ -36,19 +34,13 @@ Standalone files carry minimal metadata (title/group, tags, viewing range) but s
 | 細部 | 2025年度経理データ, ●山の自然 | Grouping folder; may map to case title or standalone title |
 | ファイル | 2025年度.xlsx, 植物.pdf | Leaf; nested siblings allowed (e.g. 河川名.xlsx under same 細部) |
 
-### Modes
+### File list (unified)
 
-**一覧・検索**
-
-- Filter by title, tags, date range.
-- Show extraction / embedding / sync status.
-- Show whether RAG is currently ON or OFF.
-
-**RAG 有効化**
-
-- Operator toggles ㋹ per file.
-- Only files with successful extraction can be enabled.
-- Enabled files are embedded/synced to Qdrant; disabled files remain stored but excluded from AI retrieval.
+- Filter by title, tags, date range (same bar as before).
+- Each row shows pipeline status and ㋹ RAG toggle together.
+- Only files with successful extraction (and embedding when required) can enable ㋹.
+- Enabled files are synced to Qdrant; disabled files remain stored but excluded from AI retrieval.
+- Failed extraction shows **再抽出** on the same row.
 
 ## Pipeline Overview
 
@@ -92,18 +84,18 @@ flowchart LR
 2. Attach Office/PDF/etc.
 3. Save case.
 4. Open 管理 → RAG 管理; file appears under ケース（事象） tree.
-5. After extraction succeeds, enable ㋹ in **RAG 有効化** if needed.
+5. After extraction succeeds, enable ㋹ on the same RAG 管理 list if needed.
 
 ### Register a standalone file
 
 1. 登録 → 単独ファイル（参照資料） (or RAG 管理 → + 単独ファイル登録).
 2. Enter title (細部), tags, viewing range; upload file.
 3. Save; extraction job starts.
-4. Enable ㋹ in RAG 管理 when ready for AI search.
+4. Enable ㋹ on the file row when ready for AI search.
 
 ### Extraction failed
 
-Use **一覧・検索** to find the file → **再抽出** → re-enable ㋹ after success.
+Find the file in the list → **再抽出** → re-enable ㋹ after success.
 
 ## Open Design Items
 
