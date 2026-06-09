@@ -4,6 +4,7 @@ import type { AuthUser } from '../types/auth.js'
 import { canAccessCase, isAdmin } from './permissions.js'
 import { nextDisplayId } from './display-id.js'
 import { writeAuditLog } from './audit.js'
+import { enqueueCaseBodyEmbedding } from './rag-admin.js'
 
 export type CaseInput = {
   material_number?: string | null
@@ -343,6 +344,15 @@ export async function createCase (
       caseDisplayId: displayId
     })
     await client.query('COMMIT')
+    const hasBody = Boolean(
+      input.body_summary?.trim() ||
+      input.body_article?.trim() ||
+      input.body_assessment?.trim() ||
+      input.body_reference?.trim()
+    )
+    if (hasBody) {
+      await enqueueCaseBodyEmbedding(pool, caseId, displayId)
+    }
     return getCaseById(pool, user, caseId)
   } catch (error) {
     await client.query('ROLLBACK')
@@ -424,6 +434,14 @@ export async function updateCase (
       caseDisplayId: existing.display_id as string
     })
     await client.query('COMMIT')
+    const bodyTouched =
+      'body_summary' in input ||
+      'body_article' in input ||
+      'body_assessment' in input ||
+      'body_reference' in input
+    if (bodyTouched) {
+      await enqueueCaseBodyEmbedding(pool, caseId, existing.display_id as string)
+    }
     return getCaseById(pool, user, caseId)
   } catch (error) {
     await client.query('ROLLBACK')

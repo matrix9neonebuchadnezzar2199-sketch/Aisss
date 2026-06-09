@@ -6,7 +6,9 @@ import type { S3Client } from '@aws-sdk/client-s3'
 import { AppError, sendError } from './lib/errors.js'
 import { authPlugin } from './plugins/auth.js'
 import { attachmentRoutes } from './routes/attachments.js'
+import { adminOllamaRoutes } from './routes/admin-ollama.js'
 import { aiRoutes } from './routes/ai.js'
+import { ragRoutes } from './routes/rag.js'
 import { auditRoutes } from './routes/audit.js'
 import { caseRoutes } from './routes/cases.js'
 import { importRoutes } from './routes/imports.js'
@@ -91,7 +93,14 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
   await app.register(auditRoutes, { pool })
   await app.register(jobRoutes, { pool })
   await app.register(ollamaRoutes, { pool, settings })
-  await app.register(aiRoutes)
+  await app.register(adminOllamaRoutes, { pool })
+  await app.register(ragRoutes, {
+    pool,
+    settings,
+    storage,
+    storageConfig: settings.objectStorage
+  })
+  await app.register(aiRoutes, { pool, settings })
 
   app.decorate('pool', pool)
 

@@ -35,7 +35,24 @@ export const ollamaRoutes: FastifyPluginAsync<{
           is_rerank: role?.is_rerank ?? false
         }
       })
-      return { models }
+      const defaults = await pool.query(
+        `SELECT value_json FROM app_settings WHERE key = 'rag'`
+      )
+      const ragSettings = defaults.rows[0]?.value_json as { rerank_enabled?: boolean } | undefined
+      const defaultChat = models.find((m) => m.is_default_chat)
+      const defaultEmbed = models.find((m) => m.is_default_embedding)
+      const rerank = models.find((m) => m.is_rerank)
+
+      return {
+        models,
+        defaults: {
+          chat_model: defaultChat?.name ?? null,
+          embedding_model: defaultEmbed?.name ?? null,
+          rerank_model: rerank?.name ?? null,
+          rerank_enabled: ragSettings?.rerank_enabled ?? false,
+          enabled_chat_models: models.filter((m) => m.enabled_for_chat).map((m) => m.name)
+        }
+      }
     } catch (error) {
       return sendError(reply, error, request.id)
     }

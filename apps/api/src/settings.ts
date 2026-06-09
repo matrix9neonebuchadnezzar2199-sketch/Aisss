@@ -15,6 +15,8 @@ export type Settings = {
   port: number
   databaseUrl: string
   ollamaBaseUrl: string
+  vectorDbUrl: string
+  vectorCollection: string
   migrateOnStart: boolean
   migrationsDir: string
   devUserId: string | null
@@ -36,6 +38,8 @@ export function loadSettings (): Settings {
     port: Number(process.env.API_PORT ?? process.env.PORT ?? '8000'),
     databaseUrl: required('DATABASE_URL'),
     ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://host.docker.internal:11434',
+    vectorDbUrl: process.env.VECTOR_DB_URL ?? 'http://vector:6333',
+    vectorCollection: process.env.VECTOR_COLLECTION ?? 'aisss_chunks',
     migrateOnStart: (process.env.API_MIGRATE_ON_START ?? 'true').toLowerCase() !== 'false',
     migrationsDir: process.env.MIGRATIONS_DIR ?? path.resolve(moduleDir, '../../../infra/migrations'),
     devUserId: process.env.DEV_USER_ID ?? '00000000-0000-4000-8000-000000000001',
