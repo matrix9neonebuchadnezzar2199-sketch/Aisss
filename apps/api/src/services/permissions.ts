@@ -4,6 +4,10 @@ export function isAdmin (user: AuthUser): boolean {
   return user.role === 'admin'
 }
 
+export function isOperator (user: AuthUser): boolean {
+  return isAdmin(user) || user.role === 'operator' || user.role === 'reviewer'
+}
+
 export function canAccessCase (user: AuthUser, viewingRangeIds: string[]): boolean {
   if (isAdmin(user)) return true
   if (viewingRangeIds.length === 0) return false

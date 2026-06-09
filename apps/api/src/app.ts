@@ -15,6 +15,7 @@ import { importRoutes } from './routes/imports.js'
 import { jobRoutes } from './routes/jobs.js'
 import { masterRoutes } from './routes/masters.js'
 import { ollamaRoutes } from './routes/ollama.js'
+import { opsRoutes } from './routes/ops.js'
 import { permissionRoutes } from './routes/permissions.js'
 import { checkOllamaHealth } from './services/ollama-health.js'
 import type { Settings } from './settings.js'
@@ -92,6 +93,7 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
   await app.register(permissionRoutes, { pool })
   await app.register(auditRoutes, { pool })
   await app.register(jobRoutes, { pool })
+  await app.register(opsRoutes, { pool })
   await app.register(ollamaRoutes, { pool, settings })
   await app.register(adminOllamaRoutes, { pool })
   await app.register(ragRoutes, {

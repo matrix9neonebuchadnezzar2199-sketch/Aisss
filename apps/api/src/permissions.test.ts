@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { canAccessCase, isAdmin } from './services/permissions.js'
+import { canAccessCase, isAdmin, isOperator } from './services/permissions.js'
 import type { AuthUser } from './types/auth.js'
 
 const admin: AuthUser = {
@@ -23,6 +23,16 @@ const analyst: AuthUser = {
   viewingRangeIds: ['vr-analyst']
 }
 
+const viewer: AuthUser = {
+  id: '3',
+  externalId: null,
+  displayName: 'Viewer',
+  departmentId: null,
+  role: 'general',
+  groupIds: ['g2'],
+  viewingRangeIds: ['vr-public']
+}
+
 test('isAdmin detects admin role', () => {
   assert.equal(isAdmin(admin), true)
   assert.equal(isAdmin(analyst), false)
@@ -32,4 +42,10 @@ test('canAccessCase respects viewing range overlap', () => {
   assert.equal(canAccessCase(admin, []), true)
   assert.equal(canAccessCase(analyst, ['vr-analyst']), true)
   assert.equal(canAccessCase(analyst, ['vr-other']), false)
+})
+
+test('isOperator gates operational screens to elevated roles', () => {
+  assert.equal(isOperator(admin), true)
+  assert.equal(isOperator(analyst), true)
+  assert.equal(isOperator(viewer), false)
 })
