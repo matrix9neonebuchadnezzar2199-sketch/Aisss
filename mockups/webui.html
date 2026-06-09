@@ -393,6 +393,110 @@
     }
     .rag-register-note strong { color: var(--fg-default); }
 
+    /* Tag input (new + history search, chips with ×) */
+    .tag-input-wrap {
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius);
+      background: var(--input-bg);
+      padding: 6px 8px;
+      min-height: 38px;
+    }
+    .tag-input-wrap:focus-within {
+      outline: 2px solid var(--accent-fg);
+      outline-offset: -1px;
+    }
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .tag-chips:empty { margin-bottom: 0; }
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px 2px 8px;
+      border-radius: 12px;
+      background: var(--info-subtle);
+      color: var(--accent-emphasis);
+      font-size: 12px;
+      line-height: 1.4;
+      border: 1px solid rgba(56, 139, 253, 0.35);
+    }
+    .tag-chip-remove {
+      border: none;
+      background: transparent;
+      color: var(--fg-muted);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .tag-chip-remove:hover { color: var(--danger-fg); background: var(--danger-subtle); }
+    .tag-combobox { position: relative; }
+    .tag-text {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--input-fg);
+      font: inherit;
+      font-size: 13px;
+      padding: 4px 2px;
+      outline: none;
+    }
+    .tag-text::placeholder { color: var(--input-placeholder); }
+    .tag-suggestions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      z-index: 20;
+      margin: 4px 0 0;
+      padding: 4px 0;
+      list-style: none;
+      background: var(--canvas-default);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .tag-suggestions.hidden { display: none; }
+    .tag-suggestions li button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: var(--fg-default);
+      font: inherit;
+      font-size: 13px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .tag-suggestions li button:hover { background: var(--canvas-inset); }
+    .tag-suggestions .tag-suggest-new {
+      color: var(--accent-emphasis);
+      font-weight: 600;
+    }
+    .tag-suggestions .tag-suggest-hint {
+      font-size: 11px;
+      color: var(--fg-subtle);
+      padding: 6px 12px;
+      pointer-events: none;
+    }
+    .form-group.tag-span-2 { grid-column: 1 / -1; }
+    .filter-bar .tag-input-wrap {
+      min-width: 200px;
+      flex: 1;
+      max-width: 280px;
+      min-height: 32px;
+      padding: 4px 8px;
+    }
+    .filter-bar .tag-text { font-size: 12px; }
+
     /* Panels */
     .view { display: none; }
     .view.active { display: block; }
@@ -1062,7 +1166,17 @@
           <div class="form-grid">
             <div class="form-group"><label>タイトル（細部グループ名）</label><input type="text" placeholder="例: 2025年度経理データ" /></div>
             <div class="form-group"><label>ジャンル</label><select><option>単独ファイル（参照資料）</option></select></div>
-            <div class="form-group"><label>タグ</label><input type="text" placeholder="カンマ区切り" /></div>
+            <div class="form-group tag-span-2">
+              <label>タグ</label>
+              <div class="tag-input-wrap" data-tag-input data-tag-preset="参考資料,2025年度">
+                <div class="tag-chips"></div>
+                <div class="tag-combobox">
+                  <input type="text" class="tag-text" placeholder="新規入力または履歴から検索…" autocomplete="off" />
+                  <ul class="tag-suggestions hidden"></ul>
+                </div>
+              </div>
+              <span style="font-size:11px;color:var(--fg-subtle);margin-top:4px;display:block">Enter で追加 · 履歴から選択 · × で個別削除</span>
+            </div>
             <div class="form-group"><label>閲覧範囲</label><select><option>分析第一課</option><option>全員</option></select></div>
           </div>
           <div class="upload-zone" style="margin-top:12px">
@@ -1149,9 +1263,15 @@
                 <button type="button" class="active" data-rag-mode="browse">一覧・検索</button>
                 <button type="button" data-rag-mode="enable">RAG 有効化 <span class="rag-enabled-mark">㋹</span></button>
               </div>
-              <div class="filter-bar" style="margin-bottom:12px">
+              <div class="filter-bar" style="margin-bottom:12px;flex-wrap:wrap;align-items:flex-start">
                 <input type="search" placeholder="タイトル・ファイル名…" />
-                <input type="text" placeholder="タグ" style="max-width:120px" />
+                <div class="tag-input-wrap" data-tag-input data-tag-mode="filter">
+                  <div class="tag-chips"></div>
+                  <div class="tag-combobox">
+                    <input type="text" class="tag-text" placeholder="タグ（履歴検索）" autocomplete="off" />
+                    <ul class="tag-suggestions hidden"></ul>
+                  </div>
+                </div>
                 <input type="date" title="期間（開始）" />
                 <span style="color:var(--fg-muted)">〜</span>
                 <input type="date" title="期間（終了）" />
@@ -1414,6 +1534,147 @@
       btn.classList.add('active');
     });
   });
+
+  const TAG_HISTORY_KEY = 'aisss-tag-history';
+  const DEFAULT_TAG_HISTORY = [
+    '経済', '自然', '地政学', '2025年度', '2026年度', '参考資料', '内部限',
+    '東アジア', '経理', '植物', 'PDF', 'Excel', '月次分析'
+  ];
+
+  function loadTagHistory() {
+    try {
+      const raw = localStorage.getItem(TAG_HISTORY_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (_) {}
+    return DEFAULT_TAG_HISTORY.slice();
+  }
+
+  function saveTagHistory(history) {
+    try { localStorage.setItem(TAG_HISTORY_KEY, JSON.stringify(history.slice(0, 50))); } catch (_) {}
+  }
+
+  function initTagInput(wrap) {
+    const chipsEl = wrap.querySelector('.tag-chips');
+    const input = wrap.querySelector('.tag-text');
+    const list = wrap.querySelector('.tag-suggestions');
+    const history = loadTagHistory();
+    const selected = new Set();
+
+    const preset = (wrap.dataset.tagPreset || '').split(',').map(s => s.trim()).filter(Boolean);
+    preset.forEach(t => selected.add(t));
+
+    function renderChips() {
+      chipsEl.innerHTML = '';
+      selected.forEach(tag => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.textContent = tag;
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'tag-chip-remove';
+        rm.setAttribute('aria-label', 'タグ「' + tag + '」を削除');
+        rm.textContent = '×';
+        rm.addEventListener('click', () => {
+          selected.delete(tag);
+          renderChips();
+        });
+        chip.appendChild(rm);
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    function addTag(tag) {
+      const t = tag.trim();
+      if (!t || selected.has(t)) {
+        input.value = '';
+        hideSuggestions();
+        return;
+      }
+      selected.add(t);
+      if (!history.includes(t)) {
+        history.unshift(t);
+        saveTagHistory(history);
+      }
+      renderChips();
+      input.value = '';
+      hideSuggestions();
+    }
+
+    function hideSuggestions() {
+      list.classList.add('hidden');
+      list.innerHTML = '';
+    }
+
+    function showSuggestions(query) {
+      const q = query.trim().toLowerCase();
+      const matches = history.filter(h => {
+        if (selected.has(h)) return false;
+        if (!q) return true;
+        return h.toLowerCase().includes(q);
+      }).slice(0, 8);
+
+      list.innerHTML = '';
+      if (q && !history.some(h => h.toLowerCase() === q) && !selected.has(query.trim())) {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag-suggest-new';
+        btn.textContent = '新規: 「' + query.trim() + '」を追加';
+        btn.addEventListener('mousedown', e => { e.preventDefault(); addTag(query.trim()); });
+        li.appendChild(btn);
+        list.appendChild(li);
+      }
+      if (matches.length) {
+        if (!list.children.length) {
+          const hint = document.createElement('li');
+          hint.className = 'tag-suggest-hint';
+          hint.textContent = '履歴から選択';
+          list.appendChild(hint);
+        }
+        matches.forEach(h => {
+          const li = document.createElement('li');
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = h;
+          btn.addEventListener('mousedown', e => { e.preventDefault(); addTag(h); });
+          li.appendChild(btn);
+          list.appendChild(li);
+        });
+      }
+      if (!list.children.length) {
+        hideSuggestions();
+        return;
+      }
+      list.classList.remove('hidden');
+    }
+
+    input.addEventListener('focus', () => showSuggestions(input.value));
+    input.addEventListener('input', () => showSuggestions(input.value));
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (input.value.trim()) addTag(input.value);
+      } else if (e.key === 'Backspace' && !input.value && selected.size) {
+        const last = Array.from(selected).pop();
+        selected.delete(last);
+        renderChips();
+      } else if (e.key === 'Escape') {
+        hideSuggestions();
+        input.blur();
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!wrap.contains(e.target)) hideSuggestions();
+    });
+
+    renderChips();
+  }
+
+  document.querySelectorAll('[data-tag-input]').forEach(initTagInput);
 </script>
 </body>
 </html>

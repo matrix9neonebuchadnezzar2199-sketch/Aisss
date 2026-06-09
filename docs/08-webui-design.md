@@ -141,7 +141,7 @@ See [RAG Admin Guide](./16-rag-admin-guide.md).
 
 Operators register reference files that are not tied to a full case record:
 
-- Title (細部 group name), tags, viewing range.
+- Title (細部 group name), tags (new entry + history search; chips with per-tag × remove), viewing range.
 - File upload (Office, PDF, image, audio).
 - After save, extraction runs and the file appears under **単独ファイル（参照資料）** in the RAG tree.
 
@@ -158,7 +158,7 @@ Genres (initial):
 
 Right panel modes:
 
-- **一覧・検索** — title, tag, and date filters; extraction status; RAG on/off labels.
+- **一覧・検索** — title, tag chips (history search, multi-select, × remove), and date filters; extraction status; RAG on/off labels.
 - **RAG 有効化** — toggle ㋹ per file (include in vector index for AI search).
 
 Registration paths (not upload on this screen):
