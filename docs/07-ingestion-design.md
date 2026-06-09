@@ -15,7 +15,6 @@ Ingestion converts structured case input and attachments into searchable, audita
 | Image | Attachment upload | OCR text. |
 | Audio | Attachment upload | ASR transcript. |
 | Manual audio transcript | Attachment or text field | Text linked to the case. |
-| Dify direct document | Dify source registry | Shadow metadata and optional text mirror. |
 
 ## Excel Template
 

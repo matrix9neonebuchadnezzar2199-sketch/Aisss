@@ -30,7 +30,8 @@ Deliverables:
 - Backend skeleton.
 - WebUI skeleton.
 - Database migration setup.
-- Local Docker Compose for PostgreSQL, object storage, queue, vector DB, Dify, and Ollama where practical.
+- Local Docker Compose for PostgreSQL, object storage, queue, and vector DB.
+- Host Ollama connectivity documented and verifiable via `GET /api/ollama/health`.
 - `.env.example`.
 - Basic CI for lint and tests.
 
@@ -105,8 +106,10 @@ Deliverables:
 - Chunking and embedding jobs.
 - Vector database integration.
 - Permissioned search middleware.
-- Dify workflow integration.
-- Ollama model integration.
+- `/api/ai/chat` with permissioned search and Ollama completion.
+- AI search UI with model selector and Ollama health indicator.
+- RAG admin and model management screens.
+- Optional ReRank configuration (default off).
 - Citation display.
 - Handling-condition output restrictions.
 
@@ -159,7 +162,7 @@ Done when:
 
 - Native image similarity search.
 - Advanced ranking using reliability, accuracy, and rank.
-- Dify direct knowledge shadow-sync automation.
+- Metadata-weighted ranking beyond optional ReRank.
 - Case relation graph.
 - Retention expiration workflows.
 - Redaction workflow for external sharing.

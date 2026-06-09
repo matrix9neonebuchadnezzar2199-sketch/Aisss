@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The API boundary keeps record management, permission enforcement, ingestion jobs, and Dify integration explicit. This document is a starting contract for implementation, not a final OpenAPI specification.
+The API boundary keeps record management, permission enforcement, ingestion jobs, Ollama integration, and AI chat explicit. This document is a starting contract for implementation, not a final OpenAPI specification.
 
 ## API Groups
 
@@ -14,6 +14,9 @@ The API boundary keeps record management, permission enforcement, ingestion jobs
 - Permission management.
 - Extraction and RAG jobs.
 - Permissioned search middleware.
+- RAG administration.
+- Ollama proxy and model roles.
+- AI chat.
 - Audit logs.
 
 ## Authentication Assumptions
@@ -100,7 +103,7 @@ Changing group membership or viewing range mapping must invalidate permission ca
 
 ## Permissioned Search Middleware API
 
-Dify calls this API, not the unrestricted vector database.
+Authenticated AISSS sessions call this API. `/api/ai/chat` also invokes the same logic internally. Callers must not query the unrestricted vector database directly.
 
 `POST /api/rag/search`
 
@@ -108,9 +111,8 @@ Request:
 
 ```json
 {
-  "user_id": "uuid",
   "query": "string",
-  "channel": "dify_chat",
+  "channel": "webui_chat",
   "top_k": 8,
   "filters": {
     "date_from": "2026-01-01",
@@ -119,6 +121,8 @@ Request:
   }
 }
 ```
+
+`user_id` is taken from the authenticated session, not from the request body.
 
 Response:
 
@@ -149,9 +153,45 @@ Response:
 Rules:
 
 - The middleware loads actual user permissions server-side.
-- `user_id` from Dify must be mapped to a trusted identity or signed token.
 - Search results are rechecked against PostgreSQL before being returned.
 - Denied documents are omitted without explanation to normal users.
+- Optional ReRank runs when configured (ADR-005).
+
+## RAG Administration APIs
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/rag/status` | Index statistics and queue depth. |
+| `GET` | `/api/rag/cases/{case_id}/sync-state` | Per-case pipeline state. |
+
+## Ollama APIs
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/ollama/health` | Connection status and latency. |
+| `GET` | `/api/ollama/models` | Model list with AISSS role assignments. |
+| `GET` | `/api/ollama/models/{name}` | Model detail (admin). |
+| `PUT` | `/api/admin/ollama/model-roles` | Default models, enabled chat models, ReRank settings. |
+
+See [Ollama Integration Guide](./15-ollama-integration.md).
+
+## AI Chat APIs
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/ai/chat` | Permissioned RAG + Ollama completion. |
+| `POST` | `/api/ai/chat/stream` | Same flow with SSE streaming. |
+
+Request:
+
+```json
+{
+  "message": "string",
+  "model": "llama3.2:latest",
+  "conversation_id": "optional-uuid",
+  "filters": {}
+}
+```
 
 ## Audit APIs
 

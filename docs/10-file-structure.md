@@ -21,16 +21,18 @@ AISSS/
     11-milestones.md
     12-foundation-materials.md
     13-deployment-docker.md
+    15-ollama-integration.md
+    16-rag-admin-guide.md
     dev-diary.md
     decisions/
       ADR-001-primary-architecture.md
       ADR-002-rag-permission-middleware.md
       ADR-003-docker-two-stacks.md
+      ADR-004-native-ollama-ai.md
+      ADR-005-rerank-optional.md
   aisss/
     docker-compose.yaml
     .env.example
-  dify/
-    docker-compose.override.yaml
   mockups/
     webui.html
   Makefile
@@ -55,6 +57,8 @@ AISSS/
           masters/
           permissions/
           rag/
+          ai/
+          ollama/
           audit/
           jobs/
           db/
@@ -94,7 +98,9 @@ AISSS/
 | `imports` | Excel preview, validation, confirmed import. |
 | `masters` | Editable master values. |
 | `permissions` | Viewing ranges, condition policy evaluation, group mapping. |
-| `rag` | Search middleware, chunk metadata, Dify tool contract. |
+| `rag` | Search middleware, chunk metadata, RAG admin status APIs. |
+| `ai` | Chat completion orchestration, streaming, policy-aware prompts. |
+| `ollama` | Health, model list proxy, model role configuration. |
 | `audit` | Audit log write and operator search. |
 | `jobs` | Job dispatch, retry, status. |
 | `db` | Database models, migrations, transactions. |
@@ -105,7 +111,7 @@ AISSS/
 | Module | Responsibility |
 |---|---|
 | `extraction` | Office/PDF parsing, OCR, ASR, manual text normalization. |
-| `embedding` | Chunking, embedding generation, vector upsert. |
+| `embedding` | Chunking, Ollama embedding generation, vector upsert. |
 | `rag_sync` | Metadata resync, vector cleanup, rebuild. |
 | `shared` | Shared job payloads, logging, storage access. |
 
@@ -116,8 +122,11 @@ AISSS/
 | `case-registration` | Form sections matching the data model. |
 | `case-search` | Metadata and text filters. |
 | `case-detail` | Joined body view, attachment panel, audit markers. |
-| `excel-import` | Preview, errors, confirm. |
-| `ai-search` | Dify-backed question UI with citations and restrictions. |
+| `excel-import` | Preview, errors, confirm (integrated in registration). |
+| `ai-search` | Native chat with model selector, citations, restrictions. |
+| `rag-admin` | Pipeline dashboard, reindex, job retry. |
+| `model-management` | Ollama models, roles, ReRank toggle. |
+| `ollama-status` | Global health indicator component. |
 | `master-management` | Editable lists. |
 | `permission-management` | Groups and viewing ranges. |
 | `job-monitoring` | Extraction and RAG state. |
@@ -134,9 +143,8 @@ Recommended environment variables:
 - `OBJECT_STORAGE_SECRET_KEY`
 - `REDIS_URL`
 - `VECTOR_DB_URL`
-- `DIFY_BASE_URL`
-- `DIFY_API_KEY`
 - `OLLAMA_BASE_URL`
+- `OLLAMA_HEALTH_INTERVAL_SEC`
 - `AUTH_PROVIDER`
 
 Never commit real `.env` files.

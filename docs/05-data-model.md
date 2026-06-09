@@ -94,7 +94,7 @@ erDiagram
 | `id` | UUID | Primary key. |
 | `case_id` | UUID | FK to `cases`. |
 | `attachment_id` | UUID, nullable | Null for case body derived text. |
-| `source_type` | Text | `case_body`, `office_parse`, `pdf_parse`, `ocr`, `asr`, `manual_text`, `dify_direct_shadow`. |
+| `source_type` | Text | `case_body`, `office_parse`, `pdf_parse`, `ocr`, `asr`, `manual_text`. |
 | `text` | Text | Extracted or joined text. |
 | `language` | Text | Example: `ja`. |
 | `extraction_engine` | Text | Parser/OCR/ASR engine. |

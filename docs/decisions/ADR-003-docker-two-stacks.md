@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-004](./ADR-004-native-ollama-ai.md) (2026-06-09)
 
 ## Date
 
@@ -10,72 +10,14 @@ Accepted
 
 ## Context
 
-AISSS needs Dify for AI workflow and chat, plus its own WebUI, backend API, PostgreSQL, object storage, queue, workers, and vector database. A common question is whether the whole system should be one Docker Compose stack.
+This ADR applied when Dify was the AI workflow layer. Dify has been removed from the product architecture.
 
-Two facts shape this decision:
+## Superseding Decision
 
-- Dify is not a single container. The official Dify deployment is already a multi-container Compose stack with its own database, redis, and vector store.
-- AISSS must remain the source of truth and the permission authority, and must stay maintainable across frequent Dify updates.
+Run **AISSS as a single Docker Compose stack** (WebUI, API, workers, PostgreSQL, Redis, MinIO, Qdrant). Ollama runs on the **host** and is reached via `OLLAMA_BASE_URL` (typically `http://host.docker.internal:11434`).
 
-## Decision
+See [Deployment (Docker)](../13-deployment-docker.md) and [Ollama Integration Guide](../15-ollama-integration.md) for the current topology.
 
-Run AISSS and Dify as two independent Docker Compose stacks connected by a shared external Docker network. Each stack keeps its own PostgreSQL. Cross-stack communication uses HTTP APIs only.
+## Historical Record
 
-A repository `Makefile` provides single-command startup that brings up both stacks, while still allowing each stack to be started, stopped, and upgraded independently.
-
-## Alternatives Considered
-
-### Single Combined Stack
-
-Pros:
-
-- One `docker compose up` for everything.
-- Fewer files at first glance.
-
-Cons:
-
-- Forking or merging the Dify Compose stack makes Dify upgrades painful.
-- Coupled lifecycle: restarting or upgrading Dify risks the case system.
-- Tendency to share a database, which couples migrations and backups.
-- Weaker failure isolation.
-
-Rejected because it harms maintenance and upgrade safety.
-
-### Shared Database Between AISSS and Dify
-
-Pros:
-
-- One database to operate.
-
-Cons:
-
-- Schema migrations and backups become entangled.
-- A Dify change can affect AISSS data integrity.
-- Breaks the source-of-truth boundary from ADR-001.
-
-Rejected because it defeats separation and increases risk.
-
-### Two Independent Stacks with Shared Network
-
-Pros:
-
-- Independent upgrades, restarts, and backups.
-- Clear failure isolation; AISSS survives Dify downtime.
-- Permission middleware stays inside the AISSS stack.
-- Single-command startup is still possible through a wrapper.
-
-Cons:
-
-- Requires a shared network and a small Dify override file.
-- Two `.env` files to manage.
-
-Accepted because it gives the best maintenance and security properties with minimal extra setup.
-
-## Consequences
-
-- Dify runs from its official Compose stack, attached to a shared external network via an override file.
-- AISSS provides its own `aisss/docker-compose.yaml` and `aisss/.env.example`.
-- A `Makefile` wraps both stacks for convenience.
-- Operators back up AISSS and Dify separately.
-- The AISSS vector database is treated as rebuildable from PostgreSQL and object storage.
-- After each Dify upgrade, the search middleware contract must be re-tested.
+The original decision separated AISSS and Dify into two stacks on a shared Docker network to allow independent upgrades. That separation is no longer needed because Dify is not deployed.

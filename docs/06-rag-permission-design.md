@@ -2,33 +2,36 @@
 
 ## Core Rule
 
-RAG must never expand a user's access. AISSS decides what the user can view before any text reaches Dify or Ollama.
+RAG must never expand a user's access. AISSS decides what the user can view before any text reaches Ollama.
 
-The permissioned search middleware is the enforcement point. It receives the authenticated user and query, calculates the accessible case scope from PostgreSQL, searches only eligible chunks, applies handling-condition rules, and returns safe context to Dify.
+The permissioned search middleware is the enforcement point. It receives the authenticated user and query, calculates the accessible case scope from PostgreSQL, searches only eligible chunks, applies handling-condition rules, and returns safe context to the AI chat layer (`/api/ai/chat`).
 
 ## Query Flow
 
 ```mermaid
 sequenceDiagram
   actor User
-  participant Dify as Dify App
+  participant WebUI as AISSS WebUI
+  participant API as AISSS API
   participant Search as Permissioned Search Middleware
   participant DB as PostgreSQL
   participant Vector as Vector DB
   participant LLM as Ollama
 
-  User->>Dify: Ask question
-  Dify->>Search: Search request with user identity and query
+  User->>WebUI: Ask question and select model
+  WebUI->>API: POST /api/ai/chat
+  API->>Search: Search with session user identity and query
   Search->>DB: Load user groups and policy scope
   DB-->>Search: Accessible viewing ranges and denied conditions
   Search->>Vector: Vector search with metadata filters
   Vector-->>Search: Candidate chunks
   Search->>DB: Re-check case permissions and effective conditions
   DB-->>Search: Allowed chunks and output policies
-  Search-->>Dify: Safe context, citations, output restrictions
-  Dify->>LLM: Generate answer with safe context only
-  LLM-->>Dify: Answer
-  Dify-->>User: Permission-filtered answer
+  Search-->>API: Safe context, citations, output restrictions
+  API->>LLM: Generate answer with safe context only
+  LLM-->>API: Answer
+  API-->>WebUI: Permission-filtered answer
+  WebUI-->>User: Answer with citations
 ```
 
 ## Permission Inputs
@@ -43,7 +46,7 @@ The middleware uses:
 - Handling type sensitivity.
 - Case status and deletion state.
 - Attachment and chunk source type.
-- Request channel, such as WebUI, Dify chat, API, export, or external sharing workflow.
+- Request channel, such as `webui_chat`, API, export, or external sharing workflow.
 
 ## Effective Policy Calculation
 
@@ -85,7 +88,7 @@ Strong restrictions should be enforced before vector search by metadata filters.
 
 ## Quote Policies
 
-`quote_policy` controls how Dify may use returned context:
+`quote_policy` controls how the LLM may use returned context:
 
 - `allow`: answer may quote short relevant excerpts.
 - `summarize_only`: answer should summarize and avoid direct reproduction.
@@ -104,9 +107,9 @@ Do not rely on prompt instructions alone for `deny`. Deny at retrieval.
 
 The WebUI should show the effective policy in the answer and case detail screens.
 
-## Dify Integration Contract
+## AI Chat Integration Contract
 
-The Dify workflow should call the search middleware as an external tool or API step. Dify receives:
+`/api/ai/chat` must call the search middleware internally before any Ollama completion. The chat layer receives:
 
 - Safe context chunks.
 - Citation metadata.
@@ -114,16 +117,9 @@ The Dify workflow should call the search middleware as an external tool or API s
 - Effective export policy.
 - Warning labels for UI display.
 
-Dify must not perform unrestricted native knowledge-base retrieval for sensitive AISSS materials.
+The API must not query the vector database for generation without passing through the middleware.
 
-## Dify Direct Knowledge
-
-Documents registered directly in Dify may be useful for common manuals, public references, or low-risk material. For production use:
-
-- Public or all-user documents may remain in Dify direct knowledge if approved.
-- Permission-sensitive documents must have a shadow record in AISSS.
-- Shadow records must include owner, source, viewing range, handling conditions, and synchronization ID.
-- If no shadow record exists, the document must be excluded from permissioned production workflows.
+Optional ReRank runs inside the middleware when enabled (see [ADR-005](./decisions/ADR-005-rerank-optional.md)).
 
 ## Citation Rules
 

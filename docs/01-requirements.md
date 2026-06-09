@@ -2,7 +2,7 @@
 
 ## Goal
 
-AISSS builds a case management system and a permissioned RAG tool around Dify and Ollama. Users register cases, metadata, attachments, and extracted text through the WebUI. Authorized users can then search, summarize, and ask questions over those materials through Dify-backed workflows without bypassing case-level access control.
+AISSS builds a case management system and a permissioned RAG tool with native Ollama integration. Users register cases, metadata, attachments, and extracted text through the WebUI. Authorized users can then search, summarize, and ask questions over those materials through AISSS AI chat without bypassing case-level access control.
 
 ## Scope
 
@@ -14,7 +14,8 @@ In scope:
 - Excel-based bulk import.
 - Text extraction from Office, PDF, image OCR, and audio ASR.
 - RAG synchronization to vector search.
-- Dify workflow integration with Ollama.
+- Native AI chat with Ollama (embeddings, completion, optional rerank).
+- RAG administration and model management in WebUI.
 - User, group, viewing range, and handling condition based access control.
 - Audit logs for registration, update, view, download, AI query, and export.
 
@@ -22,7 +23,7 @@ Out of scope for the first implementation:
 
 - Fully automated classification of sensitive materials.
 - Native image similarity search.
-- Dify-only document-level access control without AISSS permission middleware.
+- External AI tools as the permission authority without AISSS middleware.
 - Public internet lookup of registered indicators or document content.
 
 ## Users and Scale
@@ -93,12 +94,15 @@ Supported attachment types:
 
 Each attachment must be linked to a case UUID and must have extraction status, file hash, storage key, media type, size, uploader, and timestamps.
 
-## Dify and RAG Requirements
+## AI and RAG Requirements
 
-- Dify is used as the AI workflow and chat application layer.
-- Ollama provides local LLM inference where required.
-- Vector search must be permission-filtered before content reaches Dify generation.
-- Documents registered directly in Dify must be treated as supplemental knowledge. For permission-sensitive materials, they should be imported or mirrored into AISSS metadata before they become searchable.
+- AISSS WebUI and API provide AI chat, RAG administration, and model management.
+- Ollama on the host provides embeddings, chat completion, and optional reranking.
+- Vector search must be permission-filtered before content reaches LLM generation.
+- All searchable content originates from AISSS cases and attachments; there is no parallel direct-upload knowledge path.
+- Users can select an enabled chat model in the AI search screen.
+- Ollama health must be visible in the WebUI.
+- ReRank is optional and off by default (ADR-005).
 - Every RAG chunk must include source metadata: case UUID, attachment ID when applicable, source type, viewing range, handling conditions, registration department, dates, rank, reliability, accuracy, and keywords.
 
 ## Non-Functional Requirements

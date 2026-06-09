@@ -14,13 +14,14 @@ flowchart LR
   extractedText --> postgres
   postgres --> chunking["Chunking and Metadata Build"]
   chunking --> vectorDb["Vector DB"]
-  userQuestion["User Question"] --> dify["Dify Workflow"]
-  dify --> searchMw["Permissioned Search Middleware"]
+  userQuestion["User Question"] --> webuiChat["AISSS WebUI AI Search"]
+  webuiChat --> apiChat["POST /api/ai/chat"]
+  apiChat --> searchMw["Permissioned Search Middleware"]
   searchMw --> postgres
   searchMw --> vectorDb
   searchMw --> safeContext["Safe Context"]
-  safeContext --> dify
-  dify --> ollama["Ollama"]
+  safeContext --> apiChat
+  apiChat --> ollama["Ollama Host"]
   ollama --> answer["Answer and Citations"]
 ```
 
@@ -76,7 +77,7 @@ flowchart TD
   allowedScope --> vectorSearch["Filtered Vector Search"]
   vectorDb --> vectorSearch
   vectorSearch --> finalCheck["PostgreSQL Final Permission Check"]
-  finalCheck --> safeContext["Safe Context for Dify"]
+  finalCheck --> safeContext["Safe Context for LLM"]
 ```
 
 ## Data Classification
@@ -88,7 +89,7 @@ flowchart TD
 | Original files | Object storage | None | Download through API only. |
 | Extracted text | PostgreSQL | RAG chunks | Rebuildable from original files when parser is stable. |
 | Embeddings | Vector DB | None | Rebuildable. |
-| Dify answer history | Dify or AISSS audit | Audit log summary | Avoid storing restricted text where not governed. |
+| AI answer history | AISSS audit | Audit log summary | Avoid storing restricted text where not governed. |
 | Audit log | PostgreSQL | Backup | Protected operator access. |
 
 ## Data Freshness Rules
@@ -104,17 +105,4 @@ flowchart TD
 | Master label change | Update display labels and optionally refresh RAG metadata. |
 | Case delete | Soft delete, remove vectors, retain originals according to retention policy. |
 
-## Dify Direct Data
-
-```mermaid
-flowchart LR
-  difyUpload["Dify Direct Upload"] --> difyKnowledge["Dify Knowledge"]
-  difyUpload --> shadowRegistration["AISSS Shadow Registration"]
-  shadowRegistration --> postgres["PostgreSQL Source Metadata"]
-  postgres --> permissionPolicy["Permission Policy"]
-  difyKnowledge --> difyWorkflow["Dify Workflow"]
-  permissionPolicy --> searchMw["Permissioned Middleware"]
-  searchMw --> difyWorkflow
-```
-
-Dify direct documents must not become part of sensitive production RAG unless AISSS has metadata that defines ownership, viewing range, and handling conditions.
+All searchable content enters through AISSS cases and attachments. There is no parallel direct-upload knowledge path.

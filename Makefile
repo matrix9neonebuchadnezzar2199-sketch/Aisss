@@ -1,44 +1,25 @@
 # AISSS orchestration wrapper.
-# Runs AISSS and Dify as two independent Docker Compose stacks that share
-# one external network. See docs/13-deployment-docker.md and ADR-003.
+# Single Docker Compose stack. Ollama runs on the host.
+# See docs/13-deployment-docker.md and ADR-004.
 
-SHARED_NETWORK ?= aisss-shared
 AISSS_COMPOSE ?= aisss/docker-compose.yaml
-# Path to the official Dify docker compose, vendored outside app code.
-DIFY_COMPOSE ?= dify/docker-compose.yaml
 
-.PHONY: help net up down up-aisss down-aisss up-dify down-dify ps logs-aisss
+.PHONY: help up down ps logs-aisss
 
 help:
 	@echo "Targets:"
-	@echo "  net         Create the shared docker network (run once)"
-	@echo "  up          Start Dify stack, then AISSS stack"
-	@echo "  down        Stop both stacks"
-	@echo "  up-aisss    Start only the AISSS stack"
-	@echo "  down-aisss  Stop only the AISSS stack"
-	@echo "  up-dify     Start only the Dify stack"
-	@echo "  down-dify   Stop only the Dify stack"
+	@echo "  up          Start the AISSS stack"
+	@echo "  down        Stop the AISSS stack"
 	@echo "  ps          Show AISSS stack containers"
 	@echo "  logs-aisss  Tail AISSS stack logs"
+	@echo ""
+	@echo "Ollama must be running on the host. See docs/15-ollama-integration.md"
 
-net:
-	docker network inspect $(SHARED_NETWORK) >/dev/null 2>&1 || docker network create $(SHARED_NETWORK)
-
-up: net up-dify up-aisss
-
-down: down-aisss down-dify
-
-up-aisss:
+up:
 	docker compose -f $(AISSS_COMPOSE) up -d
 
-down-aisss:
+down:
 	docker compose -f $(AISSS_COMPOSE) down
-
-up-dify:
-	docker compose -f $(DIFY_COMPOSE) up -d
-
-down-dify:
-	docker compose -f $(DIFY_COMPOSE) down
 
 ps:
 	docker compose -f $(AISSS_COMPOSE) ps

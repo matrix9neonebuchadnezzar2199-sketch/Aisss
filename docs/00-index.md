@@ -6,7 +6,7 @@
 
 AISSS is a case management and permissioned RAG platform for storing information materials, attachments, extracted text, and AI-searchable knowledge. These documents are the baseline for future implementation decisions.
 
-The central design rule is simple: the case management database is the source of truth. Dify, Ollama, and vector search are secondary systems that must respect the permissions and handling conditions stored in AISSS.
+The central design rule is simple: the case management database is the source of truth. Ollama (on the host) and vector search are secondary systems that must respect the permissions and handling conditions stored in AISSS.
 
 ## Recommended Reading Order
 
@@ -23,9 +23,10 @@ The central design rule is simple: the case management database is the source of
 11. [Milestones](./11-milestones.md)
 12. [Foundation Materials](./12-foundation-materials.md)
 13. [Deployment: Docker Topology](./13-deployment-docker.md)
-14. [Dify Integration Guide](./14-dify-integration-guide.md)
-15. [WebUI Mockup](../mockups/webui.html)（HTML）
-16. [Development Diary](./dev-diary.md)
+14. [Ollama Integration Guide](./15-ollama-integration.md)
+15. [RAG Admin Guide](./16-rag-admin-guide.md)
+16. [WebUI Mockup](../mockups/webui.html)（HTML）
+17. [Development Diary](./dev-diary.md)
 
 ## Naming Convention
 
@@ -40,16 +41,19 @@ The central design rule is simple: the case management database is the source of
 
 - [ADR-001: Primary Architecture](./decisions/ADR-001-primary-architecture.md)
 - [ADR-002: RAG Permission Middleware](./decisions/ADR-002-rag-permission-middleware.md)
-- [ADR-003: Two Docker Stacks](./decisions/ADR-003-docker-two-stacks.md)
+- [ADR-003: Two Docker Stacks](./decisions/ADR-003-docker-two-stacks.md) (superseded)
+- [ADR-004: Native Ollama AI](./decisions/ADR-004-native-ollama-ai.md)
+- [ADR-005: Optional ReRank](./decisions/ADR-005-rerank-optional.md)
 
 ## Key Implementation Rules
 
-- Do not let Dify answer from documents that the requesting user cannot view in AISSS.
+- Do not let the LLM answer from documents that the requesting user cannot view in AISSS.
 - Do not store original Office, PDF, image, or audio files directly in PostgreSQL.
 - Keep original files in object storage and store only metadata, extracted text, and storage keys in the database.
 - Use asynchronous jobs for OCR, ASR, Office parsing, PDF parsing, embedding, and RAG synchronization.
 - Store structured body sections separately, but render them as one joined body in the WebUI.
 - Treat handling conditions such as print prohibition, copy prohibition, inquiry prohibition, and channel-specific disclosure prohibition as enforceable rules, not as display labels.
+- Ollama runs on the host; AISSS API proxies inference and exposes health in the WebUI.
 
 ## GitHub
 

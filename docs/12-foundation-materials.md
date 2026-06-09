@@ -126,7 +126,7 @@ Future ADR candidates:
 - Backup and restore.
 - Reindex all RAG chunks.
 - Recover failed extraction jobs.
-- Rotate Dify and object storage credentials.
+- Rotate object storage credentials and review Ollama host access.
 - Add a new viewing range.
 - Respond to suspected AI permission leakage.
 

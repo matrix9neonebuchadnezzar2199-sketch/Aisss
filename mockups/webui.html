@@ -117,6 +117,41 @@
       border: 1px solid #30363d;
       border-radius: 20px;
     }
+    .ollama-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #8b949e;
+      padding: 4px 10px;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+    }
+    .ollama-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success-fg);
+      box-shadow: 0 0 6px var(--success-fg);
+    }
+    .ollama-status.degraded .dot { background: var(--attention-fg); box-shadow: 0 0 6px var(--attention-fg); }
+    .ollama-status.down .dot { background: var(--danger-fg); box-shadow: 0 0 6px var(--danger-fg); }
+    .chat-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .chat-toolbar label { font-size: 12px; color: var(--fg-muted); }
+    .chat-toolbar select {
+      min-width: 200px;
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--input-fg);
+    }
 
     /* Layout */
     .layout {
@@ -647,6 +682,10 @@
     <a href="#" data-view="ai">AI 検索</a>
     <a href="#" data-view="masters">マスタ管理</a>
   </nav>
+  <span class="ollama-status" id="ollamaStatus" title="Ollama ホスト接続状態">
+    <span class="dot"></span>
+    <span>Ollama: 接続中</span>
+  </span>
   <span class="gh-user">分析第一課 / 山田 太郎</span>
 </header>
 
@@ -661,6 +700,8 @@
       <a href="#" data-view="register" title="ケース登録"><span class="nav-icon">✏️</span><span class="sidebar-label">ケース登録</span></a>
       <a href="#" data-view="ai" title="AI 検索"><span class="nav-icon">🤖</span><span class="sidebar-label">AI 検索</span></a>
       <p class="sidebar-group-title">管理</p>
+      <a href="#" data-view="rag-admin" title="RAG 管理"><span class="nav-icon">📚</span><span class="sidebar-label">RAG 管理</span></a>
+      <a href="#" data-view="models" title="モデル管理"><span class="nav-icon">🧠</span><span class="sidebar-label">モデル管理</span></a>
       <a href="#" data-view="masters" title="マスタ管理"><span class="nav-icon">⚙️</span><span class="sidebar-label">マスタ管理</span></a>
       <a href="#" title="ユーザー・グループ"><span class="nav-icon">👥</span><span class="sidebar-label">ユーザー・グループ</span></a>
       <a href="#" title="監査ログ"><span class="nav-icon">📋</span><span class="sidebar-label">監査ログ</span></a>
@@ -845,10 +886,20 @@
     <section class="view" id="view-ai">
       <div class="panel">
         <div class="panel-header">
-          <h2>AI 検索（Dify 連携）</h2>
+          <h2>AI 検索</h2>
           <span class="label label-info">権限フィルタ ON</span>
+          <span class="label label-success">Ollama 接続中</span>
         </div>
         <div class="panel-body">
+          <div class="chat-toolbar">
+            <label for="chatModel">モデル</label>
+            <select id="chatModel">
+              <option selected>llama3.2:latest</option>
+              <option>qwen2.5:7b</option>
+              <option>gemma2:9b</option>
+            </select>
+            <span class="label label-default">POST /api/ai/chat</span>
+          </div>
           <div class="policy-banner">
             ⚠ この画面の回答は閲覧権限と取扱条件（複製禁止・印刷禁止等）を適用しています。印刷・エクスポートは制限される場合があります。
           </div>
@@ -865,6 +916,144 @@
           <div class="chat-input-row">
             <input type="text" placeholder="質問を入力…（権限のある資料のみ検索対象）" />
             <button class="btn btn-primary">送信</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RAG 管理 -->
+    <section class="view" id="view-rag-admin">
+      <div class="stats">
+        <div class="stat-card"><div class="num">48,291</div><div class="lbl">インデックス chunk</div></div>
+        <div class="stat-card"><div class="num">38</div><div class="lbl">抽出待ち</div></div>
+        <div class="stat-card"><div class="num">12</div><div class="lbl">埋め込み待ち</div></div>
+        <div class="stat-card"><div class="num">5</div><div class="lbl">失敗ジョブ</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>RAG 管理</h2>
+          <button class="btn btn-sm">一括再インデックス</button>
+        </div>
+        <div class="panel-body">
+          <div class="policy-banner" style="margin-bottom:12px">
+            Office / PDF の DB 化はケース添付 → 抽出 → 埋め込み → Qdrant のパイプラインで行います。この画面で監視・再実行します。
+          </div>
+          <div class="filter-bar" style="margin-bottom:12px">
+            <select><option>すべての状態</option><option>抽出失敗</option><option>埋め込み待ち</option><option>同期ずれ</option></select>
+            <button class="btn btn-sm">更新</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ケース ID</th>
+                <th>表題</th>
+                <th>抽出</th>
+                <th>埋め込み</th>
+                <th>RAG 同期</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">CASE-2026-00142</td>
+                <td>東アジア情勢に関する月次分析</td>
+                <td><span class="label label-success">完了</span></td>
+                <td><span class="label label-success">完了</span></td>
+                <td><span class="label label-success">同期済</span></td>
+                <td><button class="btn btn-sm">再インデックス</button></td>
+              </tr>
+              <tr>
+                <td class="mono">CASE-2026-00089</td>
+                <td>地域経済レポート（PDF 添付）</td>
+                <td><span class="label label-success">完了</span></td>
+                <td><span class="label label-warning">待機中</span></td>
+                <td><span class="label label-default">—</span></td>
+                <td><button class="btn btn-sm">再インデックス</button></td>
+              </tr>
+              <tr>
+                <td class="mono">CASE-2026-00012</td>
+                <td>会議録（Office 添付）</td>
+                <td><span class="label label-danger">失敗</span></td>
+                <td><span class="label label-default">—</span></td>
+                <td><span class="label label-default">—</span></td>
+                <td><button class="btn btn-sm btn-primary">再抽出</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="form-section" style="margin-top:20px">
+            <h3>設定（管理者）</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>チャンクサイズ</label><input type="text" value="800 tokens" readonly /></div>
+              <div class="form-group"><label>オーバーラップ</label><input type="text" value="120 tokens" readonly /></div>
+              <div class="form-group"><label>埋め込みモデル</label><input type="text" value="nomic-embed-text:latest" readonly /></div>
+              <div class="form-group"><label>ReRank</label><input type="text" value="OFF（既定）" readonly /></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- モデル管理 -->
+    <section class="view" id="view-models">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>モデル管理</h2>
+          <span class="label label-success">Ollama 42ms · v0.5.4</span>
+        </div>
+        <div class="panel-body">
+          <div class="policy-banner" style="margin-bottom:12px">
+            ホスト Ollama のモデル一覧（<code>GET /api/ollama/models</code>）。pull / delete はホスト CLI で実施。ロール割当は管理者が WebUI で設定。
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>モデル名</th>
+                <th>サイズ</th>
+                <th>用途</th>
+                <th>チャット選択</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">llama3.2:latest</td>
+                <td>2.0 GB</td>
+                <td><span class="label label-info">chat（既定）</span></td>
+                <td><span class="label label-success">有効</span></td>
+                <td><button class="btn btn-sm">編集</button></td>
+              </tr>
+              <tr>
+                <td class="mono">nomic-embed-text:latest</td>
+                <td>274 MB</td>
+                <td><span class="label label-purple">embedding（既定）</span></td>
+                <td>—</td>
+                <td><button class="btn btn-sm">編集</button></td>
+              </tr>
+              <tr>
+                <td class="mono">qwen2.5:7b</td>
+                <td>4.7 GB</td>
+                <td><span class="label label-info">chat</span></td>
+                <td><span class="label label-success">有効</span></td>
+                <td><button class="btn btn-sm">編集</button></td>
+              </tr>
+              <tr>
+                <td class="mono">bge-reranker-v2-m3</td>
+                <td>—</td>
+                <td><span class="label label-default">未割当</span></td>
+                <td>—</td>
+                <td><button class="btn btn-sm">割当</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="form-section" style="margin-top:20px">
+            <h3>デフォルト・ReRank</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>既定チャットモデル</label><select><option>llama3.2:latest</option></select></div>
+              <div class="form-group"><label>既定埋め込みモデル</label><select><option>nomic-embed-text:latest</option></select></div>
+              <div class="form-group"><label>ReRank モデル</label><select><option value="">（なし — OFF）</option><option>bge-reranker-v2-m3</option></select></div>
+              <div class="form-group"><label>ReRank 有効</label><select><option>OFF</option><option>ON</option></select></div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:8px">設定を保存</button>
           </div>
         </div>
       </div>

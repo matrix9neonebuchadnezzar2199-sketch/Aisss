@@ -3,16 +3,14 @@
 # ../apps and require source code that lands in Milestone 1.
 # Infrastructure services use pinned upstream images.
 #
-# Dify runs as a separate stack and joins the same external network.
-# See ../docs/13-deployment-docker.md and ../docs/decisions/ADR-003-docker-two-stacks.md.
+# Ollama runs on the host — set OLLAMA_BASE_URL in .env.
+# See ../docs/13-deployment-docker.md and ../docs/decisions/ADR-004-native-ollama-ai.md.
 
 name: aisss
 
 networks:
   default:
     driver: bridge
-  aisss-shared:
-    external: true
 
 volumes:
   aisss_postgres_data:
@@ -50,13 +48,10 @@ services:
         condition: service_started
     ports:
       - "${AISSS_API_PORT:-8000}:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
-      default: {}
-      # Distinct alias on the shared network so Dify can reach the AISSS
-      # API without colliding with Dify's own service named "api".
-      aisss-shared:
-        aliases:
-          - aisss-api
+      - default
     restart: unless-stopped
 
   worker:
@@ -73,6 +68,8 @@ services:
         condition: service_started
       vector:
         condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - default
     restart: unless-stopped

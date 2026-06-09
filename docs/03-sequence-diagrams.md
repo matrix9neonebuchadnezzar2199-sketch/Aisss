@@ -73,26 +73,29 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   actor User
-  participant Dify as Dify App
+  participant WebUI as AISSS WebUI
+  participant API as AISSS API
   participant Search as Permissioned Search Middleware
   participant DB as PostgreSQL
   participant Vector as Vector DB
-  participant Ollama as Ollama
+  participant Ollama as Ollama Host
   participant Audit as Audit Log
 
-  User->>Dify: Ask question
-  Dify->>Search: Request context with trusted user identity
+  User->>WebUI: Ask question and select model
+  WebUI->>API: POST /api/ai/chat
+  API->>Search: Request context with session user identity
   Search->>DB: Load user groups and permission scope
   Search->>Vector: Search only eligible metadata scope
   Vector-->>Search: Candidate chunks
   Search->>DB: Re-check cases and handling conditions
   DB-->>Search: Authorized chunks and output policies
   Search->>Audit: Record retrieval event
-  Search-->>Dify: Safe context and policies
-  Dify->>Ollama: Generate answer from safe context
-  Ollama-->>Dify: Generated answer
-  Dify->>Audit: Record answer event
-  Dify-->>User: Answer with allowed citations
+  Search-->>API: Safe context and policies
+  API->>Ollama: Generate answer from safe context
+  Ollama-->>API: Generated answer
+  API->>Audit: Record answer event
+  API-->>WebUI: Answer with allowed citations
+  WebUI-->>User: Display answer
 ```
 
 ## Viewing Range or Condition Change
@@ -139,20 +142,3 @@ sequenceDiagram
   Note over Storage: Original files follow retention policy
 ```
 
-## Dify Direct Document Registration
-
-```mermaid
-sequenceDiagram
-  actor Operator
-  participant Dify as Dify Admin
-  participant WebUI as AISSS WebUI
-  participant API as Backend API
-  participant DB as PostgreSQL
-
-  Operator->>Dify: Register supplemental document
-  Operator->>WebUI: Register Dify source shadow metadata
-  WebUI->>API: Submit source ID viewing range and conditions
-  API->>DB: Save shadow record
-  API->>DB: Write audit log
-  API-->>WebUI: Shadow record active
-```

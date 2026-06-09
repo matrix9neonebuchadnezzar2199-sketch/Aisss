@@ -11,13 +11,24 @@ The AISSS WebUI is the operational interface for registering, managing, searchin
 - Dashboard.
 - Case search.
 - Case registration.
-- Excel import.
-- Attachments and extraction status.
 - AI search.
 - Master management.
+
+Admin / operator group:
+
+- RAG management.
+- Model management.
 - User and group management.
 - Audit logs.
 - System jobs.
+
+Excel import is integrated into case registration. Attachment and extraction status appear on case detail, case search, and RAG management.
+
+## Global Status
+
+- **Ollama indicator** in header or sidebar footer: connected / degraded / down.
+- Polls `GET /api/ollama/health` on an interval.
+- When down, AI search input is disabled; model management shows last error.
 
 ## Case Registration Screen
 
@@ -102,17 +113,48 @@ The preview must not commit any rows. Confirmed import must be auditable.
 The AI screen should:
 
 - Authenticate through the same user identity as WebUI.
-- Call Dify only through a workflow that uses the permissioned search middleware.
+- Call `POST /api/ai/chat` (or streaming variant) which uses the permissioned search middleware internally.
+- Let users **select a chat model** from `enabled_chat_models` (SaaS-style dropdown).
+- Show Ollama connection status near the chat input.
 - Display source citations with handling labels.
 - Show effective output restrictions such as 印刷禁止 or 複製禁止.
 - Disable export and print actions according to effective policy.
 - Provide a link back to authorized case detail pages.
+- Support streaming responses when implemented.
 
 The AI screen must not show:
 
 - Count or titles of denied cases.
 - Raw vector search debug output to normal users.
 - Storage keys or direct object URLs.
+
+## RAG Management Screen
+
+See [RAG Admin Guide](./16-rag-admin-guide.md).
+
+Operators and administrators use this screen to:
+
+- View index statistics and pipeline health.
+- Monitor extraction, embedding, and sync status per case.
+- Retry failed jobs and trigger reindex.
+- View chunking and embedding settings (admin edit).
+
+Office and PDF become searchable through case attachments; this screen monitors and controls that pipeline rather than providing a separate upload path.
+
+## Model Management Screen
+
+See [Ollama Integration Guide](./15-ollama-integration.md).
+
+Administrators use this screen to:
+
+- List models from host Ollama via `GET /api/ollama/models`.
+- Assign roles: chat, embedding, rerank.
+- Set default chat and embedding models.
+- Configure `enabled_chat_models` for the AI search dropdown.
+- Toggle ReRank (effective only when `rerank_model` is set).
+- View Ollama health latency and last check time.
+
+Model pull and delete remain host CLI operations in the initial release.
 
 ## Master Management
 

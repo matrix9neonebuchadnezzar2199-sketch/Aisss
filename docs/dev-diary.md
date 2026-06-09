@@ -1,5 +1,20 @@
 # Development Diary
 
+## 2026-06-09: Dify Removed — Native Ollama AI
+
+### Summary
+
+Architecture pivot: Dify removed. AISSS now owns AI chat, RAG administration, model management, and Ollama proxy. Host Ollama for embeddings and completion. ReRank optional (default off). ADR-004 and ADR-005 added; ADR-003 superseded.
+
+### New / Updated
+
+- `docs/15-ollama-integration.md`, `docs/16-rag-admin-guide.md`
+- `docs/decisions/ADR-004-native-ollama-ai.md`, `ADR-005-rerank-optional.md`
+- Sidebar mockup: RAG 管理, モデル管理, AI 検索 with model selector
+- Single-stack Docker; `dify/` removed
+
+---
+
 ## 2026-06-09: Product Name and WebUI Mockup
 
 ### Summary

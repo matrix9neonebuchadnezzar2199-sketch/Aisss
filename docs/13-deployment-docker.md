@@ -2,138 +2,143 @@
 
 ## Decision Summary
 
-AISSS and Dify run as two independent Docker Compose stacks connected by a shared external Docker network. They are not a single stack and do not share a database. This separation is intentional and is driven by maintenance, upgrade isolation, and the permission boundary.
+AISSS runs as a **single Docker Compose stack**. Ollama runs on the **host** outside Compose and is reached via `OLLAMA_BASE_URL`.
 
-See [ADR-003](./decisions/ADR-003-docker-two-stacks.md) for the rationale.
-
-## Why Two Stacks
-
-- Dify already ships as its own multi-container Compose stack. It should run unmodified so upgrades stay easy.
-- AISSS must remain the source of truth and stay available even when Dify is restarted or upgraded.
-- The permissioned search middleware lives in the AISSS stack, keeping the access-control boundary on the side that owns permissions.
-- Backup and restore of AISSS data must be independent from Dify internal state.
+See [ADR-004](./decisions/ADR-004-native-ollama-ai.md). ADR-003 (two-stack with Dify) is superseded.
 
 ## Topology
 
 ```mermaid
 flowchart LR
-  subgraph aisssStack [AISSS Stack]
+  subgraph host [Host OS]
+    ollama["Ollama :11434"]
+  end
+  subgraph aisssStack [AISSS Compose Stack]
     web["AISSS WebUI"]
     api["Backend API and Search Middleware"]
-    pg["AISSS PostgreSQL"]
-    minio["MinIO Object Storage"]
+    pg["PostgreSQL"]
+    minio["MinIO"]
     redis["Redis Queue"]
-    worker["Extraction and Embedding Worker"]
-    vector["Vector DB"]
+    worker["Workers"]
+    vector["Qdrant"]
   end
-  subgraph difyStack [Dify Stack]
-    difyApi["Dify api and worker"]
-    difyWeb["Dify web"]
-    difyDb["Dify PostgreSQL"]
-    difyRedis["Dify Redis"]
-    difyVector["Dify Vector Store"]
-  end
-  difyApi -->|"HTTP to search middleware"| api
-  api -->|"HTTP to Dify API"| difyApi
+  browser["Browser"] --> web
   web --> api
   api --> pg
   api --> minio
   api --> redis
+  api --> vector
+  api -->|"OLLAMA_BASE_URL"| ollama
   worker --> pg
+  worker --> minio
   worker --> vector
+  worker -->|"embeddings"| ollama
 ```
 
-## Stack Responsibilities
+## Stack Services
 
-| Stack | Services | Owns |
+| Service | Image / build | Role |
 |---|---|---|
-| AISSS | WebUI, backend API, search middleware, PostgreSQL, MinIO, Redis, workers, vector DB | Case records, files, permissions, audit, RAG index. |
-| Dify | api, worker, web, db, redis, vector store, nginx, sandbox, ssrf_proxy | AI workflow, chat orchestration, prompt and app config. |
+| `web` | `apps/web` | WebUI |
+| `api` | `apps/api` | API, RAG middleware, Ollama proxy, AI chat |
+| `worker` | `apps/workers` | Extraction, embedding, RAG sync |
+| `db` | `postgres:16` | Source of truth |
+| `redis` | `redis:7` | Job queue |
+| `minio` | `minio/minio` | Object storage |
+| `vector` | `qdrant/qdrant` | Vector index (rebuildable) |
 
-## Database Separation
+## Host Ollama
 
-Do not share PostgreSQL between AISSS and Dify.
+Ollama is **not** a Compose service. Requirements:
 
-- Dify uses its own `db` service from the official Dify Compose stack.
-- AISSS uses its own PostgreSQL service.
-- Sharing one database would couple schema migrations, backups, and failures across both systems and would break the maintenance benefit of separation.
+1. Install and start Ollama on the host.
+2. Pull required models (`nomic-embed-text`, chat model, optional rerank).
+3. Set `OLLAMA_BASE_URL` in `aisss/.env`.
 
-## Shared Network
+Default from containers:
 
-Both stacks attach to one external Docker network so containers can reach each other by service name over HTTP.
+```env
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+```
+
+On Linux, if `host.docker.internal` is unavailable, use the Docker bridge gateway (often `172.17.0.1`) or add `extra_hosts` to the `api` and `worker` services.
+
+Ensure Ollama listens on an address reachable from containers. Verify with:
 
 ```bash
-docker network create aisss-shared
+curl http://localhost:11434/api/tags
 ```
 
-- AISSS Compose joins `aisss-shared` as an external network.
-- Dify Compose joins the same external network through an override file.
-- Cross-stack communication uses HTTP APIs, not shared volumes or shared databases.
-
-## Dify Stack Setup
-
-Run Dify from its official Compose stack. Do not fork it into the AISSS repository.
-
-1. Clone or vendor the official Dify `docker` directory outside the AISSS application code.
-2. Add a small override file to attach Dify to `aisss-shared` and to set the search middleware URL.
-3. Keep Dify environment values in Dify's own `.env`.
-
-Recommended override file `dify/docker-compose.override.yaml`:
-
-```yaml
-networks:
-  aisss-shared:
-    external: true
-
-services:
-  api:
-    networks:
-      - default
-      - aisss-shared
-  worker:
-    networks:
-      - default
-      - aisss-shared
-```
-
-## AISSS Stack Setup
-
-The AISSS stack is defined in `aisss/docker-compose.yaml`. It builds WebUI, API, and worker images and runs PostgreSQL, MinIO, Redis, and the vector DB.
-
-Environment values come from `aisss/.env`. Use `aisss/.env.example` as the template and never commit real secrets.
-
-## One Command, Two Stacks
-
-Separation does not prevent single-command startup. The repository `Makefile` wraps both stacks.
+After AISSS API is running:
 
 ```bash
-make net      # create the shared network once
-make up       # start Dify stack, then AISSS stack
-make down     # stop both stacks
-make up-aisss # start only the AISSS stack
-make up-dify  # start only the Dify stack
+curl http://localhost:8000/api/ollama/health
 ```
 
-During maintenance you can restart one stack without touching the other.
+## Quick Start
 
-## Startup Order
+```bash
+cp aisss/.env.example aisss/.env   # edit passwords and OLLAMA_BASE_URL
+make up
+```
 
-1. Create the shared network.
-2. Start the AISSS stack so the search middleware is reachable.
-3. Start the Dify stack and point its workflow at the AISSS search middleware URL.
+Or:
 
-If Dify starts before AISSS, AI search will fail until the middleware is available, but case management remains usable.
+```bash
+docker compose -f aisss/docker-compose.yaml up -d
+```
 
-## Backup and Restore
+## Environment
 
-- AISSS PostgreSQL: logical dump on a schedule.
-- AISSS MinIO: bucket backup or replication.
-- AISSS vector DB: rebuildable from PostgreSQL and MinIO, so treat it as recreatable.
-- Dify: back up using Dify's own documented procedure, separately from AISSS.
+Copy [`aisss/.env.example`](../aisss/.env.example). Key variables:
 
-## Operational Notes
+- `DATABASE_URL`
+- `OBJECT_STORAGE_*`
+- `REDIS_URL`
+- `VECTOR_DB_URL`
+- `OLLAMA_BASE_URL`
+- `OLLAMA_HEALTH_INTERVAL_SEC`
 
-- Pin image versions for both stacks to make upgrades deliberate.
-- Upgrade Dify and AISSS independently and test the search middleware contract after each Dify upgrade.
-- Keep the shared network name stable; both stacks depend on it.
-- Expose only the WebUI, the Dify web, and required APIs through a reverse proxy in production.
+Never commit `aisss/.env`.
+
+## Ports (defaults)
+
+| Service | Host port |
+|---|---|
+| WebUI | 3000 |
+| API | 8000 |
+| MinIO API | 9000 |
+| MinIO console | 9001 |
+| Qdrant | 6333 |
+| Ollama | 11434 (host only) |
+
+## Backup
+
+Back up independently:
+
+- PostgreSQL volume (`aisss_postgres_data`)
+- MinIO volume (`aisss_minio_data`)
+- Optional: Qdrant volume (rebuildable from PG + MinIO)
+
+Ollama models live on the host filesystem; back up the Ollama model directory if needed.
+
+## Failure Isolation
+
+| Failure | Effect |
+|---|---|
+| Ollama down | Case management works; AI search disabled; WebUI shows status |
+| Qdrant down | Metadata search works; semantic AI search degraded |
+| AISSS API down | Full application unavailable |
+| Worker down | New extractions/embeddings queue; existing data intact |
+
+## Production Notes
+
+- Put TLS termination in front of WebUI/API.
+- Restrict MinIO and Qdrant ports to internal networks in production.
+- Do not expose Ollama to the public internet; only AISSS API/workers should reach it.
+- Run permission regression tests after embedding or chat model changes.
+
+## Related
+
+- [Ollama Integration Guide](./15-ollama-integration.md)
+- [Makefile](../Makefile)
