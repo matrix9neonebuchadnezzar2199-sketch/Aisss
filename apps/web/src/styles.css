@@ -315,3 +315,25 @@ button:disabled {
   color: #ff8b8b;
   font-size: 0.85rem;
 }
+
+.excel-import-panel {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #151b23;
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+}
+
+.preview-block,
+.confirm-block {
+  margin-top: 0.75rem;
+}
+
+button.linkish {
+  background: none;
+  border: none;
+  color: #7eb6ff;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}

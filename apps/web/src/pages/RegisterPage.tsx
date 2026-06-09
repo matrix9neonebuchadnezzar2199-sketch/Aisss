@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { AttachmentPanel } from '../components/AttachmentPanel'
+import { ExcelImportPanel } from '../components/ExcelImportPanel'
 import { apiFetch, type CaseDetail, type MasterItem } from '../lib/api'
 
 const emptyForm = {
@@ -109,6 +110,7 @@ export function RegisterPage () {
   return (
     <section className="page">
       <h2>{caseId ? 'ケース編集' : 'ケース登録'}</h2>
+      {!caseId && <ExcelImportPanel />}
       {error && <p className="error">{error}</p>}
 
       <div className="form-grid">

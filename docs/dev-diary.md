@@ -1,5 +1,20 @@
 # Development Diary
 
+## 2026-06-09: Milestone 4 Excel Import
+
+### Summary
+
+Added Excel template generation, preview/confirm import APIs with row-level validation, strict master resolution, preview persistence with expiry, and WebUI two-step import on the registration screen.
+
+### New / Updated
+
+- `infra/migrations/005_m4_excel_imports.sql`, `templates/excel/README.md`
+- `apps/api` — `excel-import` service, `imports` routes, `xlsx` parser
+- `apps/web` — `ExcelImportPanel` on register (non-edit mode)
+- `docs/11-milestones.md`
+
+---
+
 ## 2026-06-09: Milestone 3 Attachment and Extraction MVP
 
 ### Summary

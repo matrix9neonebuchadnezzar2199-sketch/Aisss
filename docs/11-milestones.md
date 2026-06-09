@@ -109,7 +109,9 @@ Done when:
 - Invalid rows are rejected with actionable messages.
 - Master strictness rules are enforced.
 
-**Mock coverage:** Excel button → form autofill toast only; preview/confirm UI **not** in mock.
+**Implementation:** `POST /api/imports/excel/preview`, `.../confirm`, template download, row validation (strict masters), keyword auto-create on confirm, Web preview/confirm on register screen.
+
+**Mock coverage:** Static mock still uses autofill toast; live WebUI uses API flow above.
 
 ## Milestone 5: Permissioned RAG MVP
 
