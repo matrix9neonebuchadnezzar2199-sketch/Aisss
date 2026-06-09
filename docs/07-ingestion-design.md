@@ -15,7 +15,7 @@ Ingestion converts structured case input and attachments into searchable, audita
 | Image | Attachment upload | OCR text. |
 | Audio | Attachment upload | ASR transcript. |
 | Manual audio transcript | Attachment or text field | Text linked to the case. |
-| Standalone reference file | 登録 → 単独ファイル（参照資料） | File metadata, extracted text, optional RAG enablement under 単独ファイル genre. |
+| Standalone reference file | RAG 管理 → + 単独ファイル登録 | File metadata, extracted text, optional RAG enablement under 単独ファイル genre. |
 
 ## Excel Template
 
