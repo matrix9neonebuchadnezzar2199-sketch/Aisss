@@ -121,6 +121,25 @@ PDF processing should:
 - Run OCR fallback for scanned pages.
 - Keep page numbers in extraction metadata for citations.
 
+## Pilot Phase Decision (M17)
+
+**Decision:** OCR and ASR remain **stubs for the limited pilot**. Image and audio attachments are accepted and stored, but extraction returns an explicit operator-visible error instead of silent empty text.
+
+| Format | Pilot status | Operator workaround |
+|---|---|---|
+| PDF / DOCX / TXT | Supported | Upload directly. |
+| XLSX / PPTX (legacy Office) | Stub | Convert to PDF or DOCX before upload. |
+| Image (PNG/JPG) | Stub | Upload a manual transcript as `.txt`. |
+| Audio (MP3/WAV) | Stub | Upload a manual transcript as `.txt`. |
+
+**Post-MVP trigger:** enable OCR/ASR implementation when pilot feedback shows two or more real files blocked by stub extraction (see `19-operational-runbook.md` Post-MVP Cut Criteria).
+
+**Future implementation path (not in pilot):**
+
+1. OCR: Tesseract with `jpn` traineddata in the worker container, invoked only from `apps/workers/src/extract.js`.
+2. ASR: local Whisper-compatible model in an isolated worker profile; no outbound network by default.
+3. CI: add fixture-based extraction tests with synthetic PNG/audio samples; keep engines behind feature flags.
+
 ## OCR
 
 OCR processing should:
