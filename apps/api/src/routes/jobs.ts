@@ -119,11 +119,11 @@ export const jobRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { po
         throw new AppError('permission_denied', 'Operator role required.', 403)
       }
       const { jobId } = request.params as { jobId: string }
+      // retry_count は worker の markJobFailed が失敗時に加算する（二重カウント防止のためここでは増やさない）
       const { rows } = await pool.query(
         `UPDATE jobs
          SET status = 'pending',
              error = NULL,
-             retry_count = retry_count + 1,
              last_retry_at = NOW(),
              dead_lettered_at = NULL,
              updated_at = NOW()

@@ -129,6 +129,47 @@ test('processEmbeddingJob upserts case body payload with viewing range metadata'
   assert.ok(deleteChunkIndex < upsertIndex)
 })
 
+test('clearChunksForSource queries receive flat scalar params (no nested arrays)', async () => {
+  const { pool, queryLog } = createPoolMock({
+    case: {
+      id: 'case-1',
+      display_id: 'CASE-1',
+      title: 'Case title',
+      body_summary: null,
+      body_article: 'Body',
+      body_assessment: null,
+      body_reference: null,
+      rag_enabled: true
+    },
+    caseViewingRangeIds: []
+  })
+  const { deps } = createDeps()
+
+  await processEmbeddingJob(
+    pool,
+    config,
+    {
+      id: 'job-flat',
+      attachment_id: null,
+      payload_json: { source: 'case_body', case_id: 'case-1' }
+    },
+    deps
+  )
+
+  // pg は $1 にネスト配列が来ると PostgreSQL array literal に変換して uuid 比較が型エラーになる。
+  const clearQueries = queryLog.filter((q) =>
+    q.sql.includes('DELETE FROM rag_chunks') ||
+    q.sql.includes('DELETE FROM rag_sync_states') ||
+    q.sql.includes('FROM rag_sync_states rs')
+  )
+  assert.ok(clearQueries.length >= 3)
+  for (const q of clearQueries) {
+    for (const param of q.params) {
+      assert.equal(Array.isArray(param), false, `nested array param leaked into: ${q.sql}`)
+    }
+  }
+})
+
 test('processEmbeddingJob preserves metadata and chunk indexes for multiple case chunks', async () => {
   const longText = 'a'.repeat(2101)
   const { pool, queryLog } = createPoolMock({

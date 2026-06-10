@@ -24,6 +24,19 @@ export async function claimNextJob (pool, jobType) {
   return rows[0] ?? null
 }
 
+// worker クラッシュ等で 'running' のまま残ったジョブを再キューする（永久スタック防止）
+export async function requeueStaleRunningJobs (pool, staleMinutes = 10) {
+  const { rows } = await pool.query(
+    `UPDATE jobs
+     SET status = 'pending', updated_at = NOW()
+     WHERE status = 'running'
+       AND updated_at < NOW() - ($1 * INTERVAL '1 minute')
+     RETURNING id, job_type`,
+    [staleMinutes]
+  )
+  return rows
+}
+
 export async function markJobFailed (pool, job, error) {
   const message = error instanceof Error ? error.message : String(error ?? 'job failed')
   const retryCount = Number(job.retry_count ?? 0)
@@ -104,7 +117,7 @@ export async function processExtractionJob (pool, storage, storageConfig, job, d
     `SELECT a.*, c.id AS case_id, c.display_id
      FROM attachments a
      JOIN cases c ON c.id = a.case_id
-     WHERE a.id = $1`,
+     WHERE a.id = $1 AND c.deleted_at IS NULL`,
     [attachmentId]
   )
   const attachment = rows[0]
@@ -124,11 +137,8 @@ export async function processExtractionJob (pool, storage, storageConfig, job, d
       `UPDATE attachments SET extraction_status = 'failed', extraction_error = $2 WHERE id = $1`,
       [attachmentId, message]
     )
-    await pool.query(
-      `UPDATE jobs SET status = 'failed', error = $2, updated_at = NOW(), completed_at = NOW() WHERE id = $1`,
-      [job.id, message]
-    )
-    return { status: 'failed', error: message }
+    const failed = await markJobFailed(pool, job, message)
+    return { status: failed.status, error: message }
   }
 
   await pool.query(
@@ -161,7 +171,7 @@ export async function processExtractionJob (pool, storage, storageConfig, job, d
 
 async function processStandaloneExtraction (pool, storage, storageConfig, job, standaloneId, resolved) {
   const { rows } = await pool.query(
-    `SELECT * FROM standalone_files WHERE id = $1`,
+    `SELECT * FROM standalone_files WHERE id = $1 AND deleted_at IS NULL`,
     [standaloneId]
   )
   const file = rows[0]
@@ -185,11 +195,8 @@ async function processStandaloneExtraction (pool, storage, storageConfig, job, s
       `UPDATE standalone_files SET extraction_status = 'failed', extraction_error = $2 WHERE id = $1`,
       [standaloneId, message]
     )
-    await pool.query(
-      `UPDATE jobs SET status = 'failed', error = $2, updated_at = NOW(), completed_at = NOW() WHERE id = $1`,
-      [job.id, message]
-    )
-    return { status: 'failed', error: message }
+    const failed = await markJobFailed(pool, job, message)
+    return { status: failed.status, error: message }
   }
 
   await pool.query(

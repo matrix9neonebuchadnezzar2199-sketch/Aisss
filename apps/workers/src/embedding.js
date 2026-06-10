@@ -35,21 +35,21 @@ async function loadStandaloneViewingRangeIds (pool, standaloneId) {
   return rows.map((r) => r.viewing_range_id)
 }
 
-async function clearChunksForSource (pool, whereSql, param) {
+async function clearChunksForSource (pool, whereSql, params) {
   const { rows } = await pool.query(
     `SELECT rs.vector_point_id
      FROM rag_sync_states rs
      JOIN rag_chunks rc ON rc.id = rs.chunk_id
      WHERE ${whereSql}`,
-    [param]
+    params
   )
   await pool.query(
     `DELETE FROM rag_sync_states WHERE chunk_id IN (
       SELECT id FROM rag_chunks WHERE ${whereSql}
     )`,
-    [param]
+    params
   )
-  await pool.query(`DELETE FROM rag_chunks WHERE ${whereSql}`, [param])
+  await pool.query(`DELETE FROM rag_chunks WHERE ${whereSql}`, params)
   return rows.map((r) => r.vector_point_id)
 }
 
@@ -160,7 +160,7 @@ async function embedAttachment (pool, config, job, attachmentId, model, vectorSi
     `SELECT a.*, c.display_id, c.title, c.id AS case_id
      FROM attachments a
      JOIN cases c ON c.id = a.case_id
-     WHERE a.id = $1`,
+     WHERE a.id = $1 AND c.deleted_at IS NULL`,
     [attachmentId]
   )
   const attachment = rows[0]
