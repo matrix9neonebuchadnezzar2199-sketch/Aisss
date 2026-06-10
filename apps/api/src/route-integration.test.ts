@@ -13,6 +13,15 @@ const databaseUrl = process.env.INTEGRATION_DATABASE_URL
 const moduleDir = path.dirname(fileURLToPath(import.meta.url))
 const migrationsDir = path.resolve(moduleDir, '../../../infra/migrations')
 
+// CI では integration test の silent skip を許さない。
+// Postgres サービスや URL 注入が壊れた時に green のまま素通りするのを防ぐガード。
+test('CI must provide INTEGRATION_DATABASE_URL so integration tests cannot silently skip', { skip: !process.env.CI }, () => {
+  assert.ok(
+    databaseUrl,
+    'INTEGRATION_DATABASE_URL is missing in CI: Postgres-backed integration tests would silently skip'
+  )
+})
+
 const ADMIN_USER_ID = '00000000-0000-4000-8000-000000000001'
 const PILOT_USER_ID = '00000000-0000-4000-8000-000000000003'
 const PUBLIC_CASE_DISPLAY_ID = 'CASE-2026-00142'
