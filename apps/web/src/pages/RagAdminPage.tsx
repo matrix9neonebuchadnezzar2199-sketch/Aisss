@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   apiFetch,
   fetchRagFiles,
@@ -11,6 +11,7 @@ import {
 } from '../lib/api'
 
 export function RagAdminPage () {
+  const navigate = useNavigate()
   const [status, setStatus] = useState({
     chunk_count: 0,
     embedding_pending: 0,
@@ -46,7 +47,6 @@ export function RagAdminPage () {
       .catch((e: Error) => setError(e.message))
   }, [])
 
-  // フィルタ checkbox の変更は即座に一覧へ反映する
   useEffect(() => {
     void reload().catch((e: Error) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,8 +73,6 @@ export function RagAdminPage () {
     }
   }
 
-  // 初回有効化は「抽出成功済み」が条件（chunk はまだ無いので pipeline ready を要求するとデッドロックする）。
-  // 無効化はいつでも可能にする。
   function ragToggleDisabled (item: RagFileItem): boolean {
     if (pending[item.id]) return true
     if (item.rag_enabled) return false
@@ -82,99 +80,125 @@ export function RagAdminPage () {
   }
 
   return (
-    <section className="page">
-      <div className="detail-header">
-        <h2>RAG 管理</h2>
-        <Link to="/rag/standalone" className="primary">+ 単独ファイル登録</Link>
+    <section className="view active" id="view-rag-admin">
+      <div className="stats">
+        <div className="stat-card">
+          <div className="num">{status.chunk_count}</div>
+          <div className="lbl">チャンク</div>
+        </div>
+        <button type="button" className="stat-card stat-link" onClick={() => navigate('/jobs?status=pending&job_type=embedding')}>
+          <div className="num num-warning">{status.embedding_pending}</div>
+          <div className="lbl">埋め込み待ち →</div>
+        </button>
+        <button type="button" className="stat-card stat-link" onClick={() => navigate('/jobs?status=failed')}>
+          <div className="num num-danger">{status.pipeline_failed}</div>
+          <div className="lbl">パイプライン失敗 →</div>
+        </button>
+        <div className="stat-card">
+          <div className="num">{status.vectors_synced}</div>
+          <div className="lbl">同期済み</div>
+        </div>
+        <div className={`stat-card${status.not_enabled_candidates > 0 ? ' stat-warn' : ''}`}>
+          <div className="num">{status.not_enabled_candidates}</div>
+          <div className="lbl">未ナレッジ化候補</div>
+        </div>
       </div>
 
-      <div className="stats-row">
-        <span>チャンク: {status.chunk_count}</span>
-        <span>埋め込み待ち: {status.embedding_pending}</span>
-        <span>失敗: {status.pipeline_failed}</span>
-        <span>同期済み: {status.vectors_synced}</span>
-        <span className={status.not_enabled_candidates > 0 ? 'stat-warn' : ''}>
-          未ナレッジ化候補: {status.not_enabled_candidates}
-        </span>
-        <span>自動ON予約: {status.auto_enable_reserved}</span>
+      <div className="panel">
+        <div className="panel-header">
+          <h2>RAG 管理</h2>
+          <Link className="btn btn-primary btn-sm" to="/rag/standalone">+ 単独ファイル登録</Link>
+        </div>
+        <div className="panel-body">
+          <div className="filter-panel">
+            <label>タイトル検索
+              <input value={q} onChange={(e) => setQ(e.target.value)} />
+            </label>
+            <label>閲覧範囲
+              <select value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
+                <option value="">すべて</option>
+                {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+              </select>
+            </label>
+            <label className="inline-check">
+              <input
+                type="checkbox"
+                checked={candidatesOnly}
+                onChange={(e) => setCandidatesOnly(e.target.checked)}
+              />
+              未ナレッジ化候補のみ
+            </label>
+            <button type="button" className="btn btn-sm" onClick={() => void reload()}>再読み込み</button>
+          </div>
+
+          {error && <p className="error">{error}</p>}
+
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">ファイル</th>
+                <th scope="col">種別</th>
+                <th scope="col">閲覧範囲</th>
+                <th scope="col">パイプライン</th>
+                <th scope="col">状態</th>
+                <th scope="col">自動ON予約</th>
+                <th scope="col">㋹ RAG</th>
+                <th scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr
+                  key={`${item.source_kind}-${item.id}`}
+                  className={item.is_knowledge_candidate ? 'rag-row-candidate' : undefined}
+                >
+                  <td>{item.file_name}</td>
+                  <td>{item.source_kind === 'case_attachment' ? 'ケース添付' : '単独'}</td>
+                  <td>
+                    {item.viewing_range_labels.join(', ')}
+                    {item.source_kind === 'case_attachment' && item.case_display_id && (
+                      <>
+                        {' '}
+                        <Link
+                          to={`/register?edit=${encodeURIComponent(item.case_display_id)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="label label-info"
+                        >
+                          ケースを開く
+                        </Link>
+                      </>
+                    )}
+                  </td>
+                  <td><span className={`status status-${item.extraction_status}`}>{item.pipeline_status}</span></td>
+                  <td>
+                    <span className={`rag-visibility rag-visibility-${item.rag_visibility_state}`}>
+                      {item.rag_visibility_label}
+                    </span>
+                  </td>
+                  <td>{item.auto_enable_rag_on_extraction ? 'ON' : '—'}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={item.rag_enabled}
+                      disabled={ragToggleDisabled(item)}
+                      onChange={() => void toggleRag(item)}
+                      title="㋹ RAG 有効化"
+                    />
+                  </td>
+                  <td>
+                    {item.extraction_status === 'failed' && item.source_kind === 'case_attachment' && (
+                      <button type="button" className="btn btn-sm" onClick={() => void retryFailedExtraction(item.id)}>
+                        再抽出
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <div className="filter-panel">
-        <label>タイトル検索
-          <input value={q} onChange={(e) => setQ(e.target.value)} />
-        </label>
-        <label>閲覧範囲
-          <select value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
-            <option value="">すべて</option>
-            {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-          </select>
-        </label>
-        <label className="inline-check">
-          <input
-            type="checkbox"
-            checked={candidatesOnly}
-            onChange={(e) => setCandidatesOnly(e.target.checked)}
-          />
-          未ナレッジ化候補のみ
-        </label>
-        <button type="button" onClick={() => void reload()}>再読み込み</button>
-      </div>
-
-      {error && <p className="error">{error}</p>}
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>ファイル</th>
-            <th>種別</th>
-            <th>閲覧範囲</th>
-            <th>パイプライン</th>
-            <th>状態</th>
-            <th>自動ON予約</th>
-            <th>㋹ RAG</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr
-              key={`${item.source_kind}-${item.id}`}
-              className={item.is_knowledge_candidate ? 'rag-row-candidate' : undefined}
-            >
-              <td>{item.file_name}</td>
-              <td>{item.source_kind === 'case_attachment' ? 'ケース添付' : '単独'}</td>
-              <td>
-                {item.viewing_range_labels.join(', ')}
-                {item.source_kind === 'case_attachment' && item.case_display_id && (
-                  <Link to={`/register?edit=${item.case_display_id}`} className="badge">ケース継承</Link>
-                )}
-              </td>
-              <td><span className={`status status-${item.extraction_status}`}>{item.pipeline_status}</span></td>
-              <td>
-                <span className={`rag-visibility rag-visibility-${item.rag_visibility_state}`}>
-                  {item.rag_visibility_label}
-                </span>
-              </td>
-              <td>{item.auto_enable_rag_on_extraction ? 'ON' : '—'}</td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={item.rag_enabled}
-                  disabled={ragToggleDisabled(item)}
-                  onChange={() => void toggleRag(item)}
-                />
-              </td>
-              <td>
-                {item.extraction_status === 'failed' && item.source_kind === 'case_attachment' && (
-                  <button type="button" className="linkish" onClick={() => void retryFailedExtraction(item.id)}>
-                    再抽出
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </section>
   )
 }

@@ -22,29 +22,36 @@ export function AdminDashboardPage () {
   }, [])
 
   return (
-    <section className="page">
-      <h2>管理ダッシュボード</h2>
-      {error && <p className="error">{error}</p>}
-      <div className="dashboard-grid">
-        <Metric label="ケース" value={dashboard.cases} to="/search" />
-        <Metric label="失敗抽出" value={dashboard.failed_extractions} to="/rag" />
-        <Metric label="失敗ジョブ" value={dashboard.failed_jobs} to="/jobs" />
-        <Metric label="RAG チャンク" value={dashboard.rag_chunks} to="/rag" />
-        <Metric label="本日監査" value={dashboard.audit_events_today} to="/audit" />
-        <Metric label="未完了 feedback" value={dashboard.open_feedback} to="/pilot" />
+    <section className="view active" id="view-admin">
+      <div className="panel">
+        <div className="panel-header">
+          <h2>管理ダッシュボード</h2>
+          <span className="label label-info">運用メニュー</span>
+        </div>
+        <div className="panel-body">
+          {error && <p className="error">{error}</p>}
+          <div className="stats">
+            <MetricLink label="ケース" value={dashboard.cases} to="/search" />
+            <MetricLink label="失敗抽出" value={dashboard.failed_extractions} to="/rag" />
+            <MetricLink label="失敗ジョブ" value={dashboard.failed_jobs} to="/jobs?status=failed" />
+            <MetricLink label="RAG チャンク" value={dashboard.rag_chunks} to="/rag" />
+            <MetricLink label="本日監査" value={dashboard.audit_events_today} to="/audit" />
+            <MetricLink label="未完了 feedback" value={dashboard.open_feedback} to="/pilot" />
+          </div>
+          <p className="rag-register-note">
+            バックアップ・復元の実施記録は API <code>/api/admin/backup-checks</code> に保存します。
+          </p>
+        </div>
       </div>
-      <p className="hint">
-        バックアップ・復元の実施記録は API <code>/api/admin/backup-checks</code> に保存します。
-      </p>
     </section>
   )
 }
 
-function Metric ({ label, value, to }: { label: string; value: number; to: string }) {
+function MetricLink ({ label, value, to }: { label: string; value: number; to: string }) {
   return (
-    <Link className="metric-card" to={to}>
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <Link className="stat-card stat-link" to={to}>
+      <div className="num">{value.toLocaleString()}</div>
+      <div className="lbl">{label} →</div>
     </Link>
   )
 }

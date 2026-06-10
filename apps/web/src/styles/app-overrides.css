@@ -1,0 +1,95 @@
+/* React-specific overrides on top of mock CSS */
+
+#root {
+  min-height: 100vh;
+}
+
+a.nav-link-style {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.nav-link-style:hover {
+  color: var(--accent-emphasis);
+}
+
+.case-detail-standalone {
+  min-height: 100vh;
+  background: var(--canvas-subtle);
+}
+
+.case-detail-standalone .container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.gh-admin-menu {
+  position: relative;
+}
+
+.gh-admin-menu summary {
+  list-style: none;
+  cursor: pointer;
+  color: #c9d1d9;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.gh-admin-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.gh-admin-menu summary:hover {
+  background: #30363d;
+  color: #fff;
+}
+
+.gh-admin-menu[open] summary {
+  background: #388bfd26;
+  color: #58a6ff;
+}
+
+.gh-admin-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 200px;
+  background: var(--canvas-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 50;
+  padding: 4px 0;
+}
+
+.gh-admin-dropdown a {
+  display: block;
+  padding: 8px 14px;
+  color: var(--fg-default);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.gh-admin-dropdown a:hover {
+  background: var(--canvas-inset);
+}
+
+.gh-admin-dropdown a.active {
+  color: var(--accent-emphasis);
+  font-weight: 600;
+}
+
+.app-footer-mock-ref {
+  text-align: center;
+  font-size: 11px;
+  color: var(--fg-subtle);
+  padding: 16px;
+  margin-top: 24px;
+  border-top: 1px solid var(--border-muted);
+}
+
+.app-footer-mock-ref a {
+  color: var(--accent-fg);
+}

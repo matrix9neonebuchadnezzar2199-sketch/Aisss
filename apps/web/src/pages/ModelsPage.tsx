@@ -70,73 +70,79 @@ export function ModelsPage () {
   }
 
   return (
-    <section className="page">
-      <h2>モデル管理（API 連携）</h2>
-      <p className="meta">
-        Ollama: {health}{latency != null ? ` (${latency}ms)` : ''}
-      </p>
+    <section className="view active" id="view-models">
+      <div className="panel">
+        <div className="panel-header">
+          <h2>モデル管理</h2>
+          <span className={`label label-${health === 'ok' ? 'success' : 'danger'}`}>
+            Ollama: {health}{latency != null ? ` (${latency}ms)` : ''}
+          </span>
+        </div>
+        <div className="panel-body">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">モデル</th>
+                <th scope="col">チャット有効</th>
+                <th scope="col">既定チャット</th>
+                <th scope="col">既定埋め込み</th>
+                <th scope="col">ReRank</th>
+              </tr>
+            </thead>
+            <tbody>
+              {models.map((m) => (
+                <tr key={m.name}>
+                  <td>{m.name}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={m.enabled_for_chat}
+                      onChange={(e) => updateModel(m.name, {
+                        enabled_for_chat: e.target.checked,
+                        ...(e.target.checked ? {} : { is_default_chat: false })
+                      })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="radio"
+                      name="default_chat"
+                      checked={m.is_default_chat}
+                      onChange={() => updateModel(m.name, { is_default_chat: true, enabled_for_chat: true })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="radio"
+                      name="default_embed"
+                      checked={m.is_default_embedding}
+                      onChange={() => updateModel(m.name, { is_default_embedding: true })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={m.is_rerank}
+                      onChange={(e) => updateModel(m.name, { is_rerank: e.target.checked })}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>モデル</th>
-            <th>チャット有効</th>
-            <th>既定チャット</th>
-            <th>既定埋め込み</th>
-            <th>ReRank</th>
-          </tr>
-        </thead>
-        <tbody>
-          {models.map((m) => (
-            <tr key={m.name}>
-              <td>{m.name}</td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={m.enabled_for_chat}
-                  onChange={(e) => updateModel(m.name, {
-                    enabled_for_chat: e.target.checked,
-                    // チャット無効化したモデルを既定チャットのまま残さない
-                    ...(e.target.checked ? {} : { is_default_chat: false })
-                  })}
-                />
-              </td>
-              <td>
-                <input
-                  type="radio"
-                  name="default_chat"
-                  checked={m.is_default_chat}
-                  onChange={() => updateModel(m.name, { is_default_chat: true, enabled_for_chat: true })}
-                />
-              </td>
-              <td>
-                <input
-                  type="radio"
-                  name="default_embed"
-                  checked={m.is_default_embedding}
-                  onChange={() => updateModel(m.name, { is_default_embedding: true })}
-                />
-              </td>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={m.is_rerank}
-                  onChange={(e) => updateModel(m.name, { is_rerank: e.target.checked })}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          <label className="rerank-toggle" style={{ display: 'block', marginTop: 12 }}>
+            <input type="checkbox" checked={rerankEnabled} onChange={(e) => setRerankEnabled(e.target.checked)} />
+            ReRank を有効化（既定: off）
+          </label>
 
-      <label className="rerank-toggle">
-        <input type="checkbox" checked={rerankEnabled} onChange={(e) => setRerankEnabled(e.target.checked)} />
-        ReRank を有効化（既定: off）
-      </label>
-
-      {error && <p className="error">{error}</p>}
-      {saved && <p className="meta">設定を保存しました</p>}
-      <button type="button" onClick={() => void onSave()}>設定を保存</button>
+          {error && <p className="error">{error}</p>}
+          {saved && <p className="meta">設定を保存しました</p>}
+          <button type="button" className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={() => void onSave()}>
+            設定を保存
+          </button>
+        </div>
+      </div>
     </section>
   )
 }

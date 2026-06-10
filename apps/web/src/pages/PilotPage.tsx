@@ -16,7 +16,6 @@ export function PilotPage () {
   const [notice, setNotice] = useState<string | null>(null)
   const [listRestricted, setListRestricted] = useState(false)
 
-  // 一覧取得は operator 限定。一般ユーザーは登録のみ可能なので、403 をエラーではなく案内として扱う。
   async function load () {
     try {
       const data = await fetchPilotFeedback()
@@ -55,65 +54,79 @@ export function PilotPage () {
   }
 
   return (
-    <section className="page">
-      <h2>本番パイロット</h2>
-      <p className="meta">パイロット feedback を収集し、M7 から Post-MVP backlog へ整理します。</p>
+    <section className="view active" id="view-pilot">
+      <div className="panel">
+        <div className="panel-header">
+          <h2>本番パイロット</h2>
+          <span className="label label-info">M7 feedback</span>
+        </div>
+        <div className="panel-body">
+          <p className="rag-register-note">パイロット feedback を収集し、M7 から Post-MVP backlog へ整理します。</p>
 
-      <div className="filter-panel">
-        <label>領域
-          <select value={area} onChange={(e) => setArea(e.target.value)}>
-            <option value="case">ケース</option>
-            <option value="rag">RAG / AI</option>
-            <option value="permission">権限</option>
-            <option value="ops">運用</option>
-          </select>
-        </label>
-        <label>重要度
-          <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
-          </select>
-        </label>
-        <label>タイトル
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label>内容
-          <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
-        </label>
-        <button type="button" onClick={() => void submit()}>登録</button>
+          <div className="filter-panel">
+            <label>領域
+              <select value={area} onChange={(e) => setArea(e.target.value)}>
+                <option value="case">ケース</option>
+                <option value="rag">RAG / AI</option>
+                <option value="permission">権限</option>
+                <option value="ops">運用</option>
+              </select>
+            </label>
+            <label>重要度
+              <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
+            </label>
+            <label>タイトル
+              <input value={title} onChange={(e) => setTitle(e.target.value)} />
+            </label>
+            <label>内容
+              <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+            </label>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => void submit()}>登録</button>
+          </div>
+
+          {error && <p className="error">{error}</p>}
+          {notice && <p className="meta">{notice}</p>}
+          {listRestricted && (
+            <p className="rag-register-note">フィードバック一覧の閲覧には運用者権限が必要です（登録は可能です）。</p>
+          )}
+
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">作成</th>
+                <th scope="col">領域</th>
+                <th scope="col">重要度</th>
+                <th scope="col">タイトル</th>
+                <th scope="col">状態</th>
+                <th scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td className="mono">{item.created_at?.slice(0, 10)}</td>
+                  <td>{item.area}</td>
+                  <td>{item.severity}</td>
+                  <td>{item.title}</td>
+                  <td>{item.status}</td>
+                  <td>
+                    {item.status !== 'triaged' && (
+                      <button type="button" className="btn btn-sm" onClick={() => void setStatus(item.id, 'triaged')}>triage</button>
+                    )}
+                    {item.status !== 'closed' && (
+                      <button type="button" className="btn btn-sm" onClick={() => void setStatus(item.id, 'closed')}>close</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      {error && <p className="error">{error}</p>}
-      {notice && <p className="meta">{notice}</p>}
-      {listRestricted && (
-        <p className="hint">フィードバック一覧の閲覧には運用者権限が必要です（登録は可能です）。</p>
-      )}
-
-      <table className="data-table">
-        <thead>
-          <tr><th>作成</th><th>領域</th><th>重要度</th><th>タイトル</th><th>状態</th><th>操作</th></tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.created_at?.slice(0, 10)}</td>
-              <td>{item.area}</td>
-              <td>{item.severity}</td>
-              <td>{item.title}</td>
-              <td>{item.status}</td>
-              <td>
-                {item.status !== 'triaged' && (
-                  <button type="button" className="linkish" onClick={() => void setStatus(item.id, 'triaged')}>triage</button>
-                )}
-                {item.status !== 'closed' && (
-                  <button type="button" className="linkish" onClick={() => void setStatus(item.id, 'closed')}>close</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </section>
   )
 }

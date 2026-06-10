@@ -358,3 +358,61 @@ export async function updatePilotFeedbackStatus (id: string, status: string): Pr
     body: JSON.stringify({ status })
   })
 }
+
+export type UserRow = {
+  id: string
+  external_id: string | null
+  display_name: string
+  department_id: string | null
+  department_name?: string | null
+  role: string
+}
+
+export type GroupRow = {
+  id: string
+  name: string
+  is_active: boolean
+  members: Array<{ user_id: string; display_name: string }>
+}
+
+export type ViewingRangeRow = {
+  id: string
+  code: string | null
+  name: string
+  sort_order: number
+  group_ids: string[]
+}
+
+export async function fetchUsers (q?: string): Promise<{ items: UserRow[] }> {
+  const qs = q ? `?${new URLSearchParams({ q })}` : ''
+  return apiFetch(`/api/users${qs}`)
+}
+
+export async function fetchGroups (): Promise<{ items: GroupRow[] }> {
+  return apiFetch('/api/groups')
+}
+
+export async function fetchViewingRangesWithGroups (): Promise<{ items: ViewingRangeRow[] }> {
+  return apiFetch('/api/viewing-ranges')
+}
+
+export async function updateGroupMembers (groupId: string, userIds: string[]): Promise<void> {
+  await apiFetch(`/api/groups/${groupId}/members`, {
+    method: 'PUT',
+    body: JSON.stringify({ user_ids: userIds })
+  })
+}
+
+export async function updateViewingRangeGroups (viewingRangeId: string, groupIds: string[]): Promise<void> {
+  await apiFetch(`/api/viewing-ranges/${viewingRangeId}/groups`, {
+    method: 'PUT',
+    body: JSON.stringify({ group_ids: groupIds })
+  })
+}
+
+export async function createGroup (name: string): Promise<{ id: string; name: string }> {
+  return apiFetch('/api/groups', {
+    method: 'POST',
+    body: JSON.stringify({ name })
+  })
+}

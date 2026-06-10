@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { apiFetch, uploadStandaloneFile, type MasterItem } from '../lib/api'
 
 export function StandaloneFilePage () {
@@ -41,32 +41,40 @@ export function StandaloneFilePage () {
   }
 
   return (
-    <section className="page">
-      <h2>単独ファイル登録</h2>
-      <div className="form-grid">
-        <label className="full">細部 / 表題
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label className="full">タグ（カンマ区切り）
-          <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="参考, 条例" />
-        </label>
-        <label className="full">閲覧範囲（複数選択可）
-          <select
-            multiple
-            value={viewingRangeIds}
-            onChange={(e) => setViewingRangeIds(Array.from(e.target.selectedOptions, (o) => o.value))}
-          >
-            {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-          </select>
-        </label>
-        <label className="full">ファイル
-          <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </label>
+    <section className="view active" id="view-standalone-file">
+      <div className="panel">
+        <div className="panel-header">
+          <h2>単独ファイル登録</h2>
+          <Link className="btn btn-sm" to="/rag">← RAG 管理</Link>
+        </div>
+        <div className="panel-body">
+          <div className="form-grid">
+            <label className="full">細部 / 表題
+              <input value={title} onChange={(e) => setTitle(e.target.value)} />
+            </label>
+            <label className="full">タグ（カンマ区切り）
+              <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="参考, 条例" />
+            </label>
+            <label className="full">閲覧範囲（複数選択可）
+              <select
+                multiple
+                value={viewingRangeIds}
+                onChange={(e) => setViewingRangeIds(Array.from(e.target.selectedOptions, (o) => o.value))}
+              >
+                {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+              </select>
+            </label>
+            <label className="full upload-zone">
+              ファイル
+              <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            </label>
+          </div>
+          {error && <p className="error">{error}</p>}
+          <button type="button" className="btn btn-primary" onClick={() => void onSubmit()} disabled={loading}>
+            {loading ? '登録中…' : '登録する'}
+          </button>
+        </div>
       </div>
-      {error && <p className="error">{error}</p>}
-      <button type="button" onClick={() => void onSubmit()} disabled={loading}>
-        {loading ? '登録中…' : '登録する'}
-      </button>
     </section>
   )
 }

@@ -56,19 +56,25 @@ Interactive mockups:
 
 ## Screen Completeness Matrix
 
-| Screen | Mock view | Completeness | Spec | Primary APIs | Milestone |
-|---|---|---|---|---|---|
-| ケース検索 | `search` | Medium (4-row filter layout fixed) | [08 § Case Search](./08-webui-design.md) | `GET /api/cases` | M2 |
-| ケース登録・編集 | `register` | Medium–High (vertical body stack fixed) | [08 § Registration](./08-webui-design.md) | `POST` / `PATCH /api/cases/{id}` | M2 |
-| ケース詳細 | `case-detail.html` | Medium | [08 § Case detail](./08-webui-design.md) | `GET /api/cases/{id}` | M2 |
-| AI 検索 | `ai` | Low (static) | [08 § AI Search](./08-webui-design.md) | `POST /api/ai/chat`, `GET /api/ollama/health` | M5 |
-| 単独ファイル登録 | `standalone-file` | Low | [16 § Registration](./16-rag-admin-guide.md) | `POST /api/rag/standalone-files` | M5 |
-| RAG 管理 | `rag-admin` | High | [16](./16-rag-admin-guide.md), [17](./17-viewing-range-permission-flow.md) | `GET /api/rag/*`, `PATCH` enable / viewing-ranges | M5 |
-| モデル管理 | `models` | Medium (static) | [15](./15-ollama-integration.md) | `GET /api/ollama/models`, `PUT /api/admin/ollama/model-roles` | M5 |
-| ユーザー・グループ | `permissions` | Medium | [08 § Permission](./08-webui-design.md), [17](./17-viewing-range-permission-flow.md) | `GET/PUT /api/users`, `/api/groups`, `/api/viewing-ranges` | M2 |
-| マスタ管理 | `masters` | Low | [08 § Master](./08-webui-design.md) | `GET/POST/PATCH /api/masters/{name}` | M2 |
-| 監査ログ | `audit` | Medium (2-row filter layout fixed) | [08 § Audit](./08-webui-design.md) | `GET /api/audit-logs` | M6 |
-| ジョブ状態 | `jobs` | Medium | [08 § Job Status](./08-webui-design.md) | `GET /api/jobs`, retry | M6 |
+| Screen | Mock view | Functional | Visual (React) | Spec | Primary APIs | Milestone |
+|---|---|---|---|---|---|---|
+| ケース検索 | `search` | Medium | M19 target | [08 § Case Search](./08-webui-design.md) | `GET /api/cases` | M2 / M19 |
+| ケース登録・編集 | `register` | Medium–High | M19 target | [08 § Registration](./08-webui-design.md) | `POST` / `PATCH /api/cases/{id}` | M2 / M19 |
+| ケース詳細 | `case-detail.html` | Medium | M19 target | [08 § Case detail](./08-webui-design.md) | `GET /api/cases/{id}` | M2 / M19 |
+| AI 検索 | `ai` | Medium | M19 target | [08 § AI Search](./08-webui-design.md) | `POST /api/ai/chat`, `GET /api/ollama/health` | M5 / M19 |
+| 単独ファイル登録 | `standalone-file` | Medium | M19 target | [16 § Registration](./16-rag-admin-guide.md) | `POST /api/rag/standalone-files` | M5 / M19 |
+| RAG 管理 | `rag-admin` | High | M19 target | [16](./16-rag-admin-guide.md), [17](./17-viewing-range-permission-flow.md) | `GET /api/rag/*`, `PATCH` enable / viewing-ranges | M5 / M19 |
+| モデル管理 | `models` | Medium | M19 target | [15](./15-ollama-integration.md) | `GET /api/ollama/models`, `PUT /api/admin/ollama/model-roles` | M5 / M19 |
+| ユーザー・グループ | `permissions` | API ready | M19 target | [08 § Permission](./08-webui-design.md), [17](./17-viewing-range-permission-flow.md) | `GET/PUT /api/users`, `/api/groups`, `/api/viewing-ranges` | M2 / M19 |
+| マスタ管理 | `masters` | Medium | M19 target | [08 § Master](./08-webui-design.md) | `GET/POST/PATCH /api/masters/{name}` | M2 / M19 |
+| 監査ログ | `audit` | High | M19 target | [08 § Audit](./08-webui-design.md) | `GET /api/audit-logs` | M6 / M19 |
+| ジョブ状態 | `jobs` | High | M19 target | [08 § Job Status](./08-webui-design.md) | `GET /api/jobs`, retry | M6 / M19 |
+
+Wiring verification: [20-webui-wiring-checklist.md](./20-webui-wiring-checklist.md).
+
+### Legacy matrix note
+
+Previous single **Completeness** column tracked functional mock coverage only. **Visual (React)** tracks M19 parity with `mockups/*.html`.
 
 ### Interactive features implemented in the mock
 

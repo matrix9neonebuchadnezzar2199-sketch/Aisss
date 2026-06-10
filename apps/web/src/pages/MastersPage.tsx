@@ -43,21 +43,46 @@ export function MastersPage () {
     }
   }
 
+  const masterLabel = MASTER_OPTIONS.find((m) => m.key === master)?.label ?? master
+
   return (
-    <section className="page">
-      <h2>マスタ管理</h2>
-      <label>マスタ種別
-        <select value={master} onChange={(e) => setMaster(e.target.value)}>
-          {MASTER_OPTIONS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
-        </select>
-      </label>
-      {error && <p className="error">{error}</p>}
-      <ul className="master-list">
-        {items.map((item) => <li key={item.id}>{item.name}</li>)}
-      </ul>
-      <div className="inline-form">
-        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="新しい値" />
-        <button type="button" onClick={() => void addValue()}>+ 値を追加</button>
+    <section className="view active" id="view-masters">
+      <div className="panel">
+        <div className="panel-header">
+          <h2>マスタ管理</h2>
+          <select value={master} onChange={(e) => setMaster(e.target.value)}>
+            {MASTER_OPTIONS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+          </select>
+        </div>
+        <div className="panel-body">
+          {error && <p className="error">{error}</p>}
+
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">名称</th>
+                <th scope="col">ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td className="mono">{item.id.slice(0, 8)}…</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="filter-bar" style={{ marginTop: 12 }}>
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder={`${masterLabel} に追加する値`}
+            />
+            <button type="button" className="btn btn-sm btn-primary" onClick={() => void addValue()}>+ 値を追加</button>
+          </div>
+        </div>
       </div>
     </section>
   )

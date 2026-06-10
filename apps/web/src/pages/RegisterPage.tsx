@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AttachmentPanel } from '../components/AttachmentPanel'
 import { ExcelImportPanel } from '../components/ExcelImportPanel'
 import { apiFetch, type CaseDetail, type MasterItem } from '../lib/api'
@@ -96,13 +96,15 @@ export function RegisterPage () {
           method: 'PATCH',
           body: JSON.stringify(payload)
         })
-        navigate(`/cases/${updated.display_id}`)
+        window.open(`/cases/${updated.display_id}`, '_blank')
+        navigate('/search')
       } else {
         const created = await apiFetch<CaseDetail>('/api/cases', {
           method: 'POST',
           body: JSON.stringify(payload)
         })
-        navigate(`/cases/${created.display_id}`)
+        window.open(`/cases/${created.display_id}`, '_blank')
+        navigate('/search')
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
@@ -112,83 +114,92 @@ export function RegisterPage () {
   }
 
   return (
-    <section className="page">
-      <h2>{caseId ? 'ケース編集' : 'ケース登録'}</h2>
-      {!caseId && <ExcelImportPanel />}
-      {error && <p className="error">{error}</p>}
+    <section className="view active" id="view-register">
+      <div className="panel">
+        <div className="panel-header">
+          <h2>{caseId ? `ケース編集 · ${editDisplayId}` : 'ケース（事象）登録'}</h2>
+          {editDisplayId && (
+            <Link className="btn btn-sm" to={`/cases/${editDisplayId}`} target="_blank" rel="noopener noreferrer">
+              キャンセル（詳細へ）
+            </Link>
+          )}
+        </div>
+        <div className="panel-body">
+          {!caseId && <ExcelImportPanel />}
+          {error && <p className="error">{error}</p>}
 
-      <div className="form-grid">
-        <label>表題 *
-          <input value={form.title} onChange={(e) => update('title', e.target.value)} required />
-        </label>
-        <label>資料番号
-          <input value={form.material_number} onChange={(e) => update('material_number', e.target.value)} />
-        </label>
-        <label>資料区分
-          <select value={form.material_type_id} onChange={(e) => update('material_type_id', e.target.value)}>
-            <option value="">—</option>
-            {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </label>
-        <label>登録部署
-          <select value={form.registering_department_id} onChange={(e) => update('registering_department_id', e.target.value)}>
-            <option value="">—</option>
-            {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </label>
-        <label>ランク
-          <select value={form.rank_id} onChange={(e) => update('rank_id', e.target.value)}>
-            <option value="">—</option>
-            {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-        </label>
-        <label>事象開始日
-          <input type="date" value={form.event_start_date} onChange={(e) => update('event_start_date', e.target.value)} />
-        </label>
-        <label>事象終了日
-          <input type="date" value={form.event_end_date} onChange={(e) => update('event_end_date', e.target.value)} />
-        </label>
-        <label>閲覧範囲 *
-          <select
-            multiple
-            required
-            value={form.viewing_range_ids}
-            onChange={(e) => update('viewing_range_ids', Array.from(e.target.selectedOptions, (o) => o.value))}
-          >
-            {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-          <span className="hint">必ず1つ以上選択してください。「全員」「管理者のみ」も閲覧範囲として選択します。</span>
-        </label>
-        <label className="full">要約
-          <textarea rows={3} value={form.summary} onChange={(e) => update('summary', e.target.value)} />
-        </label>
+          <div className="form-grid">
+            <label>表題 *
+              <input value={form.title} onChange={(e) => update('title', e.target.value)} required />
+            </label>
+            <label>資料番号
+              <input value={form.material_number} onChange={(e) => update('material_number', e.target.value)} />
+            </label>
+            <label>資料区分
+              <select value={form.material_type_id} onChange={(e) => update('material_type_id', e.target.value)}>
+                <option value="">—</option>
+                {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </label>
+            <label>登録部署
+              <select value={form.registering_department_id} onChange={(e) => update('registering_department_id', e.target.value)}>
+                <option value="">—</option>
+                {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </label>
+            <label>ランク
+              <select value={form.rank_id} onChange={(e) => update('rank_id', e.target.value)}>
+                <option value="">—</option>
+                {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </label>
+            <label>事象開始日
+              <input type="date" value={form.event_start_date} onChange={(e) => update('event_start_date', e.target.value)} />
+            </label>
+            <label>事象終了日
+              <input type="date" value={form.event_end_date} onChange={(e) => update('event_end_date', e.target.value)} />
+            </label>
+            <label>閲覧範囲 *
+              <select
+                multiple
+                required
+                value={form.viewing_range_ids}
+                onChange={(e) => update('viewing_range_ids', Array.from(e.target.selectedOptions, (o) => o.value))}
+              >
+                {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+              <span className="rag-register-note">必ず1つ以上選択。「全員」「管理者のみ」も閲覧範囲として選択します。</span>
+            </label>
+            <label className="full">要約
+              <textarea rows={3} value={form.summary} onChange={(e) => update('summary', e.target.value)} />
+            </label>
+          </div>
+
+          <div className="form-body-stack">
+            <label>1 要約
+              <textarea rows={3} value={form.body_summary} onChange={(e) => update('body_summary', e.target.value)} />
+            </label>
+            <label className="body-article">2 記事
+              <textarea rows={8} value={form.body_article} onChange={(e) => update('body_article', e.target.value)} />
+            </label>
+            <label>3 所見
+              <textarea rows={3} value={form.body_assessment} onChange={(e) => update('body_assessment', e.target.value)} />
+            </label>
+            <label>4 その他参考事項
+              <textarea rows={3} value={form.body_reference} onChange={(e) => update('body_reference', e.target.value)} />
+            </label>
+          </div>
+
+          <button type="button" className="btn btn-primary" onClick={() => void submit()} disabled={saving}>
+            {caseId ? '更新する' : '登録する'}
+          </button>
+
+          {caseId && <AttachmentPanel caseId={caseId} />}
+          {!caseId && (
+            <p className="rag-register-note">添付ファイルは登録後（編集モード）または詳細画面からアップロードできます。</p>
+          )}
+        </div>
       </div>
-
-      <div className="form-body-stack">
-        <label>1 要約
-          <textarea rows={3} value={form.body_summary} onChange={(e) => update('body_summary', e.target.value)} />
-        </label>
-        <label className="body-article">2 記事
-          <textarea rows={8} value={form.body_article} onChange={(e) => update('body_article', e.target.value)} />
-        </label>
-        <label>3 所見
-          <textarea rows={3} value={form.body_assessment} onChange={(e) => update('body_assessment', e.target.value)} />
-        </label>
-        <label>4 その他参考事項
-          <textarea rows={3} value={form.body_reference} onChange={(e) => update('body_reference', e.target.value)} />
-        </label>
-      </div>
-
-      <button type="button" className="primary" onClick={() => void submit()} disabled={saving}>
-        {caseId ? '更新する' : '登録する'}
-      </button>
-
-      {caseId && (
-        <AttachmentPanel caseId={caseId} />
-      )}
-      {!caseId && (
-        <p className="hint">添付ファイルは登録後（編集モード）または詳細画面からアップロードできます。</p>
-      )}
     </section>
   )
 }

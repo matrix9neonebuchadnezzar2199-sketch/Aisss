@@ -186,6 +186,26 @@ Done when:
 
 **Implementation:** Pilot group/user seed in `007_m6_m7_ops_pilot.sql`; `/pilot` feedback workflow; [Operational Runbook](./19-operational-runbook.md); dashboard feedback metric; known limitations recorded in app settings and runbook.
 
+## Milestone 19: WebUI Mock Visual Parity
+
+Goal: Reproduce the HTML mock (`mockups/webui.html`, `case-detail.html`) look, navigation, and cross-links in the React WebUI while preserving API wiring.
+
+Deliverables:
+
+- Design tokens and component CSS ported from mock (shared class names).
+- App shell: gh-header, hierarchical sidebar, collapse, Ollama badge.
+- All 11 mock views + standalone case detail layout.
+- Permissions screen (`/permissions`) matching mock tabs.
+- [WebUI Wiring Checklist](./20-webui-wiring-checklist.md) signed off for Flow A/B/C.
+
+Done when:
+
+- Side-by-side visual review with mock passes for each screen.
+- Cross-navigation (stats→jobs, jobs→audit, RAG→edit, search→detail new tab) works.
+- Screen→API matrix in doc 20 verified for admin, operator, and pilot.
+
+**Non-scope:** Full 17 search filters, all registration fields from spec 08, MAP search, AI streaming UI.
+
 ## Post-MVP Ideas
 
 - MAP search (geographic case map + filters; offline tiles) — discussed but **deferred**; not in mock. See [18 § Post-MVP](./18-webui-mock-inventory-and-flows.md#post-mvp-deferred).
