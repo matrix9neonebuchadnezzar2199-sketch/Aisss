@@ -6,7 +6,7 @@ test('resolveRagVisibilityState labels rag-enabled attachments', () => {
   const result = resolveRagVisibilityState({
     rag_enabled: true,
     auto_enable_rag_on_extraction: false,
-    extraction_status: 'completed'
+    extraction_status: 'succeeded'
   })
   assert.equal(result.state, 'rag_enabled')
   assert.equal(result.label, 'RAG有効')
@@ -17,7 +17,7 @@ test('resolveRagVisibilityState labels auto-enable reservation', () => {
   const result = resolveRagVisibilityState({
     rag_enabled: false,
     auto_enable_rag_on_extraction: true,
-    extraction_status: 'completed'
+    extraction_status: 'succeeded'
   })
   assert.equal(result.state, 'auto_enable_reserved')
   assert.equal(result.label, '自動ON予約')
@@ -28,7 +28,7 @@ test('resolveRagVisibilityState labels extracted-but-not-enabled candidates', ()
   const result = resolveRagVisibilityState({
     rag_enabled: false,
     auto_enable_rag_on_extraction: false,
-    extraction_status: 'completed'
+    extraction_status: 'succeeded'
   })
   assert.equal(result.state, 'knowledge_candidate')
   assert.equal(result.label, '未ナレッジ化候補')

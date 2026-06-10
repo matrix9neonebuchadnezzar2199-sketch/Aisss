@@ -25,6 +25,22 @@ export function sendError (
     })
   }
 
+  // Fastify 由来のクライアントエラー（空 JSON body 等）は 500 に丸めず本来の 4xx を返す
+  const httpError = error as { statusCode?: number; code?: string; message?: string }
+  if (
+    typeof httpError?.statusCode === 'number' &&
+    httpError.statusCode >= 400 &&
+    httpError.statusCode < 500
+  ) {
+    return reply.code(httpError.statusCode).send({
+      error: {
+        code: typeof httpError.code === 'string' ? httpError.code : 'bad_request',
+        message: httpError.message ?? 'Bad request.',
+        request_id: requestId
+      }
+    })
+  }
+
   reply.log.error(error)
   return reply.code(500).send({
     error: {

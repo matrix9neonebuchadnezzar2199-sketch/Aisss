@@ -77,6 +77,26 @@ test('POST /api/ai/chat rejects unauthenticated requests', async (t) => {
   assert.equal(response.statusCode, 401)
 })
 
+test('empty JSON body returns 400 instead of masked 500', async (t) => {
+  // WebUI の retry 系は Content-Type: application/json で body 無し POST を送ることがある。
+  // Fastify の FST_ERR_CTP_EMPTY_JSON_BODY (400) を internal_error 500 に丸めない（dry-run D3）。
+  const app = await buildAuthTestApp()
+  t.after(async () => { await app.close() })
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/jobs/00000000-0000-4000-8000-00000000dddd/retry',
+    headers: {
+      'X-AISSS-User-Id': regularUserId,
+      'Content-Type': 'application/json'
+    }
+  })
+
+  assert.equal(response.statusCode, 400)
+  const body = response.json() as { error: { code: string } }
+  assert.notEqual(body.error.code, 'internal_error')
+})
+
 test('operational routes reject general users before data queries', async (t) => {
   const app = await buildAuthTestApp()
   t.after(async () => { await app.close() })

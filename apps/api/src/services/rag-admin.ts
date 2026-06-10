@@ -47,19 +47,19 @@ export async function getRagStatus (pool: pg.Pool) {
       `SELECT COUNT(*)::text AS count FROM attachments
        WHERE rag_enabled = FALSE
          AND auto_enable_rag_on_extraction = FALSE
-         AND extraction_status = 'completed'`
+         AND extraction_status = 'succeeded'`
     ),
     pool.query<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM standalone_files
        WHERE deleted_at IS NULL
          AND rag_enabled = FALSE
-         AND extraction_status = 'completed'`
+         AND extraction_status = 'succeeded'`
     ),
     pool.query<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM attachments
        WHERE rag_enabled = FALSE
          AND auto_enable_rag_on_extraction = TRUE
-         AND extraction_status IN ('pending', 'running', 'completed')`
+         AND extraction_status IN ('pending', 'running', 'succeeded')`
     )
   ])
   const notEnabledCandidates =
@@ -144,7 +144,8 @@ export function resolveRagVisibilityState (input: {
   if (input.auto_enable_rag_on_extraction) {
     return { state: 'auto_enable_reserved', label: '自動ON予約', is_knowledge_candidate: false }
   }
-  if (input.extraction_status === 'completed') {
+  // worker は抽出成功を extraction_status='succeeded' で記録する（'completed' は jobs.status 側の値）
+  if (input.extraction_status === 'succeeded') {
     return { state: 'knowledge_candidate', label: '未ナレッジ化候補', is_knowledge_candidate: true }
   }
   return { state: 'rag_disabled', label: 'RAG無効', is_knowledge_candidate: false }

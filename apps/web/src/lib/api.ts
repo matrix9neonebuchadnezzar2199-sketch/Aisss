@@ -81,7 +81,11 @@ export async function setAttachmentAutoEnableRag (
 }
 
 export async function retryExtraction (attachmentId: string): Promise<void> {
-  await apiFetch(`/api/attachments/${attachmentId}/retry-extraction`, { method: 'POST' })
+  // Content-Type: application/json を送る以上、空 body は Fastify に拒否されるため {} を明示する
+  await apiFetch(`/api/attachments/${attachmentId}/retry-extraction`, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
 }
 
 export type ExtractedText = {
@@ -295,7 +299,10 @@ export async function fetchJobs (params?: Record<string, string>): Promise<{ ite
 }
 
 export async function retryJob (jobId: string): Promise<void> {
-  await apiFetch(`/api/jobs/${jobId}/retry`, { method: 'POST' })
+  await apiFetch(`/api/jobs/${jobId}/retry`, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
 }
 
 export async function deadLetterJob (jobId: string, reason?: string): Promise<void> {

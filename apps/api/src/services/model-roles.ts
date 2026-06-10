@@ -63,6 +63,17 @@ export async function updateModelRoles (
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    // default はグローバルに1つ。assignments に含まれない残留行（Ollama から消えたモデル等）が
+    // default を握り続けないよう、新しい default を立てる前に全行をリセットする。
+    if (input.assignments.some((a) => a.is_default_chat)) {
+      await client.query(`UPDATE ollama_model_roles SET is_default_chat = FALSE WHERE is_default_chat = TRUE`)
+    }
+    if (input.assignments.some((a) => a.is_default_embedding)) {
+      await client.query(`UPDATE ollama_model_roles SET is_default_embedding = FALSE WHERE is_default_embedding = TRUE`)
+    }
+    if (input.assignments.some((a) => a.is_rerank)) {
+      await client.query(`UPDATE ollama_model_roles SET is_rerank = FALSE WHERE is_rerank = TRUE`)
+    }
     for (const a of input.assignments) {
       await client.query(
         `INSERT INTO ollama_model_roles (
