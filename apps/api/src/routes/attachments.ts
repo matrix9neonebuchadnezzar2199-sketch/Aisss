@@ -20,6 +20,8 @@ export const attachmentRoutes: FastifyPluginAsync<{
           error: { code: 'validation_error', message: 'file is required.' }
         })
       }
+      const fields = file.fields as Record<string, { value?: string } | Array<{ value?: string }>>
+      const autoEnableRaw = (fields.auto_enable_rag_on_extraction as { value?: string })?.value
       const buffer = await file.toBuffer()
       const created = await attachmentService.uploadAttachment(
         pool,
@@ -29,7 +31,8 @@ export const attachmentRoutes: FastifyPluginAsync<{
         caseId,
         file.filename,
         file.mimetype,
-        buffer
+        buffer,
+        autoEnableRaw === 'true'
       )
       return reply.code(201).send(created)
     } catch (error) {
@@ -84,6 +87,21 @@ export const attachmentRoutes: FastifyPluginAsync<{
     try {
       const { attachmentId } = request.params as { attachmentId: string }
       return await attachmentService.retryExtraction(pool, request.user, attachmentId)
+    } catch (error) {
+      return sendError(reply, error, request.id)
+    }
+  })
+
+  app.patch('/api/attachments/:attachmentId/auto-enable-rag', async (request, reply) => {
+    try {
+      const { attachmentId } = request.params as { attachmentId: string }
+      const body = request.body as { enabled?: boolean }
+      return await attachmentService.updateAutoEnableRagOnExtraction(
+        pool,
+        request.user,
+        attachmentId,
+        body.enabled === true
+      )
     } catch (error) {
       return sendError(reply, error, request.id)
     }

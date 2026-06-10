@@ -5,13 +5,28 @@ import type { AuthUser } from '../types/auth.js'
 import { AppError } from '../lib/errors.js'
 import { buildQuoteSystemHint } from './conditions.js'
 import { chatCompletion, chatCompletionStream } from './ollama-client.js'
-import { permissionedSearch } from './permissioned-search.js'
+import { permissionedSearch, type PermissionedSearchResult } from './permissioned-search.js'
 import { isAdmin } from './permissions.js'
 import { getDefaultChatModel, getModelDefaults } from './model-roles.js'
 import { writeAuditLog } from './audit.js'
 import { checkOllamaHealth } from './ollama-health.js'
 
 const WEBUI_CHAT_CHANNEL = 'webui_chat'
+
+export type AiChatDeps = {
+  checkHealth?: typeof checkOllamaHealth
+  getDefaults?: typeof getModelDefaults
+  search?: (
+    pool: pg.Pool,
+    settings: Settings,
+    user: AuthUser,
+    query: string,
+    topK: number,
+    channel: string
+  ) => Promise<PermissionedSearchResult>
+  complete?: typeof chatCompletion
+  audit?: typeof writeAuditLog
+}
 
 function buildSystemPrompt (
   contexts: Array<{ citation: string; text: string }>,
@@ -34,14 +49,15 @@ export async function runAiChat (
   pool: pg.Pool,
   settings: Settings,
   user: AuthUser,
-  input: { message: string; model?: string; conversation_id?: string }
+  input: { message: string; model?: string; conversation_id?: string },
+  deps: AiChatDeps = {}
 ) {
-  const health = await checkOllamaHealth(settings.ollamaBaseUrl)
+  const health = await (deps.checkHealth ?? checkOllamaHealth)(settings.ollamaBaseUrl)
   if (health.status === 'down') {
     throw new AppError('service_unavailable', 'Ollama is unavailable.', 503)
   }
 
-  const defaults = await getModelDefaults(pool)
+  const defaults = await (deps.getDefaults ?? getModelDefaults)(pool)
   const model = input.model ?? defaults.chat_model
   if (!model) {
     throw new AppError('validation_error', 'No chat model configured.', 400)
@@ -55,7 +71,7 @@ export async function runAiChat (
   }
 
   const queryId = randomUUID()
-  const search = await permissionedSearch(
+  const search = await (deps.search ?? permissionedSearch)(
     pool,
     settings,
     user,
@@ -69,14 +85,14 @@ export async function runAiChat (
     quoteHint
   )
 
-  const answer = await chatCompletion(
+  const answer = await (deps.complete ?? chatCompletion)(
     settings.ollamaBaseUrl,
     model,
     systemPrompt,
     input.message.trim()
   )
 
-  await writeAuditLog(pool, {
+  await (deps.audit ?? writeAuditLog)(pool, {
     userId: user.id,
     action: 'ai.chat',
     resourceType: 'ai_query',

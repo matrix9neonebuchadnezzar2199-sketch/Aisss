@@ -85,6 +85,30 @@ Weekly triage output should split items into:
 - Post-MVP enhancement.
 - Documentation/training update.
 
+## Pilot Validation Checklist
+
+Run these checks with representative pilot data before wider rollout:
+
+| Area | Validation |
+|---|---|
+| Japanese retrieval quality | Ask 10-20 expected-answer questions and record missed or irrelevant citations. |
+| Permissioned RAG | Confirm `照会禁止` cases never appear in context, citations, audit titles, or AI answers. |
+| Output policy | Confirm `複製禁止` and `印刷禁止` are reflected in answer policy and Web UI affordances. |
+| RAG enablement | Confirm extracted-but-not-RAG-enabled files are visible in RAG management. |
+| Auto RAG reservation | Confirm attachment auto-enable only runs after extraction succeeds and viewing ranges exist. |
+| Auditability | Confirm AI query audit records include `retrieved_case_ids` and `excluded_counts` without denied titles. |
+| Operations | Confirm failed extraction/embedding jobs are visible, retryable, and eventually DLQ when attempts are exhausted. |
+
+## Post-MVP Cut Criteria
+
+Create explicit Post-MVP tasks when pilot feedback shows one of these patterns:
+
+- OCR/ASR: two or more real pilot files require image/audio extraction.
+- Retrieval quality: repeated Japanese query misses are caused by embedding model quality rather than permissions.
+- RAG operations: operators cannot reliably find pending, failed, or not-enabled knowledge candidates.
+- Audit/compliance: reviewers need evidence not currently captured in `audit_logs.details_json`.
+- UI safety: users misunderstand whether an attachment is searchable by AI.
+
 ## Known Limitations
 
 - OCR and ASR engines are still stubs.

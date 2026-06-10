@@ -3,8 +3,11 @@ import assert from 'node:assert/strict'
 import { buildViewingRangeFilter } from './services/qdrant.js'
 import { ALL_USERS_VIEWING_RANGE_ID } from './lib/viewing-ranges.js'
 
-test('buildViewingRangeFilter returns undefined for admin users', () => {
-  assert.equal(buildViewingRangeFilter(['range-a'], true), undefined)
+test('buildViewingRangeFilter limits admin users to rag-enabled chunks', () => {
+  assert.deepEqual(
+    buildViewingRangeFilter(['range-a'], true),
+    { must: [{ key: 'rag_enabled', match: { value: true } }] }
+  )
 })
 
 test('buildViewingRangeFilter still allows all-users range for users with no assigned ranges', () => {

@@ -1,6 +1,13 @@
 import { downloadObject } from './storage.js'
 import { extractText } from './extract.js'
 
+function resolveProcessorDeps (deps = {}) {
+  return {
+    download: deps.download ?? downloadObject,
+    extract: deps.extract ?? extractText
+  }
+}
+
 export async function claimNextJob (pool, jobType) {
   const { rows } = await pool.query(
     `UPDATE jobs SET status = 'running', updated_at = NOW()
@@ -17,6 +24,30 @@ export async function claimNextJob (pool, jobType) {
   return rows[0] ?? null
 }
 
+export async function markJobFailed (pool, job, error) {
+  const message = error instanceof Error ? error.message : String(error ?? 'job failed')
+  const retryCount = Number(job.retry_count ?? 0)
+  const maxAttempts = Number(job.max_attempts ?? 3)
+  const nextRetryCount = retryCount + 1
+  const deadLetter = nextRetryCount >= maxAttempts
+  await pool.query(
+    `UPDATE jobs
+     SET status = $2,
+         error = $3,
+         retry_count = $4,
+         dead_lettered_at = CASE WHEN $2 = 'dead_letter' THEN NOW() ELSE dead_lettered_at END,
+         updated_at = NOW(),
+         completed_at = NOW()
+     WHERE id = $1`,
+    [job.id, deadLetter ? 'dead_letter' : 'failed', message, nextRetryCount]
+  )
+  return {
+    status: deadLetter ? 'dead_letter' : 'failed',
+    error: message,
+    retry_count: nextRetryCount
+  }
+}
+
 async function enqueueEmbeddingJob (pool, payload, caseId, caseDisplayId, attachmentId) {
   await pool.query(
     `INSERT INTO jobs (job_type, status, case_id, case_display_id, attachment_id, payload_json)
@@ -25,12 +56,45 @@ async function enqueueEmbeddingJob (pool, payload, caseId, caseDisplayId, attach
   )
 }
 
-export async function processExtractionJob (pool, storage, storageConfig, job) {
+async function hasCaseViewingRange (pool, caseId) {
+  const { rows } = await pool.query(
+    `SELECT 1 FROM case_viewing_ranges WHERE case_id = $1 LIMIT 1`,
+    [caseId]
+  )
+  return rows.length > 0
+}
+
+async function maybeEnqueueAttachmentEmbedding (pool, attachment) {
+  let ragEnabled = attachment.rag_enabled === true
+  if (!ragEnabled && attachment.auto_enable_rag_on_extraction === true) {
+    if (await hasCaseViewingRange(pool, attachment.case_id)) {
+      await pool.query(
+        `UPDATE attachments SET rag_enabled = TRUE WHERE id = $1`,
+        [attachment.id]
+      )
+      ragEnabled = true
+    }
+  }
+
+  if (!ragEnabled) return false
+
+  await enqueueEmbeddingJob(
+    pool,
+    { source: 'attachment', attachment_id: attachment.id },
+    attachment.case_id,
+    attachment.display_id,
+    attachment.id
+  )
+  return true
+}
+
+export async function processExtractionJob (pool, storage, storageConfig, job, deps = {}) {
+  const resolved = resolveProcessorDeps(deps)
   const payload = job.payload_json ?? {}
   const standaloneId = payload.standalone_file_id
 
   if (standaloneId) {
-    return processStandaloneExtraction(pool, storage, storageConfig, job, standaloneId)
+    return processStandaloneExtraction(pool, storage, storageConfig, job, standaloneId, resolved)
   }
 
   const attachmentId = job.attachment_id
@@ -51,8 +115,8 @@ export async function processExtractionJob (pool, storage, storageConfig, job) {
     [attachmentId]
   )
 
-  const buffer = await downloadObject(storage, storageConfig.bucket, attachment.storage_key)
-  const result = await extractText(attachment, buffer)
+  const buffer = await resolved.download(storage, storageConfig.bucket, attachment.storage_key)
+  const result = await resolved.extract(attachment, buffer)
 
   if (result.error || !result.text) {
     const message = result.error ?? 'No text extracted'
@@ -90,20 +154,12 @@ export async function processExtractionJob (pool, storage, storageConfig, job) {
     [job.id]
   )
 
-  if (attachment.rag_enabled) {
-    await enqueueEmbeddingJob(
-      pool,
-      { source: 'attachment', attachment_id: attachmentId },
-      attachment.case_id,
-      attachment.display_id,
-      attachmentId
-    )
-  }
+  await maybeEnqueueAttachmentEmbedding(pool, attachment)
 
   return { status: 'completed', chars: result.text.length }
 }
 
-async function processStandaloneExtraction (pool, storage, storageConfig, job, standaloneId) {
+async function processStandaloneExtraction (pool, storage, storageConfig, job, standaloneId, resolved) {
   const { rows } = await pool.query(
     `SELECT * FROM standalone_files WHERE id = $1`,
     [standaloneId]
@@ -120,8 +176,8 @@ async function processStandaloneExtraction (pool, storage, storageConfig, job, s
     file_name: file.file_name,
     attachment_kind: 'other'
   }
-  const buffer = await downloadObject(storage, storageConfig.bucket, file.storage_key)
-  const result = await extractText(pseudoAttachment, buffer)
+  const buffer = await resolved.download(storage, storageConfig.bucket, file.storage_key)
+  const result = await resolved.extract(pseudoAttachment, buffer)
 
   if (result.error || !result.text) {
     const message = result.error ?? 'No text extracted'

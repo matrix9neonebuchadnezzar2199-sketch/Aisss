@@ -100,7 +100,9 @@ export function buildViewingRangeFilter (
   viewingRangeIds: string[],
   isAdmin: boolean
 ): Record<string, unknown> | undefined {
-  if (isAdmin) return undefined
+  if (isAdmin) {
+    return { must: [{ key: 'rag_enabled', match: { value: true } }] }
+  }
   const allowedRangeIds = Array.from(new Set([...viewingRangeIds, ALL_USERS_VIEWING_RANGE_ID]))
   return {
     must: [

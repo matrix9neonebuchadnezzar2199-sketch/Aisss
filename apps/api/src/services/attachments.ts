@@ -35,7 +35,8 @@ export async function uploadAttachment (
   caseId: string,
   fileName: string,
   contentType: string,
-  buffer: Buffer
+  buffer: Buffer,
+  autoEnableRagOnExtraction = false
 ) {
   const caseRow = await getCaseById(pool, user, caseId)
   const attachmentId = randomUUID()
@@ -48,9 +49,10 @@ export async function uploadAttachment (
   const { rows } = await pool.query(
     `INSERT INTO attachments (
       id, case_id, file_name, storage_key, content_type, file_size, sha256,
-      attachment_kind, uploaded_by, extraction_status
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending')
-    RETURNING id, file_name, extraction_status, uploaded_at, attachment_kind`,
+      attachment_kind, uploaded_by, extraction_status, auto_enable_rag_on_extraction
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
+    RETURNING id, file_name, extraction_status, uploaded_at, attachment_kind,
+      rag_enabled, auto_enable_rag_on_extraction`,
     [
       attachmentId,
       caseId,
@@ -60,7 +62,8 @@ export async function uploadAttachment (
       buffer.length,
       sha256,
       kind,
-      user.id
+      user.id,
+      autoEnableRagOnExtraction
     ]
   )
 
@@ -85,7 +88,8 @@ export async function listAttachments (
   await getCaseById(pool, user, caseId)
   const { rows } = await pool.query(
     `SELECT id, file_name, content_type, file_size, attachment_kind,
-            extraction_status, extraction_error, uploaded_at
+            extraction_status, extraction_error, uploaded_at,
+            rag_enabled, auto_enable_rag_on_extraction
      FROM attachments WHERE case_id = $1 ORDER BY uploaded_at DESC`,
     [caseId]
   )
@@ -155,4 +159,28 @@ export async function retryExtraction (
     caseDisplayId: attachment.case_display_id as string
   })
   return { id: attachmentId, extraction_status: 'pending' }
+}
+
+export async function updateAutoEnableRagOnExtraction (
+  pool: pg.Pool,
+  user: AuthUser,
+  attachmentId: string,
+  enabled: boolean
+) {
+  await getAttachmentForUser(pool, user, attachmentId)
+  const { rows } = await pool.query(
+    `UPDATE attachments
+     SET auto_enable_rag_on_extraction = $2
+     WHERE id = $1
+     RETURNING id, auto_enable_rag_on_extraction`,
+    [attachmentId, enabled]
+  )
+  await writeAuditLog(pool, {
+    userId: user.id,
+    action: 'attachment.auto_rag.update',
+    resourceType: 'attachment',
+    resourceId: attachmentId,
+    details: { auto_enable_rag_on_extraction: enabled }
+  })
+  return rows[0]
 }

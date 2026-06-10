@@ -1,7 +1,7 @@
 import pg from 'pg'
 import { loadConfig } from './config.js'
 import { createStorageClient } from './storage.js'
-import { claimNextJob, processExtractionJob } from './processor.js'
+import { claimNextJob, markJobFailed, processExtractionJob } from './processor.js'
 import { processEmbeddingJob } from './embedding.js'
 
 const { Pool } = pg
@@ -29,12 +29,8 @@ async function main () {
           const result = await processEmbeddingJob(pool, config, embeddingJob)
           console.log('[aisss-worker] embedding done', embeddingJob.id, result.status)
         } catch (error) {
-          const message = error instanceof Error ? error.message : 'embedding failed'
-          await pool.query(
-            `UPDATE jobs SET status = 'failed', error = $2, updated_at = NOW(), completed_at = NOW() WHERE id = $1`,
-            [embeddingJob.id, message]
-          )
-          console.error('[aisss-worker] embedding failed', embeddingJob.id, message)
+          const failed = await markJobFailed(pool, embeddingJob, error)
+          console.error('[aisss-worker] embedding failed', embeddingJob.id, failed.error)
         }
       }
     } catch (error) {

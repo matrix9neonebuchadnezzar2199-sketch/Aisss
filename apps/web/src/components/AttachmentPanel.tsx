@@ -4,6 +4,7 @@ import {
   fetchExtractedText,
   retryExtraction,
   getUserId,
+  setAttachmentAutoEnableRag,
   uploadAttachment,
   type AttachmentItem,
   type ExtractedText
@@ -19,6 +20,7 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<Record<string, ExtractedText | null>>({})
+  const [autoEnableOnUpload, setAutoEnableOnUpload] = useState(false)
 
   const refresh = useCallback(async () => {
     const data = await fetch(`/api/cases/${caseId}/attachments`, {
@@ -47,7 +49,7 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
     setError(null)
     try {
       for (const file of Array.from(files)) {
-        await uploadAttachment(caseId, file)
+        await uploadAttachment(caseId, file, autoEnableOnUpload)
       }
       await refresh()
     } catch (e) {
@@ -62,9 +64,27 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
     setExpanded((prev) => ({ ...prev, [attachmentId]: data }))
   }
 
+  async function updateAutoEnable (attachmentId: string, enabled: boolean) {
+    await setAttachmentAutoEnableRag(attachmentId, enabled)
+    setItems((prev) => prev.map((item) => (
+      item.id === attachmentId
+        ? { ...item, auto_enable_rag_on_extraction: enabled }
+        : item
+    )))
+  }
+
   return (
     <div className="attachment-panel">
       <h3>添付ファイル</h3>
+      <label className="inline-check">
+        <input
+          type="checkbox"
+          checked={autoEnableOnUpload}
+          disabled={uploading}
+          onChange={(e) => setAutoEnableOnUpload(e.target.checked)}
+        />
+        抽出成功後に自動でRAG有効化する
+      </label>
       <label className="upload-zone">
         <input
           type="file"
@@ -80,6 +100,15 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
           <li key={item.id}>
             <span className={`status status-${item.extraction_status}`}>{item.extraction_status}</span>
             <a href={attachmentDownloadUrl(item.id)} download>{item.file_name}</a>
+            <label className="inline-check">
+              <input
+                type="checkbox"
+                checked={item.auto_enable_rag_on_extraction === true}
+                disabled={item.rag_enabled === true}
+                onChange={(e) => void updateAutoEnable(item.id, e.target.checked)}
+              />
+              抽出後RAG自動ON
+            </label>
             {item.extraction_error && <span className="extract-error">{item.extraction_error}</span>}
             <button type="button" onClick={() => void showExtracted(item.id)}>抽出テキスト</button>
             {(item.extraction_status === 'failed') && (

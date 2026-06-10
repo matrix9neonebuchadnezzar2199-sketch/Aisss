@@ -8,6 +8,20 @@ on:
 jobs:
   api:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: aisss
+          POSTGRES_PASSWORD: aisss
+          POSTGRES_DB: aisss_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aisss -d aisss_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,6 +31,8 @@ jobs:
       - run: npm install -w @aisss/api
       - run: npm run lint -w @aisss/api
       - run: npm test -w @aisss/api
+        env:
+          INTEGRATION_DATABASE_URL: postgresql://aisss:aisss@localhost:5432/aisss_test
       - run: npm run build -w @aisss/api
 
   web:

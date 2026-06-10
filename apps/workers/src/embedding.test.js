@@ -129,6 +129,48 @@ test('processEmbeddingJob upserts case body payload with viewing range metadata'
   assert.ok(deleteChunkIndex < upsertIndex)
 })
 
+test('processEmbeddingJob preserves metadata and chunk indexes for multiple case chunks', async () => {
+  const longText = 'a'.repeat(2101)
+  const { pool, queryLog } = createPoolMock({
+    case: {
+      id: 'case-1',
+      display_id: 'CASE-1',
+      title: 'Case title',
+      body_summary: null,
+      body_article: longText,
+      body_assessment: null,
+      body_reference: null,
+      rag_enabled: true
+    },
+    caseViewingRangeIds: ['vr-a']
+  })
+  const { deps, upsertCalls } = createDeps()
+
+  const result = await processEmbeddingJob(
+    pool,
+    config,
+    {
+      id: 'job-multi',
+      attachment_id: null,
+      payload_json: { source: 'case_body', case_id: 'case-1' }
+    },
+    deps
+  )
+
+  assert.equal(result.chunks, 2)
+  assert.equal(upsertCalls.length, 2)
+  for (const call of upsertCalls) {
+    const payload = call[2][0].payload
+    assert.equal(payload.case_id, 'case-1')
+    assert.equal(payload.display_id, 'CASE-1')
+    assert.deepEqual(payload.viewing_range_ids, ['vr-a'])
+    assert.equal(payload.rag_enabled, true)
+  }
+
+  const chunkInserts = queryLog.filter((q) => q.sql.includes('INSERT INTO rag_chunks'))
+  assert.deepEqual(chunkInserts.map((q) => q.params[2]), [0, 1])
+})
+
 test('processEmbeddingJob skips attachment upsert when rag_enabled is false', async () => {
   const { pool } = createPoolMock({
     attachment: {

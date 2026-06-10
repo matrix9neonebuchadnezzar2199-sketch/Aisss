@@ -1,4 +1,8 @@
 export function chunkText (text, chunkSize = 2000, overlap = 200) {
+  if (chunkSize <= 0) {
+    throw new Error('chunkSize must be greater than 0')
+  }
+  const safeOverlap = Math.max(0, Math.min(overlap, chunkSize - 1))
   const normalized = text.replace(/\r\n/g, '\n').trim()
   if (!normalized) return []
 
@@ -8,7 +12,7 @@ export function chunkText (text, chunkSize = 2000, overlap = 200) {
     const end = Math.min(start + chunkSize, normalized.length)
     chunks.push(normalized.slice(start, end))
     if (end >= normalized.length) break
-    start = Math.max(0, end - overlap)
+    start = Math.max(0, end - safeOverlap)
   }
   return chunks
 }

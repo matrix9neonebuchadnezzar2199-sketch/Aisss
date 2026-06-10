@@ -43,14 +43,21 @@ export type AttachmentItem = {
   file_name: string
   extraction_status: string
   extraction_error?: string | null
+  rag_enabled?: boolean
+  auto_enable_rag_on_extraction?: boolean
   content_type?: string
   file_size?: number
   uploaded_at?: string
 }
 
-export async function uploadAttachment (caseId: string, file: File): Promise<AttachmentItem> {
+export async function uploadAttachment (
+  caseId: string,
+  file: File,
+  autoEnableRagOnExtraction = false
+): Promise<AttachmentItem> {
   const form = new FormData()
   form.append('file', file)
+  form.append('auto_enable_rag_on_extraction', String(autoEnableRagOnExtraction))
   const response = await fetch(`/api/cases/${caseId}/attachments`, {
     method: 'POST',
     headers: { 'X-AISSS-User-Id': getUserId() },
@@ -61,6 +68,16 @@ export async function uploadAttachment (caseId: string, file: File): Promise<Att
     throw new Error(body.error?.message ?? `HTTP ${response.status}`)
   }
   return response.json() as Promise<AttachmentItem>
+}
+
+export async function setAttachmentAutoEnableRag (
+  attachmentId: string,
+  enabled: boolean
+): Promise<void> {
+  await apiFetch(`/api/attachments/${attachmentId}/auto-enable-rag`, {
+    method: 'PATCH',
+    body: JSON.stringify({ enabled })
+  })
 }
 
 export async function retryExtraction (attachmentId: string): Promise<void> {

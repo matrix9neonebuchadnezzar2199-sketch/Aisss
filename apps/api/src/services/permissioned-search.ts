@@ -150,9 +150,6 @@ export async function permissionedSearch (
 
   const vector = await (deps.embed ?? embedText)(settings.ollamaBaseUrl, embeddingModel, query)
   const filter = buildViewingRangeFilter(user.viewingRangeIds, isAdmin(user))
-  const adminFilter = isAdmin(user)
-    ? { must: [{ key: 'rag_enabled', match: { value: true } }] }
-    : filter
 
   let hits
   try {
@@ -161,7 +158,7 @@ export async function permissionedSearch (
       settings.vectorCollection,
       vector,
       topK * 3,
-      adminFilter
+      filter
     )
   } catch {
     return {
