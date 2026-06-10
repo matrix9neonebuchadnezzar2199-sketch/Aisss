@@ -4,12 +4,13 @@
 
 AISSS_COMPOSE ?= aisss/docker-compose.yaml
 
-.PHONY: help up down ps logs-aisss test migrate
+.PHONY: help up down ps logs-aisss test migrate build
 
 help:
 	@echo "Targets:"
 	@echo "  up          Start the AISSS stack"
 	@echo "  down        Stop the AISSS stack"
+	@echo "  build       Rebuild application images (api, web, worker)"
 	@echo "  ps          Show AISSS stack containers"
 	@echo "  logs-aisss  Tail AISSS stack logs"
 	@echo "  test        Run API and Web checks"
@@ -22,6 +23,9 @@ up:
 
 down:
 	docker compose -f $(AISSS_COMPOSE) down
+
+build:
+	docker compose -f $(AISSS_COMPOSE) build api web worker
 
 ps:
 	docker compose -f $(AISSS_COMPOSE) ps

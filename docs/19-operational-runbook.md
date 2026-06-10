@@ -146,6 +146,37 @@ Run once with admin, operator, and pilot users before loading representative pro
 
 Record dry-run outcomes in `90_DevLog/` with `status: ok|warn|err` per step. Blockers become M19 fix tasks.
 
+## Audit CSV Export (Excel / UTF-8 BOM)
+
+After API code changes to CSV export, **rebuild and restart the `api` container**. A git push alone does not update running containers.
+
+### Verify the live API returns UTF-8 BOM
+
+Linux / macOS:
+
+```bash
+curl -s -H "X-AISSS-User-Id: 00000000-0000-4000-8000-000000000001" \
+  "http://127.0.0.1:8000/api/audit-logs?export=csv" | head -c 16 | xxd
+```
+
+Windows (PowerShell — write raw bytes to a file; do not pipe through a string):
+
+```powershell
+curl.exe -s -H "X-AISSS-User-Id: 00000000-0000-4000-8000-000000000001" `
+  "http://127.0.0.1:8000/api/audit-logs?export=csv" -o audit-test.csv
+Format-Hex -Path audit-test.csv -Count 16
+```
+
+Expected first three bytes: **`EF BB BF`** (UTF-8 BOM), then `63 72 65 61 74 65 64 5f 61 74` (`created_at`).
+
+| Observation | Likely cause | Action |
+|---|---|---|
+| No `EF BB BF` | Old API image still running | `make build && make up` or `docker compose -f aisss/docker-compose.yaml build api && docker compose -f aisss/docker-compose.yaml up -d api` |
+| `EF BB BF` present but Excel still garbled | Old downloaded file or Excel locale | Delete prior `audit-logs.csv`, re-download, check file timestamp; or import via Excel **Data → From Text** with encoding **65001 UTF-8** |
+| `EF BB BF` present; Notepad/VS Code shows correct Japanese | Data is fine; Excel misread an old file | Re-download after API verification |
+
+Symptom when Excel opens UTF-8 without BOM as Shift_JIS: `user_name` column shows mojibake and **commas inside garbled text break column alignment** (action values appear merged into the name column). This is encoding mis-detection, not a CSV quoting bug.
+
 ## Known Limitations
 
 - OCR and ASR engines are pilot stubs; image/audio require manual `.txt` transcripts (see `07-ingestion-design.md` M17 decision).
