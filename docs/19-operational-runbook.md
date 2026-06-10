@@ -85,6 +85,22 @@ Weekly triage output should split items into:
 - Post-MVP enhancement.
 - Documentation/training update.
 
+## Retrieval Evaluation Harness
+
+Before loading representative pilot data, run the lightweight Japanese retrieval eval:
+
+```bash
+npm test -w @aisss/api -- src/rag-eval.test.ts
+```
+
+The eval set lives in `apps/api/eval/retrieval-eval-set.json`. It checks:
+
+- in-range hits return expected `display_id` values
+- out-of-range and `照会禁止` cases never leak into contexts or citations
+- `excluded_counts` records the denial reason
+
+Extend the JSON scenarios as pilot questions stabilize.
+
 ## Pilot Validation Checklist
 
 Run these checks with representative pilot data before wider rollout:

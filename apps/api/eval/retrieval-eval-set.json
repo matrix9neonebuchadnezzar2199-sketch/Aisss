@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "description": "Lightweight Japanese RAG retrieval evaluation set for pilot prep.",
+  "scenarios": [
+    {
+      "id": "in-range-hit",
+      "query": "東アジアの貿易協定の再交渉について教えてください",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-east-asia",
+          "display_id": "CASE-2026-00142",
+          "title": "東アジア情勢に関する月次分析（2026年1月）"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-east-asia": {
+            "viewing_range_ids": ["range-a"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": ["CASE-2026-00142"],
+        "forbidden_display_ids": [],
+        "min_contexts": 1
+      }
+    },
+    {
+      "id": "out-of-range-miss",
+      "query": "地域経済動向レポートの要点は？",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-regional",
+          "display_id": "CASE-2026-00138",
+          "title": "〇〇地域経済動向レポート"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-regional": {
+            "viewing_range_ids": ["range-b"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": [],
+        "forbidden_display_ids": ["CASE-2026-00138"],
+        "excluded_counts": { "viewing_range": 1 }
+      }
+    },
+    {
+      "id": "deny-policy-block",
+      "query": "照会禁止案件の詳細を教えてください",
+      "user": { "role": "admin", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-deny",
+          "display_id": "CASE-2026-00999",
+          "title": "照会禁止サンプル"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-deny": {
+            "viewing_range_ids": ["range-a"],
+            "conditions": [
+              {
+                "name": "照会禁止",
+                "search_policy": "deny",
+                "quote_policy": "deny",
+                "export_policy": "deny_all",
+                "priority": 20
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": [],
+        "forbidden_display_ids": ["CASE-2026-00999"],
+        "excluded_counts": { "search_policy": 1 }
+      }
+    }
+  ]
+}
