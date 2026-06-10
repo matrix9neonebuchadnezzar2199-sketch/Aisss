@@ -3,6 +3,15 @@ import { chunkText } from './chunk.js'
 import { embedText } from './ollama.js'
 import { ensureCollection, upsertPoints } from './qdrant.js'
 
+function resolveEmbeddingDeps (deps = {}) {
+  return {
+    getEmbeddingModel: deps.getEmbeddingModel ?? getEmbeddingModel,
+    embed: deps.embed ?? embedText,
+    ensureCollection: deps.ensureCollection ?? ensureCollection,
+    upsert: deps.upsert ?? upsertPoints
+  }
+}
+
 async function getEmbeddingModel (pool) {
   const { rows } = await pool.query(
     `SELECT model_name FROM ollama_model_roles WHERE is_default_embedding = TRUE LIMIT 1`
@@ -44,32 +53,33 @@ async function clearChunksForSource (pool, whereSql, param) {
   return rows.map((r) => r.vector_point_id)
 }
 
-export async function processEmbeddingJob (pool, config, job) {
+export async function processEmbeddingJob (pool, config, job, deps = {}) {
+  const resolved = resolveEmbeddingDeps(deps)
   const payload = job.payload_json ?? {}
-  const model = await getEmbeddingModel(pool)
+  const model = await resolved.getEmbeddingModel(pool)
   if (!model) throw new Error('No default embedding model configured')
 
-  const sampleVector = await embedText(config.ollamaBaseUrl, model, 'dimension probe')
-  await ensureCollection(config.vectorDbUrl, config.vectorCollection, sampleVector.length)
+  const sampleVector = await resolved.embed(config.ollamaBaseUrl, model, 'dimension probe')
+  await resolved.ensureCollection(config.vectorDbUrl, config.vectorCollection, sampleVector.length)
 
   if (payload.source === 'case_body' && payload.case_id) {
-    return embedCaseBody(pool, config, job, payload.case_id, model, sampleVector.length)
+    return embedCaseBody(pool, config, job, payload.case_id, model, sampleVector.length, resolved)
   }
 
   if (payload.source === 'attachment' || job.attachment_id) {
     const attachmentId = payload.attachment_id ?? job.attachment_id
-    return embedAttachment(pool, config, job, attachmentId, model, sampleVector.length)
+    return embedAttachment(pool, config, job, attachmentId, model, sampleVector.length, resolved)
   }
 
   if (payload.source === 'standalone' || payload.standalone_file_id) {
     const standaloneId = payload.standalone_file_id
-    return embedStandalone(pool, config, job, standaloneId, model, sampleVector.length)
+    return embedStandalone(pool, config, job, standaloneId, model, sampleVector.length, resolved)
   }
 
   if (payload.source === 'rag_metadata_sync') {
     const standaloneId = payload.standalone_file_id
     if (standaloneId) {
-      const result = await resyncStandaloneMetadata(pool, config, standaloneId, model, sampleVector.length)
+      const result = await resyncStandaloneMetadata(pool, config, standaloneId, model, sampleVector.length, resolved)
       await completeJob(pool, job.id)
       return result
     }
@@ -78,7 +88,7 @@ export async function processEmbeddingJob (pool, config, job) {
   throw new Error(`Unknown embedding payload: ${JSON.stringify(payload)}`)
 }
 
-async function embedCaseBody (pool, config, job, caseId, model, vectorSize) {
+async function embedCaseBody (pool, config, job, caseId, model, vectorSize, resolved) {
   const { rows } = await pool.query(
     `SELECT id, display_id, title, body_summary, body_article, body_assessment, body_reference, rag_enabled
      FROM cases WHERE id = $1 AND deleted_at IS NULL`,
@@ -103,7 +113,7 @@ async function embedCaseBody (pool, config, job, caseId, model, vectorSize) {
   for (let i = 0; i < chunks.length; i++) {
     const chunkId = randomUUID()
     const pointId = randomUUID()
-    const vector = await embedText(config.ollamaBaseUrl, model, chunks[i])
+    const vector = await resolved.embed(config.ollamaBaseUrl, model, chunks[i])
     await pool.query(
       `INSERT INTO rag_chunks (id, case_id, chunk_index, chunk_text, metadata_json)
        VALUES ($1, $2, $3, $4, $5::jsonb)`,
@@ -119,7 +129,7 @@ async function embedCaseBody (pool, config, job, caseId, model, vectorSize) {
         })
       ]
     )
-    await upsertPoints(config.vectorDbUrl, config.vectorCollection, [{
+    await resolved.upsert(config.vectorDbUrl, config.vectorCollection, [{
       id: pointId,
       vector,
       payload: {
@@ -145,7 +155,7 @@ async function embedCaseBody (pool, config, job, caseId, model, vectorSize) {
   return { status: 'completed', chunks: synced }
 }
 
-async function embedAttachment (pool, config, job, attachmentId, model, vectorSize) {
+async function embedAttachment (pool, config, job, attachmentId, model, vectorSize, resolved) {
   const { rows } = await pool.query(
     `SELECT a.*, c.display_id, c.title, c.id AS case_id
      FROM attachments a
@@ -179,7 +189,7 @@ async function embedAttachment (pool, config, job, attachmentId, model, vectorSi
   for (let i = 0; i < chunks.length; i++) {
     const chunkId = randomUUID()
     const pointId = randomUUID()
-    const vector = await embedText(config.ollamaBaseUrl, model, chunks[i])
+    const vector = await resolved.embed(config.ollamaBaseUrl, model, chunks[i])
     await pool.query(
       `INSERT INTO rag_chunks (
         id, case_id, attachment_id, extracted_text_id, chunk_index, chunk_text, metadata_json
@@ -194,7 +204,7 @@ async function embedAttachment (pool, config, job, attachmentId, model, vectorSi
         JSON.stringify({ source_type: extracted.source_type, file_name: attachment.file_name })
       ]
     )
-    await upsertPoints(config.vectorDbUrl, config.vectorCollection, [{
+    await resolved.upsert(config.vectorDbUrl, config.vectorCollection, [{
       id: pointId,
       vector,
       payload: {
@@ -221,7 +231,7 @@ async function embedAttachment (pool, config, job, attachmentId, model, vectorSi
   return { status: 'completed', chunks: synced }
 }
 
-async function embedStandalone (pool, config, job, standaloneId, model, vectorSize) {
+async function embedStandalone (pool, config, job, standaloneId, model, vectorSize, resolved) {
   const { rows } = await pool.query(
     `SELECT * FROM standalone_files WHERE id = $1 AND deleted_at IS NULL`,
     [standaloneId]
@@ -252,7 +262,7 @@ async function embedStandalone (pool, config, job, standaloneId, model, vectorSi
   for (let i = 0; i < chunks.length; i++) {
     const chunkId = randomUUID()
     const pointId = randomUUID()
-    const vector = await embedText(config.ollamaBaseUrl, model, chunks[i])
+    const vector = await resolved.embed(config.ollamaBaseUrl, model, chunks[i])
     await pool.query(
       `INSERT INTO rag_chunks (
         id, standalone_file_id, extracted_text_id, chunk_index, chunk_text, metadata_json
@@ -266,7 +276,7 @@ async function embedStandalone (pool, config, job, standaloneId, model, vectorSi
         JSON.stringify({ source_type: extracted.source_type, file_name: file.file_name })
       ]
     )
-    await upsertPoints(config.vectorDbUrl, config.vectorCollection, [{
+    await resolved.upsert(config.vectorDbUrl, config.vectorCollection, [{
       id: pointId,
       vector,
       payload: {
@@ -291,7 +301,7 @@ async function embedStandalone (pool, config, job, standaloneId, model, vectorSi
   return { status: 'completed', chunks: synced }
 }
 
-async function resyncStandaloneMetadata (pool, config, standaloneId, model, vectorSize) {
+async function resyncStandaloneMetadata (pool, config, standaloneId, model, vectorSize, resolved) {
   const viewingRangeIds = await loadStandaloneViewingRangeIds(pool, standaloneId)
   const { rows } = await pool.query(
     `SELECT rs.vector_point_id, rc.id AS chunk_id, rc.chunk_text, rc.metadata_json, sf.title, sf.rag_enabled
@@ -304,8 +314,8 @@ async function resyncStandaloneMetadata (pool, config, standaloneId, model, vect
 
   for (const row of rows) {
     const meta = row.metadata_json ?? {}
-    const vector = await embedText(config.ollamaBaseUrl, model, row.chunk_text)
-    await upsertPoints(config.vectorDbUrl, config.vectorCollection, [{
+    const vector = await resolved.embed(config.ollamaBaseUrl, model, row.chunk_text)
+    await resolved.upsert(config.vectorDbUrl, config.vectorCollection, [{
       id: row.vector_point_id,
       vector,
       payload: {
