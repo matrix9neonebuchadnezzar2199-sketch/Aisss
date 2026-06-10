@@ -25,6 +25,26 @@ This runbook covers the M7 pilot operating loop for AISSS: startup, health check
    - `/jobs` for failed or dead-letter jobs.
    - `/audit` for security-sensitive activity.
 
+### Startup race: `jobs` table vs worker
+
+On a **cold start** (`make up` after `make down` or first boot), the **worker** and **api** containers start in parallel. Only **api** runs SQL migrations (`API_MIGRATE_ON_START=true`). The worker waits for PostgreSQL health but **not** for migrations to finish.
+
+Until api has applied migrations, the worker poll loop may log errors such as `relation "jobs" does not exist`. This is **transient**, not data corruption. The worker recovers on the next poll once the `jobs` table exists.
+
+| Symptom | Meaning | Operator action |
+|---|---|---|
+| Worker logs: `loop error` / missing `jobs` table | Migrations still running on api | Wait 10–30 s; confirm `curl http://localhost:8000/api/health` is 200 |
+| `/jobs` empty or API 500 immediately after `make up` | Same race window | Refresh after api health is OK |
+| Errors persist after api is healthy | Not the startup race | Check api logs for migration failure; run `make migrate` |
+
+Recommended cold-start order for operators:
+
+1. `make up`
+2. Wait for `GET /api/health` → 200
+3. Then open `/jobs` or upload attachments that enqueue extraction jobs
+
+After code changes, rebuild application images before restart: `make build && make up` (see [Audit CSV Export](#audit-csv-export-excel--utf-8-bom)).
+
 ## Job Triage
 
 Use **ジョブ状態** (`/jobs`) for extraction, embedding, and RAG metadata jobs.

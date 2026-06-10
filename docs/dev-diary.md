@@ -1,5 +1,36 @@
 # Development Diary
 
+## 2026-06-10: Pilot GO — M7 limited production pilot approved
+
+### Summary
+
+Closed M18 dry-run and post-review hardening. Declared **GO** for limited pilot with representative data. Evidence: 32 static-review fixes + D1–D3 dry-run blockers; CI integration 47 pass / 0 skip; E2E dry-run Steps 1–12; Step 8+10 leak denial in live stack; WebUI visual sign-off (RAG candidates, toggles, audit CSV); audit CSV UTF-8 BOM verified in Excel after `make build`.
+
+### Pilot GO criteria (all met)
+
+| Layer | Evidence |
+|---|---|
+| Code + tests | Static review 32 fixes; `npm test` green; CI Postgres integration + skip guard (`4469451`) |
+| E2E dry-run | Steps 1–12 ok on live stack (`80a8133`); D1 model default, D2 `succeeded` status, D3 empty JSON POST |
+| Permission / leak | Step 8: `照会禁止` absent from AI answer/citations; Step 10: audit `excluded_counts` without denied titles |
+| WebUI | RAG candidate highlight, attachment/RAG toggles, audit CSV download — operator visual ok |
+| CSV export | `80163d7` BOM + `audit.test.ts`; Excel shows `開発管理者` / `パイロット利用者`; Docker rebuild required (`make build`) |
+
+### Known limitations at GO (see runbook)
+
+- OCR/ASR stubs (M17); ReRank off; non-streaming Web AI chat; Qdrant rebuildable from PG+MinIO
+
+### New / Updated (closeout docs)
+
+- `docs/19-operational-runbook.md` — jobs startup race, CSV BOM verification, `make build`
+- `Makefile` — `build` target
+
+### Commits (pilot-ready line)
+
+`ae4fbd8` … `3d44921` (M13–M18, static review, dry-run blockers, CSV BOM, ops docs)
+
+---
+
 ## 2026-06-10: Milestone 6-7 Operational Hardening and Pilot
 
 ### Summary

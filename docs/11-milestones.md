@@ -182,6 +182,8 @@ Done when:
 - Permission incidents are not observed in test cases.
 - Feedback is triaged into post-MVP backlog.
 
+**Pilot GO (2026-06-10):** Limited pilot approved after M18 dry-run (Steps 1–12), static-review hardening, CI integration gate, WebUI sign-off, and audit CSV UTF-8 BOM verification. See [Operational Runbook § Pilot Dry Run](./19-operational-runbook.md#pilot-dry-run-checklist) and [dev-diary.md § Pilot GO](./dev-diary.md).
+
 **Implementation:** Pilot group/user seed in `007_m6_m7_ops_pilot.sql`; `/pilot` feedback workflow; [Operational Runbook](./19-operational-runbook.md); dashboard feedback metric; known limitations recorded in app settings and runbook.
 
 ## Post-MVP Ideas
