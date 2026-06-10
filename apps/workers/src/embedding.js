@@ -83,6 +83,11 @@ export async function processEmbeddingJob (pool, config, job, deps = {}) {
       await completeJob(pool, job.id)
       return result
     }
+    if (payload.case_id) {
+      const result = await resyncCaseMetadata(pool, config, payload.case_id, model, resolved)
+      await completeJob(pool, job.id)
+      return result
+    }
   }
 
   throw new Error(`Unknown embedding payload: ${JSON.stringify(payload)}`)
@@ -90,7 +95,7 @@ export async function processEmbeddingJob (pool, config, job, deps = {}) {
 
 async function embedCaseBody (pool, config, job, caseId, model, vectorSize, resolved) {
   const { rows } = await pool.query(
-    `SELECT id, display_id, title, body_summary, body_article, body_assessment, body_reference, rag_enabled
+    `SELECT id, display_id, title, body_summary, body_article, body_assessment, body_reference
      FROM cases WHERE id = $1 AND deleted_at IS NULL`,
     [caseId]
   )
@@ -326,6 +331,50 @@ async function resyncStandaloneMetadata (pool, config, standaloneId, model, vect
         source_type: meta.source_type ?? 'standalone',
         viewing_range_ids: viewingRangeIds,
         rag_enabled: row.rag_enabled
+      }
+    }])
+  }
+
+  return { status: 'completed', resynced: rows.length }
+}
+
+// 閲覧範囲・条件変更時にケース配下チャンク（本文＋添付）の権限メタデータを最新化する
+async function resyncCaseMetadata (pool, config, caseId, model, resolved) {
+  const { rows: caseRows } = await pool.query(
+    `SELECT id, display_id, title FROM cases WHERE id = $1 AND deleted_at IS NULL`,
+    [caseId]
+  )
+  const caseRow = caseRows[0]
+  if (!caseRow) return { status: 'skipped', reason: 'case_missing' }
+
+  const viewingRangeIds = await loadViewingRangeIds(pool, caseId)
+  const { rows } = await pool.query(
+    `SELECT rs.vector_point_id, rc.id AS chunk_id, rc.chunk_text, rc.metadata_json, rc.attachment_id,
+            a.rag_enabled AS attachment_rag_enabled
+     FROM rag_chunks rc
+     JOIN rag_sync_states rs ON rs.chunk_id = rc.id
+     LEFT JOIN attachments a ON a.id = rc.attachment_id
+     WHERE rc.case_id = $1`,
+    [caseId]
+  )
+
+  for (const row of rows) {
+    const meta = row.metadata_json ?? {}
+    const vector = await resolved.embed(config.ollamaBaseUrl, model, row.chunk_text)
+    const ragEnabled = row.attachment_id ? row.attachment_rag_enabled === true : true
+    await resolved.upsert(config.vectorDbUrl, config.vectorCollection, [{
+      id: row.vector_point_id,
+      vector,
+      payload: {
+        chunk_id: row.chunk_id,
+        case_id: caseId,
+        ...(row.attachment_id ? { attachment_id: row.attachment_id } : {}),
+        display_id: caseRow.display_id,
+        title: caseRow.title,
+        chunk_text: row.chunk_text,
+        source_type: meta.source_type ?? 'case_body',
+        viewing_range_ids: viewingRangeIds,
+        rag_enabled: ragEnabled
       }
     }])
   }

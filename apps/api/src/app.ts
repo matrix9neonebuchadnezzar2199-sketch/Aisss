@@ -87,7 +87,7 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
     storage,
     storageConfig: settings.objectStorage
   })
-  await app.register(caseRoutes, { pool })
+  await app.register(caseRoutes, { pool, settings })
   await app.register(importRoutes, { pool })
   await app.register(masterRoutes, { pool })
   await app.register(permissionRoutes, { pool })

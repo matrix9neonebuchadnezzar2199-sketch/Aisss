@@ -51,3 +51,17 @@ test('computeEffectivePolicies picks most restrictive', () => {
   assert.equal(policies.quote_policy, 'summarize_only')
   assert.equal(policies.export_policy, 'deny_copy')
 })
+
+test('computeEffectivePolicies treats unknown policy values as most restrictive', () => {
+  const policies = computeEffectivePolicies([
+    {
+      name: '未知条件',
+      search_policy: 'allow',
+      quote_policy: 'mystery_policy',
+      export_policy: 'mystery_export',
+      priority: 10
+    }
+  ])
+  assert.equal(policies.quote_policy, 'deny')
+  assert.equal(policies.export_policy, 'deny_all')
+})

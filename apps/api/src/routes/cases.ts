@@ -1,9 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
+import type { Settings } from '../settings.js'
 import * as caseService from '../services/cases.js'
 
-export const caseRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { pool }) => {
+export const caseRoutes: FastifyPluginAsync<{
+  pool: pg.Pool
+  settings: Settings
+}> = async (app, { pool, settings }) => {
   app.get('/api/cases', async (request, reply) => {
     try {
       const q = request.query as Record<string, string | undefined>
@@ -68,7 +72,7 @@ export const caseRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { p
   app.delete('/api/cases/:caseId', async (request, reply) => {
     try {
       const { caseId } = request.params as { caseId: string }
-      const result = await caseService.deleteCase(pool, request.user, caseId)
+      const result = await caseService.deleteCase(pool, settings, request.user, caseId)
       return result
     } catch (error) {
       return sendError(reply, error, request.id)

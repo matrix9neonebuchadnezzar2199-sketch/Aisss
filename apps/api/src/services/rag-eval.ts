@@ -93,6 +93,15 @@ function createPoolMock (scenario: EvalScenario): pg.Pool {
         const viewingRangeIds = scenario.fixture.standalone_files?.[resourceId]?.viewing_range_ids ?? []
         return { rows: viewingRangeIds.map((viewing_range_id) => ({ viewing_range_id })) }
       }
+      // authorizeChunk の DB 最終確認（削除済み・RAG無効チェック）に応答する
+      if (sql.includes('FROM cases WHERE')) {
+        return { rows: scenario.fixture.cases?.[resourceId] ? [{ '?column?': 1 }] : [] }
+      }
+      if (sql.includes('FROM standalone_files WHERE')) {
+        return {
+          rows: scenario.fixture.standalone_files?.[resourceId] ? [{ rag_enabled: true }] : []
+        }
+      }
       return { rows: [] }
     }
   } as unknown as pg.Pool

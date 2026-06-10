@@ -45,13 +45,18 @@ export function computeEffectivePolicies (
   let exportPolicy: ExportPolicy = 'allow'
 
   for (const c of conditions) {
+    // 未知のポリシー文字列は安全側（最も厳しい値）に倒す（fail-closed）
     const qp = c.quote_policy as PolicyLevel
-    if ((QUOTE_RANK[qp] ?? 0) > (QUOTE_RANK[quotePolicy] ?? 0)) {
-      quotePolicy = qp
+    const qpKnown = QUOTE_RANK[qp] !== undefined
+    const qpRank = qpKnown ? QUOTE_RANK[qp] : QUOTE_RANK.deny
+    if (qpRank > QUOTE_RANK[quotePolicy]) {
+      quotePolicy = qpKnown ? qp : 'deny'
     }
     const ep = c.export_policy as ExportPolicy
-    if ((EXPORT_RANK[ep] ?? 0) > (EXPORT_RANK[exportPolicy] ?? 0)) {
-      exportPolicy = ep
+    const epKnown = EXPORT_RANK[ep] !== undefined
+    const epRank = epKnown ? EXPORT_RANK[ep] : EXPORT_RANK.deny_all
+    if (epRank > EXPORT_RANK[exportPolicy]) {
+      exportPolicy = epKnown ? ep : 'deny_all'
     }
   }
 

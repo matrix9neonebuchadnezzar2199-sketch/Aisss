@@ -42,6 +42,7 @@ type PoolFixture = {
   }>
   standaloneFiles?: Record<string, {
     viewingRangeIds: string[]
+    ragEnabled?: boolean
   }>
 }
 
@@ -131,6 +132,17 @@ function createPoolMock (fixture: PoolFixture): pg.Pool {
       if (sql.includes('FROM standalone_file_viewing_ranges')) {
         const viewingRangeIds = fixture.standaloneFiles?.[resourceId]?.viewingRangeIds ?? []
         return { rows: viewingRangeIds.map((viewing_range_id) => ({ viewing_range_id })) }
+      }
+      // authorizeChunk の DB 最終確認（削除済み・RAG無効の fail-closed 再チェック）
+      if (sql.includes('FROM cases WHERE')) {
+        return { rows: fixture.cases?.[resourceId] ? [{ '?column?': 1 }] : [] }
+      }
+      if (sql.includes('FROM standalone_files WHERE')) {
+        const file = fixture.standaloneFiles?.[resourceId]
+        return { rows: file ? [{ rag_enabled: file.ragEnabled ?? true }] : [] }
+      }
+      if (sql.includes('FROM attachments a')) {
+        return { rows: [] }
       }
       return { rows: [] }
     }
@@ -328,6 +340,34 @@ test('permissionedSearch aggregates effective policies from allowed contexts', a
     result.effective_policies.condition_names.sort(),
     ['印刷禁止', '複製禁止'].sort()
   )
+})
+
+test('permissionedSearch excludes chunks of deleted cases even if vectors remain', async () => {
+  // Qdrant にベクタが残っていても、DB に行が無ければ（論理削除済みなら）出さない
+  const result = await runPermissionedSearch(
+    { cases: {} },
+    admin,
+    [caseHit('deleted-case', { display_id: 'DELETED-1', title: 'Deleted case title' })]
+  )
+
+  assert.deepEqual(result.contexts, [])
+  assert.equal(result.excluded_counts.source_deleted, 1)
+})
+
+test('permissionedSearch excludes standalone chunks disabled in DB despite stale payload', async () => {
+  // payload.rag_enabled=true のまま Qdrant 削除に失敗しても、DB の rag_enabled=false で fail-closed
+  const result = await runPermissionedSearch(
+    {
+      standaloneFiles: {
+        'file-stale': { viewingRangeIds: ['range-a'], ragEnabled: false }
+      }
+    },
+    regularUser(['range-a']),
+    [standaloneHit('file-stale', { title: 'Stale standalone' })]
+  )
+
+  assert.deepEqual(result.contexts, [])
+  assert.equal(result.excluded_counts.rag_disabled, 1)
 })
 
 test('permissionedSearch fails closed when no embedding model is configured', async () => {

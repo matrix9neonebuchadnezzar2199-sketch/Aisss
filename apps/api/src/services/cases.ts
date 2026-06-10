@@ -4,7 +4,8 @@ import type { AuthUser } from '../types/auth.js'
 import { canAccessCase, isAdmin } from './permissions.js'
 import { nextDisplayId } from './display-id.js'
 import { writeAuditLog } from './audit.js'
-import { enqueueCaseBodyEmbedding } from './rag-admin.js'
+import { enqueueCaseBodyEmbedding, enqueueCaseMetadataSync, purgeCaseVectors } from './rag-admin.js'
+import type { Settings } from '../settings.js'
 import { ALL_USERS_VIEWING_RANGE_ID } from '../lib/viewing-ranges.js'
 
 export type CaseInput = {
@@ -468,6 +469,12 @@ export async function updateCase (
     if (bodyTouched) {
       await enqueueCaseBodyEmbedding(pool, caseId, existing.display_id as string)
     }
+    // 閲覧範囲・条件の変更は Qdrant payload の権限メタデータ再同期が必要
+    const permissionsTouched =
+      input.viewing_range_ids !== undefined || input.condition_ids !== undefined
+    if (permissionsTouched && !bodyTouched) {
+      await enqueueCaseMetadataSync(pool, caseId, existing.display_id as string)
+    }
     return getCaseById(pool, user, caseId)
   } catch (error) {
     await client.query('ROLLBACK')
@@ -479,6 +486,7 @@ export async function updateCase (
 
 export async function deleteCase (
   pool: pg.Pool,
+  settings: Settings,
   user: AuthUser,
   caseId: string
 ) {
@@ -487,6 +495,8 @@ export async function deleteCase (
     `UPDATE cases SET deleted_at = NOW(), updated_by = $1 WHERE id = $2`,
     [user.id, caseId]
   )
+  // 論理削除後にベクタ・チャンクを掃除（残存しても検索側 DB 再認可で露出しない）
+  await purgeCaseVectors(pool, settings, caseId)
   await writeAuditLog(pool, {
     userId: user.id,
     action: 'case.delete',

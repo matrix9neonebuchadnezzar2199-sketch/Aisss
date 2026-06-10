@@ -522,3 +522,43 @@ export async function enqueueCaseBodyEmbedding (
 ) {
   await enqueueEmbeddingJob(pool, { source: 'case_body', case_id: caseId }, caseId, displayId)
 }
+
+// 閲覧範囲・条件変更時に、ケース配下チャンクの権限メタデータ再同期ジョブを投入する
+export async function enqueueCaseMetadataSync (
+  pool: pg.Pool,
+  caseId: string,
+  displayId: string
+) {
+  await enqueueEmbeddingJob(pool, { source: 'rag_metadata_sync', case_id: caseId }, caseId, displayId)
+}
+
+// ケース削除時にベクタとチャンクを掃除する。ベクタ削除失敗時も検索側の DB 再認可で fail-closed。
+export async function purgeCaseVectors (
+  pool: pg.Pool,
+  settings: Settings,
+  caseId: string
+) {
+  const { rows } = await pool.query<{ vector_point_id: string }>(
+    `SELECT rs.vector_point_id
+     FROM rag_sync_states rs
+     JOIN rag_chunks rc ON rc.id = rs.chunk_id
+     WHERE rc.case_id = $1`,
+    [caseId]
+  )
+  try {
+    await deletePoints(
+      settings.vectorDbUrl,
+      settings.vectorCollection,
+      rows.map((r) => r.vector_point_id)
+    )
+  } catch {
+    // 検索側 authorizeChunk が cases.deleted_at を再確認するため、残存ベクタは露出しない
+  }
+  await pool.query(
+    `DELETE FROM rag_sync_states WHERE chunk_id IN (
+      SELECT id FROM rag_chunks WHERE case_id = $1
+    )`,
+    [caseId]
+  )
+  await pool.query(`DELETE FROM rag_chunks WHERE case_id = $1`, [caseId])
+}

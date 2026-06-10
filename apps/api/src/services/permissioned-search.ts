@@ -85,6 +85,25 @@ async function authorizeChunk (
   const sourceType = String(payload.source_type ?? 'unknown')
 
   if (caseId) {
+    // payload は事前フィルタのヒントに過ぎない。削除済み・RAG無効は必ず DB で最終確認する（fail-closed）。
+    const attachmentId = payload.attachment_id ? String(payload.attachment_id) : null
+    if (attachmentId) {
+      const { rows } = await pool.query<{ rag_enabled: boolean }>(
+        `SELECT a.rag_enabled
+         FROM attachments a
+         JOIN cases c ON c.id = a.case_id
+         WHERE a.id = $1 AND c.deleted_at IS NULL`,
+        [attachmentId]
+      )
+      if (!rows[0]) return { context: null, excluded_reason: 'source_deleted' }
+      if (rows[0].rag_enabled !== true) return { context: null, excluded_reason: 'rag_disabled' }
+    } else {
+      const { rows } = await pool.query(
+        `SELECT 1 FROM cases WHERE id = $1 AND deleted_at IS NULL`,
+        [caseId]
+      )
+      if (!rows[0]) return { context: null, excluded_reason: 'source_deleted' }
+    }
     const viewingRangeIds = await loadCaseViewingRanges(pool, caseId)
     if (!canAccessCase(user, viewingRangeIds)) {
       return { context: null, excluded_reason: 'viewing_range' }
@@ -107,6 +126,12 @@ async function authorizeChunk (
   }
 
   if (standaloneId) {
+    const { rows: fileRows } = await pool.query<{ rag_enabled: boolean }>(
+      `SELECT rag_enabled FROM standalone_files WHERE id = $1 AND deleted_at IS NULL`,
+      [standaloneId]
+    )
+    if (!fileRows[0]) return { context: null, excluded_reason: 'source_deleted' }
+    if (fileRows[0].rag_enabled !== true) return { context: null, excluded_reason: 'rag_disabled' }
     const { rows } = await pool.query<{ viewing_range_id: string }>(
       `SELECT viewing_range_id FROM standalone_file_viewing_ranges WHERE standalone_file_id = $1`,
       [standaloneId]

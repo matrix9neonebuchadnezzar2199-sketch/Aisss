@@ -58,11 +58,14 @@ export async function deletePoints (
   pointIds: string[]
 ): Promise<void> {
   if (pointIds.length === 0) return
-  await fetch(new URL(`/collections/${collection}/points/delete?wait=true`, baseUrl), {
+  const response = await fetch(new URL(`/collections/${collection}/points/delete?wait=true`, baseUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ points: pointIds })
   })
+  if (!response.ok) {
+    throw new AppError('vector_db_error', `Qdrant delete failed: HTTP ${response.status}`, 502)
+  }
 }
 
 export async function searchPoints (
