@@ -77,10 +77,12 @@ export const auditRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { 
             row.query_id ?? ''
           ].map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
         ].join('\n')
+        // ExcelがUTF-8として認識するようBOMを付与（日本語の文字化け対策）
+        const csvWithBom = '\uFEFF' + csv
         return reply
           .header('Content-Type', 'text/csv; charset=utf-8')
           .header('Content-Disposition', 'attachment; filename="audit-logs.csv"')
-          .send(csv)
+          .send(csvWithBom)
       }
 
       params.push(limit, offset)
