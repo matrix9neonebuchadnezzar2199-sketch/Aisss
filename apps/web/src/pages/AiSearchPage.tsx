@@ -15,6 +15,7 @@ export function AiSearchPage () {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<AiChatResponse | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     void Promise.all([fetchOllamaModels(), fetchOllamaHealth()]).then(([m, h]) => {
@@ -45,6 +46,22 @@ export function AiSearchPage () {
     result?.effective_policies.export_policy === 'deny_all'
   const copyDisabled = result?.effective_policies.export_policy === 'deny_copy' ||
     result?.effective_policies.export_policy === 'deny_all'
+
+  async function copyAnswer () {
+    if (!result || copyDisabled) return
+    try {
+      await navigator.clipboard.writeText(result.answer)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setError('クリップボードへのコピーに失敗しました')
+    }
+  }
+
+  function printAnswer () {
+    if (printDisabled) return
+    window.print()
+  }
 
   return (
     <section className="page ai-page">
@@ -90,7 +107,27 @@ export function AiSearchPage () {
 
       {result && (
         <div className="chat-result">
-          <h3>回答</h3>
+          <div className="detail-header">
+            <h3>回答</h3>
+            <div className="inline-actions">
+              <button
+                type="button"
+                disabled={copyDisabled}
+                title={copyDisabled ? '複製禁止のためコピーできません' : '回答をコピー'}
+                onClick={() => void copyAnswer()}
+              >
+                {copied ? 'コピーしました' : 'コピー'}
+              </button>
+              <button
+                type="button"
+                disabled={printDisabled}
+                title={printDisabled ? '印刷禁止のため印刷できません' : '回答を印刷'}
+                onClick={printAnswer}
+              >
+                印刷
+              </button>
+            </div>
+          </div>
           <div className="chat-answer">{result.answer}</div>
           <h4>引用</h4>
           <ul className="citation-list">

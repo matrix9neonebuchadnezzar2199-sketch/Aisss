@@ -44,7 +44,7 @@ export function RegisterPage () {
       setDepartments(dept.items)
       setRanks(rank.items)
       setViewingRanges(vr.items)
-    })
+    }).catch((e: Error) => setError(`マスタの取得に失敗しました: ${e.message}`))
   }, [])
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function RegisterPage () {
           body_assessment: c.body_assessment ?? '',
           body_reference: c.body_reference ?? '',
           event_start_date: c.event_start_date?.slice(0, 10) ?? '',
-          event_end_date: (c as CaseDetail & { event_end_date?: string }).event_end_date?.slice(0, 10) ?? '',
+          event_end_date: c.event_end_date?.slice(0, 10) ?? '',
           material_type_id: c.material_type_id ?? '',
           registering_department_id: c.registering_department_id ?? '',
           rank_id: c.rank_id ?? '',

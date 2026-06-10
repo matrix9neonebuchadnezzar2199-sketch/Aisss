@@ -94,7 +94,11 @@ export function ModelsPage () {
                 <input
                   type="checkbox"
                   checked={m.enabled_for_chat}
-                  onChange={(e) => updateModel(m.name, { enabled_for_chat: e.target.checked })}
+                  onChange={(e) => updateModel(m.name, {
+                    enabled_for_chat: e.target.checked,
+                    // チャット無効化したモデルを既定チャットのまま残さない
+                    ...(e.target.checked ? {} : { is_default_chat: false })
+                  })}
                 />
               </td>
               <td>

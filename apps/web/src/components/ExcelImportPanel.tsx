@@ -108,7 +108,13 @@ export function ExcelImportPanel () {
     <section className="excel-import-panel">
       <h3>Excel 一括取り込み</h3>
       <p className="hint">
-        <button type="button" className="linkish" onClick={() => void downloadTemplate()}>
+        <button
+          type="button"
+          className="linkish"
+          onClick={() => {
+            void downloadTemplate().catch((e: Error) => setError(e.message))
+          }}
+        >
           テンプレートをダウンロード
         </button>
         （プレビュー → 確認の 2 段階。エラー行はスキップされます）

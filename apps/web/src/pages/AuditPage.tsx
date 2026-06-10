@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiFetch } from '../lib/api'
+import { apiFetch, getUserId } from '../lib/api'
 
 type AuditRow = {
   id: string
@@ -22,19 +22,49 @@ export function AuditPage () {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  async function load () {
+  function buildFilterParams (): URLSearchParams {
     const params = new URLSearchParams()
     if (action) params.set('action', action)
     if (caseDisplayId) params.set('case', caseDisplayId)
     if (queryId) params.set('query_id', queryId)
     if (dateFrom) params.set('date_from', dateFrom)
     if (dateTo) params.set('date_to', dateTo)
+    return params
+  }
+
+  async function load () {
+    const params = buildFilterParams()
     await apiFetch<{ items: AuditRow[]; total: number }>(`/api/audit-logs?${params}`)
       .then((d) => {
         setItems(d.items)
         setTotal(d.total)
       })
       .catch((e: Error) => setError(e.message))
+  }
+
+  // <a href> ではユーザー認証ヘッダを送れないため fetch + blob でダウンロードする
+  async function downloadCsv () {
+    setError(null)
+    try {
+      const params = buildFilterParams()
+      params.set('export', 'csv')
+      const res = await fetch(`/api/audit-logs?${params}`, {
+        headers: { 'X-AISSS-User-Id': getUserId() }
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: { message?: string } }
+        throw new Error(body.error?.message ?? `HTTP ${res.status}`)
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'audit-logs.csv'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'CSV エクスポートに失敗しました')
+    }
   }
 
   useEffect(() => {
@@ -62,7 +92,7 @@ export function AuditPage () {
         </label>
         <div className="inline-actions">
           <button type="button" onClick={() => void load()}>絞り込み</button>
-          <a className="primary" href="/api/audit-logs?export=csv">CSV</a>
+          <button type="button" className="primary" onClick={() => void downloadCsv()}>CSV</button>
         </div>
       </div>
       {error && <p className="error">{error}</p>}

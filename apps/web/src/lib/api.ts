@@ -106,6 +106,7 @@ export type CaseDetail = CaseListItem & {
   body_article?: string
   body_assessment?: string
   body_reference?: string
+  event_end_date?: string
   material_type_id?: string
   registering_department_id?: string
   rank_id?: string
@@ -151,8 +152,13 @@ export async function fetchOllamaModels (): Promise<OllamaModelsResponse> {
 }
 
 export async function fetchOllamaHealth (): Promise<{ status: string; latency_ms: number | null }> {
-  const res = await fetch('/api/ollama/health')
-  return res.json() as Promise<{ status: string; latency_ms: number | null }>
+  try {
+    const res = await fetch('/api/ollama/health')
+    if (!res.ok) return { status: 'down', latency_ms: null }
+    return await res.json() as { status: string; latency_ms: number | null }
+  } catch {
+    return { status: 'down', latency_ms: null }
+  }
 }
 
 export async function sendAiChat (message: string, model?: string): Promise<AiChatResponse> {

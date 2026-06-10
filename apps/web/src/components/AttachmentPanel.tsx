@@ -32,9 +32,11 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
     }
   }, [caseId])
 
+  // initial は初期表示のみに使い、マウント時に最新一覧へ置き換える
+  // （initial を effect 依存にするとデフォルト [] が毎レンダー新参照になり無限更新になる）
   useEffect(() => {
-    setItems(initial)
-  }, [initial])
+    void refresh().catch(() => {})
+  }, [refresh])
 
   useEffect(() => {
     const pending = items.some((i) => i.extraction_status === 'pending' || i.extraction_status === 'running')
@@ -60,17 +62,34 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
   }
 
   async function showExtracted (attachmentId: string) {
-    const data = await fetchExtractedText(attachmentId)
-    setExpanded((prev) => ({ ...prev, [attachmentId]: data }))
+    try {
+      const data = await fetchExtractedText(attachmentId)
+      setExpanded((prev) => ({ ...prev, [attachmentId]: data }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '抽出テキストの取得に失敗しました')
+    }
   }
 
   async function updateAutoEnable (attachmentId: string, enabled: boolean) {
-    await setAttachmentAutoEnableRag(attachmentId, enabled)
-    setItems((prev) => prev.map((item) => (
-      item.id === attachmentId
-        ? { ...item, auto_enable_rag_on_extraction: enabled }
-        : item
-    )))
+    try {
+      await setAttachmentAutoEnableRag(attachmentId, enabled)
+      setItems((prev) => prev.map((item) => (
+        item.id === attachmentId
+          ? { ...item, auto_enable_rag_on_extraction: enabled }
+          : item
+      )))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '自動RAG設定の更新に失敗しました')
+    }
+  }
+
+  async function retryFailedExtraction (attachmentId: string) {
+    try {
+      await retryExtraction(attachmentId)
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '再抽出の開始に失敗しました')
+    }
   }
 
   return (
@@ -112,7 +131,7 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
             {item.extraction_error && <span className="extract-error">{item.extraction_error}</span>}
             <button type="button" onClick={() => void showExtracted(item.id)}>抽出テキスト</button>
             {(item.extraction_status === 'failed') && (
-              <button type="button" onClick={() => void retryExtraction(item.id).then(refresh)}>再抽出</button>
+              <button type="button" onClick={() => void retryFailedExtraction(item.id)}>再抽出</button>
             )}
             {expanded[item.id]?.text && (
               <pre className="extract-preview">{expanded[item.id]?.text}</pre>

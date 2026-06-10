@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   deadLetterJob,
   fetchJobs,
@@ -26,17 +26,21 @@ export function JobsPage () {
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
 
-  async function load () {
+  // 適用済みフィルタ（絞り込みボタンで確定）。入力途中の値でポーリングしない。
+  const [appliedFilters, setAppliedFilters] = useState({ status: '', jobType: '', caseDisplayId: '' })
+
+  // 適用済みフィルタを依存に持たせ、ポーリングが古いフィルタへ巻き戻らないようにする
+  const load = useCallback(async () => {
     const params = {
-      ...(status ? { status } : {}),
-      ...(jobType ? { job_type: jobType } : {}),
-      ...(caseDisplayId ? { case: caseDisplayId } : {})
+      ...(appliedFilters.status ? { status: appliedFilters.status } : {}),
+      ...(appliedFilters.jobType ? { job_type: appliedFilters.jobType } : {}),
+      ...(appliedFilters.caseDisplayId ? { case: appliedFilters.caseDisplayId } : {})
     }
     const [s, j] = await Promise.all([fetchJobStats(), fetchJobs(params)])
     setStats(s)
     setItems(j.items)
     setTotal(j.total)
-  }
+  }, [appliedFilters])
 
   useEffect(() => {
     void load().catch((e: Error) => setError(e.message))
@@ -44,16 +48,24 @@ export function JobsPage () {
       void load().catch((e: Error) => setError(e.message))
     }, 10000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [load])
 
   async function retry (id: string) {
-    await retryJob(id)
-    await load()
+    try {
+      await retryJob(id)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '再試行に失敗しました')
+    }
   }
 
   async function toDlq (id: string) {
-    await deadLetterJob(id, 'Moved from WebUI')
-    await load()
+    try {
+      await deadLetterJob(id, 'Moved from WebUI')
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'DLQ への移動に失敗しました')
+    }
   }
 
   return (
@@ -84,7 +96,12 @@ export function JobsPage () {
         <label>ケース
           <input value={caseDisplayId} onChange={(e) => setCaseDisplayId(e.target.value)} placeholder="CASE-..." />
         </label>
-        <button type="button" onClick={() => void load()}>絞り込み</button>
+        <button
+          type="button"
+          onClick={() => setAppliedFilters({ status, jobType, caseDisplayId })}
+        >
+          絞り込み
+        </button>
       </div>
 
       {error && <p className="error">{error}</p>}

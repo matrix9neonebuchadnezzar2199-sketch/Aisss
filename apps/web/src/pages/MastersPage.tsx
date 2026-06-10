@@ -30,12 +30,17 @@ export function MastersPage () {
 
   async function addValue () {
     if (!newName.trim()) return
-    await apiFetch(`/api/masters/${master}`, {
-      method: 'POST',
-      body: JSON.stringify({ name: newName.trim() })
-    })
-    setNewName('')
-    await load()
+    setError(null)
+    try {
+      await apiFetch(`/api/masters/${master}`, {
+        method: 'POST',
+        body: JSON.stringify({ name: newName.trim() })
+      })
+      setNewName('')
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'マスタ値の追加に失敗しました')
+    }
   }
 
   return (

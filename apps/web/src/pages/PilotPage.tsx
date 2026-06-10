@@ -13,22 +13,32 @@ export function PilotPage () {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [listRestricted, setListRestricted] = useState(false)
 
+  // 一覧取得は operator 限定。一般ユーザーは登録のみ可能なので、403 をエラーではなく案内として扱う。
   async function load () {
-    const data = await fetchPilotFeedback()
-    setItems(data.items)
+    try {
+      const data = await fetchPilotFeedback()
+      setItems(data.items)
+      setListRestricted(false)
+    } catch {
+      setListRestricted(true)
+    }
   }
 
   useEffect(() => {
-    void load().catch((e: Error) => setError(e.message))
+    void load()
   }, [])
 
   async function submit () {
     setError(null)
+    setNotice(null)
     try {
       await createPilotFeedback({ area, severity, title, description })
       setTitle('')
       setDescription('')
+      setNotice('フィードバックを登録しました')
       await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'feedback failed')
@@ -36,8 +46,12 @@ export function PilotPage () {
   }
 
   async function setStatus (id: string, status: string) {
-    await updatePilotFeedbackStatus(id, status)
-    await load()
+    try {
+      await updatePilotFeedbackStatus(id, status)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'ステータス更新に失敗しました')
+    }
   }
 
   return (
@@ -71,6 +85,10 @@ export function PilotPage () {
       </div>
 
       {error && <p className="error">{error}</p>}
+      {notice && <p className="meta">{notice}</p>}
+      {listRestricted && (
+        <p className="hint">フィードバック一覧の閲覧には運用者権限が必要です（登録は可能です）。</p>
+      )}
 
       <table className="data-table">
         <thead>

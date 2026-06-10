@@ -44,8 +44,13 @@ export function RagAdminPage () {
     void apiFetch<{ items: MasterItem[] }>('/api/masters/viewing-ranges')
       .then((d) => setViewingRanges(d.items))
       .catch((e: Error) => setError(e.message))
-    void reload().catch((e: Error) => setError(e.message))
   }, [])
+
+  // フィルタ checkbox の変更は即座に一覧へ反映する
+  useEffect(() => {
+    void reload().catch((e: Error) => setError(e.message))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [candidatesOnly])
 
   async function toggleRag (item: RagFileItem) {
     setPending((p) => ({ ...p, [item.id]: true }))
@@ -57,6 +62,23 @@ export function RagAdminPage () {
     } finally {
       setPending((p) => ({ ...p, [item.id]: false }))
     }
+  }
+
+  async function retryFailedExtraction (itemId: string) {
+    try {
+      await retryExtraction(itemId)
+      await reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '再抽出の開始に失敗しました')
+    }
+  }
+
+  // 初回有効化は「抽出成功済み」が条件（chunk はまだ無いので pipeline ready を要求するとデッドロックする）。
+  // 無効化はいつでも可能にする。
+  function ragToggleDisabled (item: RagFileItem): boolean {
+    if (pending[item.id]) return true
+    if (item.rag_enabled) return false
+    return item.extraction_status !== 'succeeded'
   }
 
   return (
@@ -138,13 +160,13 @@ export function RagAdminPage () {
                 <input
                   type="checkbox"
                   checked={item.rag_enabled}
-                  disabled={pending[item.id] || item.pipeline_status !== 'ready'}
+                  disabled={ragToggleDisabled(item)}
                   onChange={() => void toggleRag(item)}
                 />
               </td>
               <td>
                 {item.extraction_status === 'failed' && item.source_kind === 'case_attachment' && (
-                  <button type="button" className="linkish" onClick={() => void retryExtraction(item.id).then(reload)}>
+                  <button type="button" className="linkish" onClick={() => void retryFailedExtraction(item.id)}>
                     再抽出
                   </button>
                 )}

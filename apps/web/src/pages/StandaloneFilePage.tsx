@@ -6,7 +6,7 @@ export function StandaloneFilePage () {
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [tags, setTags] = useState('')
-  const [viewingRangeId, setViewingRangeId] = useState('')
+  const [viewingRangeIds, setViewingRangeIds] = useState<string[]>([])
   const [file, setFile] = useState<File | null>(null)
   const [viewingRanges, setViewingRanges] = useState<MasterItem[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +19,7 @@ export function StandaloneFilePage () {
   }, [])
 
   async function onSubmit () {
-    if (!title.trim() || !viewingRangeId || !file) {
+    if (!title.trim() || viewingRangeIds.length === 0 || !file) {
       setError('表題、閲覧範囲、ファイルは必須です')
       return
     }
@@ -28,7 +28,7 @@ export function StandaloneFilePage () {
     try {
       await uploadStandaloneFile({
         title: title.trim(),
-        viewingRangeIds: [viewingRangeId],
+        viewingRangeIds,
         tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
         file
       })
@@ -50,9 +50,12 @@ export function StandaloneFilePage () {
         <label className="full">タグ（カンマ区切り）
           <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="参考, 条例" />
         </label>
-        <label className="full">閲覧範囲
-          <select value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
-            <option value="">選択してください</option>
+        <label className="full">閲覧範囲（複数選択可）
+          <select
+            multiple
+            value={viewingRangeIds}
+            onChange={(e) => setViewingRangeIds(Array.from(e.target.selectedOptions, (o) => o.value))}
+          >
             {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
           </select>
         </label>
