@@ -43,7 +43,11 @@ Recommended cold-start order for operators:
 2. Wait for `GET /api/health` → 200
 3. Then open `/jobs` or upload attachments that enqueue extraction jobs
 
-After code changes, rebuild application images before restart: `make build && make up` (see [Audit CSV Export](#audit-csv-export-excel--utf-8-bom)).
+After code changes, rebuild application images before restart: **`make deploy`** (build + up + verify) or `make build && make up` then **`make verify-deploy`**.
+
+**`git push` alone does not update running containers.** Host-side `npm run build` does not update the web container either.
+
+See [Deploy verification](#deploy-verification-running-containers) and [Audit CSV Export](#audit-csv-export-excel--utf-8-bom).
 
 ## Job Triage
 
@@ -165,6 +169,51 @@ Run once with admin, operator, and pilot users before loading representative pro
 | 12 | All | `npm test` + `npm run build` | Green before pilot week | CI |
 
 Record dry-run outcomes in `90_DevLog/` with `status: ok|warn|err` per step. Blockers become M19 fix tasks.
+
+## Deploy verification (running containers)
+
+Use this after **any** change to `apps/web`, `apps/api`, or `apps/workers` before telling operators or AI sessions the fix is live.
+
+### Why
+
+Docker serves **built images**, not the git working tree. Stale images caused:
+
+- Audit CSV mojibake after BOM fix (api image not rebuilt)
+- M19 WebUI unchanged (web image still ~5.7 KB CSS vs ~30 KB after mock parity)
+
+### Procedure
+
+```powershell
+cd F:\Cursor\Aisss
+make deploy
+```
+
+Or stepwise:
+
+```powershell
+make build
+docker compose -f aisss/docker-compose.yaml up -d web api worker
+make verify-deploy
+```
+
+Linux/macOS verify script: `bash scripts/verify-docker-deploy.sh`
+
+### What verify checks
+
+| Check | Pass | Stale image action |
+|---|---|---|
+| Web CSS size in `aisss-web-1` | ≥ 20 KB total | `build web && up -d web` |
+| Web CSS contains `gh-header` | yes | same |
+| Audit CSV BOM (api, warn) | bytes `EF BB BF` | `build api && up -d api` |
+
+### Manual web check
+
+```powershell
+docker exec aisss-web-1 sh -c "ls -la /usr/share/nginx/html/assets/*.css"
+# Expect ~30KB index-*.css after M19+, not ~5KB
+```
+
+Open **`http://localhost:${AISSS_WEB_PORT:-3000}/search`** (not `/mockups/webui.html`). Hard refresh: Ctrl+Shift+R.
 
 ## Audit CSV Export (Excel / UTF-8 BOM)
 

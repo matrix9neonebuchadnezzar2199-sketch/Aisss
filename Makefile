@@ -4,13 +4,15 @@
 
 AISSS_COMPOSE ?= aisss/docker-compose.yaml
 
-.PHONY: help up down ps logs-aisss test migrate build
+.PHONY: help up down ps logs-aisss test migrate build verify-deploy deploy
 
 help:
 	@echo "Targets:"
 	@echo "  up          Start the AISSS stack"
 	@echo "  down        Stop the AISSS stack"
 	@echo "  build       Rebuild application images (api, web, worker)"
+	@echo "  deploy      build + up + verify-deploy (required after apps code push)"
+	@echo "  verify-deploy  Assert running containers are not stale (web CSS, api BOM)"
 	@echo "  ps          Show AISSS stack containers"
 	@echo "  logs-aisss  Tail AISSS stack logs"
 	@echo "  test        Run API and Web checks"
@@ -26,6 +28,13 @@ down:
 
 build:
 	docker compose -f $(AISSS_COMPOSE) build api web worker
+
+deploy: build
+	docker compose -f $(AISSS_COMPOSE) up -d
+	$(MAKE) verify-deploy
+
+verify-deploy:
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-docker-deploy.ps1
 
 ps:
 	docker compose -f $(AISSS_COMPOSE) ps
