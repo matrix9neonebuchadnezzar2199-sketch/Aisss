@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  attachmentDownloadUrl,
+  downloadAttachment,
   fetchExtractedText,
   retryExtraction,
   getUserId,
@@ -118,7 +118,15 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
         {items.map((item) => (
           <li key={item.id}>
             <span className={`status status-${item.extraction_status}`}>{item.extraction_status}</span>
-            <a href={attachmentDownloadUrl(item.id)} download>{item.file_name}</a>
+            <button
+              type="button"
+              className="linkish"
+              onClick={() => {
+                void downloadAttachment(item.id, item.file_name).catch((e: Error) => setError(e.message))
+              }}
+            >
+              {item.file_name}
+            </button>
             <label className="inline-check">
               <input
                 type="checkbox"

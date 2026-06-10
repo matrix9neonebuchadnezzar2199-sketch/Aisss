@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { apiFetch, getUserId } from '../lib/api'
 
@@ -15,6 +15,8 @@ type AuditRow = {
 
 export function AuditPage () {
   const [searchParams] = useSearchParams()
+  const urlCase = searchParams.get('case') ?? ''
+  const urlQueryId = searchParams.get('query_id') ?? ''
   const [items, setItems] = useState<AuditRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
@@ -25,19 +27,20 @@ export function AuditPage () {
   const [dateTo, setDateTo] = useState('')
   const [detailRow, setDetailRow] = useState<AuditRow | null>(null)
 
-  function buildFilterParams (caseOverride?: string): URLSearchParams {
+  function buildFilterParams (overrides?: { case?: string; query_id?: string }): URLSearchParams {
     const params = new URLSearchParams()
     if (action) params.set('action', action)
-    const caseVal = caseOverride ?? caseDisplayId
+    const caseVal = overrides?.case ?? caseDisplayId
     if (caseVal) params.set('case', caseVal)
-    if (queryId) params.set('query_id', queryId)
+    const qVal = overrides?.query_id ?? queryId
+    if (qVal) params.set('query_id', qVal)
     if (dateFrom) params.set('date_from', dateFrom)
     if (dateTo) params.set('date_to', dateTo)
     return params
   }
 
-  async function load (caseOverride?: string) {
-    const params = buildFilterParams(caseOverride)
+  async function load (overrides?: { case?: string; query_id?: string }) {
+    const params = buildFilterParams(overrides)
     await apiFetch<{ items: AuditRow[]; total: number }>(`/api/audit-logs?${params}`)
       .then((d) => {
         setItems(d.items)
@@ -70,11 +73,20 @@ export function AuditPage () {
     }
   }
 
+  const urlInit = useRef<string>('')
   useEffect(() => {
-    const c = searchParams.get('case') ?? ''
-    if (c) setCaseDisplayId(c)
-    void load(c || undefined)
-  }, [searchParams])
+    if (urlCase) setCaseDisplayId(urlCase)
+    if (urlQueryId) setQueryId(urlQueryId)
+
+    const key = `${urlCase}|${urlQueryId}`
+    if (urlInit.current === key) return
+    urlInit.current = key
+
+    void load({
+      ...(urlCase ? { case: urlCase } : {}),
+      ...(urlQueryId ? { query_id: urlQueryId } : {})
+    })
+  }, [urlCase, urlQueryId])
 
   return (
     <section className="view active" id="view-audit">

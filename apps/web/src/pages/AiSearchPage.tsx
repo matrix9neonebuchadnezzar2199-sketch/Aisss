@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
+  fetchAuditLogByQueryId,
   fetchOllamaHealth,
   fetchOllamaModels,
   sendAiChat,
-  type AiChatResponse
+  type AiChatResponse,
+  type AuditLogEntry
 } from '../lib/api'
 
 export function AiSearchPage () {
+  const [searchParams] = useSearchParams()
+  const queryIdParam = searchParams.get('query_id')
   const [message, setMessage] = useState('')
   const [model, setModel] = useState('')
   const [models, setModels] = useState<string[]>([])
@@ -16,6 +20,8 @@ export function AiSearchPage () {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<AiChatResponse | null>(null)
   const [copied, setCopied] = useState(false)
+  const [auditRef, setAuditRef] = useState<AuditLogEntry | null>(null)
+  const [auditRefError, setAuditRefError] = useState<string | null>(null)
 
   useEffect(() => {
     void Promise.all([fetchOllamaModels(), fetchOllamaHealth()]).then(([m, h]) => {
@@ -27,6 +33,23 @@ export function AiSearchPage () {
       setOllamaStatus(h.status)
     }).catch((e: Error) => setError(e.message))
   }, [])
+
+  useEffect(() => {
+    if (!queryIdParam) {
+      setAuditRef(null)
+      setAuditRefError(null)
+      return
+    }
+    void fetchAuditLogByQueryId(queryIdParam)
+      .then((row) => {
+        setAuditRef(row)
+        setAuditRefError(row ? null : '該当する監査ログが見つかりません')
+      })
+      .catch((e: Error) => {
+        setAuditRef(null)
+        setAuditRefError(e.message)
+      })
+  }, [queryIdParam])
 
   async function onSubmit () {
     if (!message.trim() || ollamaStatus === 'down') return
@@ -63,6 +86,8 @@ export function AiSearchPage () {
     window.print()
   }
 
+  const auditModel = auditRef?.details_json?.model as string | undefined
+
   return (
     <section className="view active ai-page" id="view-ai">
       <div className="panel">
@@ -73,6 +98,24 @@ export function AiSearchPage () {
           </span>
         </div>
         <div className="panel-body">
+          {queryIdParam && (
+            <div className="policy-banner">
+              監査参照: クエリ ID <span className="mono">{queryIdParam}</span>
+              {auditRef && (
+                <>
+                  {' · '}{auditRef.action} · {auditRef.created_at?.slice(0, 19).replace('T', ' ')}
+                  {auditModel ? ` · model: ${auditModel}` : ''}
+                  {' · '}
+                  <Link to={`/audit?query_id=${encodeURIComponent(queryIdParam)}`}>監査ログで開く</Link>
+                </>
+              )}
+              {auditRefError && <span className="error"> — {auditRefError}</span>}
+              <p className="meta" style={{ marginTop: 6 }}>
+                過去の質問・回答本文は監査ログに保存されていません。新しい質問を送信してください。
+              </p>
+            </div>
+          )}
+
           {ollamaStatus === 'down' && (
             <p className="error">Ollama が利用できません。チャット入力は無効です。</p>
           )}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { apiFetch, attachmentDownloadUrl, type CaseDetail } from '../lib/api'
+import { apiFetch, downloadAttachment, type CaseDetail } from '../lib/api'
 
 const bodySections: Array<[string, keyof CaseDetail]> = [
   ['1 要約', 'body_summary'],
@@ -13,6 +13,7 @@ export function CaseDetailPage () {
   const { displayId } = useParams<{ displayId: string }>()
   const [item, setItem] = useState<CaseDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!displayId) return
@@ -89,13 +90,21 @@ export function CaseDetailPage () {
               <span>
                 <span className="label label-info">{att.extraction_status}</span>
                 {' '}
-                <a className="btn btn-sm" href={attachmentDownloadUrl(att.id)} target="_blank" rel="noopener noreferrer">
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    setDownloadError(null)
+                    void downloadAttachment(att.id, att.file_name).catch((e: Error) => setDownloadError(e.message))
+                  }}
+                >
                   ダウンロード
-                </a>
+                </button>
               </span>
             </li>
           ))}
         </ul>
+        {downloadError && <p className="error">{downloadError}</p>}
 
         <p className="compare-hint">
           2件比較: 検索画面に戻り、別の表題を開く。別タブが使えない環境では Ctrl+クリック（Mac: ⌘+クリック）をお試しください。

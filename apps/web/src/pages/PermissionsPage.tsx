@@ -57,13 +57,14 @@ export function PermissionsPage () {
     setError(null)
     setNotice(null)
     try {
-      for (const range of ranges) {
-        await updateViewingRangeGroups(range.id, mappingDraft[range.id] ?? [])
-      }
+      await Promise.all(
+        ranges.map((range) => updateViewingRangeGroups(range.id, mappingDraft[range.id] ?? []))
+      )
       setNotice('マッピングを保存しました')
       await reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : '保存失敗')
+      await reload().catch(() => {})
     }
   }
 
@@ -85,20 +86,27 @@ export function PermissionsPage () {
     )
     if (groupId === null) return
     const ids = groupId.split(',').map((s) => s.trim()).filter(Boolean)
+    setError(null)
     try {
-      for (const g of groups) {
-        const memberIds = g.members.map((m) => m.user_id)
-        const shouldHave = ids.includes(g.id)
-        const has = memberIds.includes(user.id)
-        if (shouldHave && !has) {
-          await updateGroupMembers(g.id, [...memberIds, user.id])
-        } else if (!shouldHave && has) {
-          await updateGroupMembers(g.id, memberIds.filter((id) => id !== user.id))
-        }
-      }
+      const updates = groups
+        .map((g) => {
+          const memberIds = g.members.map((m) => m.user_id)
+          const shouldHave = ids.includes(g.id)
+          const has = memberIds.includes(user.id)
+          if (shouldHave && !has) {
+            return updateGroupMembers(g.id, [...memberIds, user.id])
+          }
+          if (!shouldHave && has) {
+            return updateGroupMembers(g.id, memberIds.filter((id) => id !== user.id))
+          }
+          return null
+        })
+        .filter(Boolean)
+      await Promise.all(updates)
       await reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : '更新失敗')
+      await reload().catch(() => {})
     }
   }
 

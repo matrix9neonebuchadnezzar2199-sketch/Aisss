@@ -104,6 +104,41 @@ export function attachmentDownloadUrl (attachmentId: string): string {
   return `/api/attachments/${attachmentId}/download`
 }
 
+/** 認証ヘッダ付きで添付を blob ダウンロード（`<a href>` では X-AISSS-User-Id が送れない） */
+export async function downloadAttachment (attachmentId: string, fileName: string): Promise<void> {
+  const res = await fetch(attachmentDownloadUrl(attachmentId), {
+    headers: { 'X-AISSS-User-Id': getUserId() }
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(body.error?.message ?? `HTTP ${res.status}`)
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export type AuditLogEntry = {
+  id: string
+  action: string
+  query_id?: string | null
+  case_display_id?: string | null
+  details_json?: Record<string, unknown> | null
+  created_at: string
+  user_name?: string | null
+}
+
+export async function fetchAuditLogByQueryId (queryId: string): Promise<AuditLogEntry | null> {
+  const data = await apiFetch<{ items: AuditLogEntry[] }>(
+    `/api/audit-logs?${new URLSearchParams({ query_id: queryId, limit: '1' })}`
+  )
+  return data.items[0] ?? null
+}
+
 export type CaseDetail = CaseListItem & {
   summary?: string
   body_summary?: string
