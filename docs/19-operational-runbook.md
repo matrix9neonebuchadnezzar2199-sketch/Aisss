@@ -125,9 +125,30 @@ Create explicit Post-MVP tasks when pilot feedback shows one of these patterns:
 - Audit/compliance: reviewers need evidence not currently captured in `audit_logs.details_json`.
 - UI safety: users misunderstand whether an attachment is searchable by AI.
 
+## Pilot Dry Run Checklist
+
+Run once with admin, operator, and pilot users before loading representative production data.
+
+| Step | Actor | Route / action | Expected result | Automated check |
+|---|---|---|---|---|
+| 1 | Admin | `make up` + `/api/health` | API healthy | Manual |
+| 2 | Admin | Register case with `全員` viewing range | Case saved, viewing range required | Manual |
+| 3 | Operator | Upload PDF attachment, auto-enable OFF | Extraction completes, RAG OFF | Manual |
+| 4 | Operator | Toggle `抽出後RAG自動ON`, re-upload or PATCH | Reservation stored | Manual |
+| 5 | Operator | `/rag` |未ナレッジ化候補 highlighted | Manual |
+| 6 | Operator | Enable RAG on extracted file | Embedding job enqueued | Manual |
+| 7 | Pilot | `/ai` query on public case | Authorized citation only | Manual |
+| 8 | Pilot | Query referencing `照会禁止` case | No context/citation leak | `npm test -w @aisss/api -- src/rag-eval.test.ts` |
+| 9 | Pilot | `/cases` list | Sees `全員` only, not analyst-only cases | `route-integration.test.ts` in CI |
+| 10 | Admin | `/audit` | AI query audit shows `excluded_counts` | Manual |
+| 11 | Operator | `/jobs` failed job retry | Retry audit recorded | Manual |
+| 12 | All | `npm test` + `npm run build` | Green before pilot week | CI |
+
+Record dry-run outcomes in `90_DevLog/` with `status: ok|warn|err` per step. Blockers become M19 fix tasks.
+
 ## Known Limitations
 
-- OCR and ASR engines are still stubs.
+- OCR and ASR engines are pilot stubs; image/audio require manual `.txt` transcripts (see `07-ingestion-design.md` M17 decision).
 - Web AI chat uses non-streaming response while SSE API exists.
 - RAG admin tree cascade is basic compared with the HTML mock.
 - ReRank configuration is stored, but ReRank execution remains off.
