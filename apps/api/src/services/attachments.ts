@@ -6,8 +6,16 @@ import { AppError } from '../lib/errors.js'
 import type { AuthUser } from '../types/auth.js'
 import type { ObjectStorageSettings } from '../settings.js'
 import { getCaseById } from './cases.js'
-import { putObject } from './storage.js'
+import { isOperator } from './permissions.js'
+import { deleteObject, putObject } from './storage.js'
 import { writeAuditLog } from './audit.js'
+
+// RAG 自動有効化の予約は実質的な RAG 有効化トリガーのため、手動有効化（setRagEnabled）と同じく operator 以上に限定する
+function requireOperatorForAutoEnable (user: AuthUser) {
+  if (!isOperator(user)) {
+    throw new AppError('permission_denied', 'Operator or admin role required to reserve RAG auto-enable.', 403)
+  }
+}
 
 function buildStorageKey (caseId: string, attachmentId: string, fileName: string): string {
   const safeName = fileName.replace(/[^\w.\-()]+/g, '_')
@@ -38,6 +46,9 @@ export async function uploadAttachment (
   buffer: Buffer,
   autoEnableRagOnExtraction = false
 ) {
+  if (autoEnableRagOnExtraction) {
+    requireOperatorForAutoEnable(user)
+  }
   const caseRow = await getCaseById(pool, user, caseId)
   const attachmentId = randomUUID()
   const sha256 = createHash('sha256').update(buffer).digest('hex')
@@ -46,26 +57,34 @@ export async function uploadAttachment (
 
   await putObject(storage, storageConfig.bucket, storageKey, buffer, contentType || 'application/octet-stream')
 
-  const { rows } = await pool.query(
-    `INSERT INTO attachments (
-      id, case_id, file_name, storage_key, content_type, file_size, sha256,
-      attachment_kind, uploaded_by, extraction_status, auto_enable_rag_on_extraction
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
-    RETURNING id, file_name, extraction_status, uploaded_at, attachment_kind,
-      rag_enabled, auto_enable_rag_on_extraction`,
-    [
-      attachmentId,
-      caseId,
-      fileName,
-      storageKey,
-      contentType || 'application/octet-stream',
-      buffer.length,
-      sha256,
-      kind,
-      user.id,
-      autoEnableRagOnExtraction
-    ]
-  )
+  let rows: Array<Record<string, unknown>>
+  try {
+    const result = await pool.query(
+      `INSERT INTO attachments (
+        id, case_id, file_name, storage_key, content_type, file_size, sha256,
+        attachment_kind, uploaded_by, extraction_status, auto_enable_rag_on_extraction
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
+      RETURNING id, file_name, extraction_status, uploaded_at, attachment_kind,
+        rag_enabled, auto_enable_rag_on_extraction`,
+      [
+        attachmentId,
+        caseId,
+        fileName,
+        storageKey,
+        contentType || 'application/octet-stream',
+        buffer.length,
+        sha256,
+        kind,
+        user.id,
+        autoEnableRagOnExtraction
+      ]
+    )
+    rows = result.rows
+  } catch (error) {
+    // DB 登録に失敗したらアップロード済みオブジェクトを残さない（S3 孤児防止、削除失敗は黙認）
+    await deleteObject(storage, storageConfig.bucket, storageKey).catch(() => {})
+    throw error
+  }
 
   await enqueueExtractionJob(pool, attachmentId, caseId, caseRow.display_id as string)
   await writeAuditLog(pool, {
@@ -167,6 +186,7 @@ export async function updateAutoEnableRagOnExtraction (
   attachmentId: string,
   enabled: boolean
 ) {
+  requireOperatorForAutoEnable(user)
   await getAttachmentForUser(pool, user, attachmentId)
   const { rows } = await pool.query(
     `UPDATE attachments

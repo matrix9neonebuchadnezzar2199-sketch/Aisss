@@ -88,7 +88,14 @@ test('operational routes reject general users before data queries', async (t) =>
     { method: 'POST', url: '/api/admin/backup-checks', payload: { scope: 'daily' } },
     { method: 'PUT', url: '/api/admin/ollama/model-roles', payload: { assignments: [] } },
     { method: 'GET', url: '/api/audit-logs?export=csv' },
-    { method: 'PATCH', url: '/api/rag/files/file-1/enable', payload: { enabled: true, source_kind: 'case_attachment' } }
+    { method: 'PATCH', url: '/api/rag/files/file-1/enable', payload: { enabled: true, source_kind: 'case_attachment' } },
+    { method: 'POST', url: '/api/masters/material-types', payload: { name: 'new type' } },
+    { method: 'PATCH', url: '/api/masters/material-types/00000000-0000-4000-8000-00000000aaaa', payload: { name: 'renamed' } },
+    { method: 'POST', url: '/api/masters/conditions', payload: { name: '新条件' } },
+    { method: 'POST', url: '/api/masters/viewing-ranges/00000000-0000-4000-8000-00000000bbbb/deactivate' },
+    { method: 'PATCH', url: '/api/attachments/00000000-0000-4000-8000-00000000cccc/auto-enable-rag', payload: { enabled: true } },
+    { method: 'GET', url: '/api/users' },
+    { method: 'GET', url: '/api/groups' }
   ] as const
 
   for (const route of routes) {

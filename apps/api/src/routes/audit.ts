@@ -40,7 +40,12 @@ export const auditRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { 
       }
       if (q.date_to) {
         params.push(q.date_to)
-        where.push(`al.created_at <= $${params.length}::timestamptz`)
+        // 日付のみ指定（YYYY-MM-DD）はその日全体を含める
+        if (/^\d{4}-\d{2}-\d{2}$/.test(q.date_to)) {
+          where.push(`al.created_at < ($${params.length}::date + INTERVAL '1 day')`)
+        } else {
+          where.push(`al.created_at <= $${params.length}::timestamptz`)
+        }
       }
 
       const page = Math.max(1, Number(q.page ?? 1))

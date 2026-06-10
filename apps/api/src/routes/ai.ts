@@ -39,21 +39,28 @@ export const aiRoutes: FastifyPluginAsync<{
         })
       }
 
+      const stream = streamAiChat(pool, settings, request.user, {
+        message: body.message,
+        model: body.model
+      })
+      // 事前検証（health / model）エラーを JSON で返せるよう、最初のイベント取得後にヘッダを書く
+      const first = await stream.next()
+
       reply.raw.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive'
       })
 
-      for await (const event of streamAiChat(pool, settings, request.user, {
-        message: body.message,
-        model: body.model
-      })) {
+      if (!first.done) {
+        reply.raw.write(`data: ${JSON.stringify(first.value)}\n\n`)
+      }
+      for await (const event of stream) {
         reply.raw.write(`data: ${JSON.stringify(event)}\n\n`)
       }
       reply.raw.end()
     } catch (error) {
-      if (!reply.sent) {
+      if (!reply.raw.headersSent) {
         return sendError(reply, error, request.id)
       }
       reply.raw.write(`data: ${JSON.stringify({ type: 'error', message: 'stream_failed' })}\n\n`)

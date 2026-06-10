@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import type pg from 'pg'
 import { AppError, sendError } from '../lib/errors.js'
 import { writeAuditLog } from '../services/audit.js'
-import { isAdmin } from '../services/permissions.js'
+import { isAdmin, isOperator } from '../services/permissions.js'
 
 export const permissionRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { pool }) => {
   app.get('/api/me', async (request) => {
@@ -18,6 +18,9 @@ export const permissionRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (ap
 
   app.get('/api/users', async (request, reply) => {
     try {
+      if (!isOperator(request.user)) {
+        throw new AppError('permission_denied', 'Operator role required.', 403)
+      }
       const q = (request.query as { q?: string }).q
       const params: unknown[] = []
       let where = 'WHERE u.is_active = TRUE'
@@ -42,6 +45,9 @@ export const permissionRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (ap
 
   app.get('/api/groups', async (request, reply) => {
     try {
+      if (!isOperator(request.user)) {
+        throw new AppError('permission_denied', 'Operator role required.', 403)
+      }
       const { rows } = await pool.query(
         `SELECT g.id, g.name, g.is_active,
           COALESCE(json_agg(json_build_object('user_id', u.id, 'display_name', u.display_name))

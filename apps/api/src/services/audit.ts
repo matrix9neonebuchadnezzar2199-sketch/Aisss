@@ -1,7 +1,8 @@
 import type pg from 'pg'
 
+// pool または transaction 中の client のどちらでも書けるようにする（本体と監査の原子性確保用）
 export async function writeAuditLog (
-  pool: pg.Pool,
+  pool: pg.Pool | pg.PoolClient,
   input: {
     userId: string | null
     action: string

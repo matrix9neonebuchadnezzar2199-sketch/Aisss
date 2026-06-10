@@ -113,7 +113,9 @@ export async function searchCases (
   }
 
   if (query.q) {
-    params.push(`%${query.q}%`)
+    // LIKE ワイルドカード（% _ \）をエスケープしてリテラル検索にする
+    const escaped = query.q.replace(/[\\%_]/g, (m) => `\\${m}`)
+    params.push(`%${escaped}%`)
     const idx = params.length
     where.push(`(
       c.title ILIKE $${idx}
@@ -362,7 +364,8 @@ export async function createCase (
     const caseId = rows[0].id as string
     await syncJoinIds(client, caseId, 'case_viewing_ranges', 'viewing_range_id', input.viewing_range_ids)
     await syncJoinIds(client, caseId, 'case_conditions', 'condition_id', input.condition_ids)
-    await writeAuditLog(pool, {
+    // 同一トランザクションで監査を書き、本体と監査の原子性を保つ
+    await writeAuditLog(client, {
       userId: user.id,
       action: 'case.create',
       resourceType: 'case',
@@ -394,6 +397,12 @@ export async function updateCase (
   caseId: string,
   input: Partial<CaseInput>
 ) {
+  if ('title' in input) {
+    if (!input.title?.trim()) {
+      throw new AppError('validation_error', 'title is required.', 400)
+    }
+    input = { ...input, title: input.title.trim() }
+  }
   requireViewingRanges(input.viewing_range_ids, 'update')
   const existing = await getCaseById(pool, user, caseId)
   const fields: string[] = []
@@ -453,7 +462,7 @@ export async function updateCase (
     }
     await syncJoinIds(client, caseId, 'case_viewing_ranges', 'viewing_range_id', input.viewing_range_ids)
     await syncJoinIds(client, caseId, 'case_conditions', 'condition_id', input.condition_ids)
-    await writeAuditLog(pool, {
+    await writeAuditLog(client, {
       userId: user.id,
       action: 'case.update',
       resourceType: 'case',
