@@ -35,7 +35,8 @@ export const ragRoutes: FastifyPluginAsync<{
       return await ragAdmin.listRagFiles(pool, {
         q: q.q,
         viewing_range_id: q.viewing_range_id,
-        tag: q.tag
+        tag: q.tag,
+        knowledge_candidates_only: q.knowledge_candidates_only === 'true'
       })
     } catch (error) {
       return sendError(reply, error, request.id)

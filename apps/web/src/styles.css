@@ -350,6 +350,37 @@ button.linkish {
   font-size: 0.9rem;
 }
 
+.stat-warn {
+  color: #f5c26b;
+  font-weight: 600;
+}
+
+.rag-row-candidate {
+  background: rgba(245, 194, 107, 0.08);
+}
+
+.rag-visibility {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.rag-visibility-knowledge_candidate {
+  background: rgba(245, 194, 107, 0.2);
+  color: #f5c26b;
+}
+
+.rag-visibility-auto_enable_reserved {
+  background: rgba(126, 182, 255, 0.15);
+  color: #7eb6ff;
+}
+
+.rag-visibility-extraction_failed {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff8a8a;
+}
+
 .badge {
   display: inline-block;
   margin-left: 0.35rem;

@@ -11,10 +11,18 @@ import {
 } from '../lib/api'
 
 export function RagAdminPage () {
-  const [status, setStatus] = useState({ chunk_count: 0, embedding_pending: 0, pipeline_failed: 0, vectors_synced: 0 })
+  const [status, setStatus] = useState({
+    chunk_count: 0,
+    embedding_pending: 0,
+    pipeline_failed: 0,
+    vectors_synced: 0,
+    not_enabled_candidates: 0,
+    auto_enable_reserved: 0
+  })
   const [items, setItems] = useState<RagFileItem[]>([])
   const [q, setQ] = useState('')
   const [viewingRangeId, setViewingRangeId] = useState('')
+  const [candidatesOnly, setCandidatesOnly] = useState(false)
   const [viewingRanges, setViewingRanges] = useState<MasterItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<Record<string, boolean>>({})
@@ -24,7 +32,8 @@ export function RagAdminPage () {
       fetchRagStatus(),
       fetchRagFiles({
         ...(q ? { q } : {}),
-        ...(viewingRangeId ? { viewing_range_id: viewingRangeId } : {})
+        ...(viewingRangeId ? { viewing_range_id: viewingRangeId } : {}),
+        ...(candidatesOnly ? { knowledge_candidates_only: 'true' } : {})
       })
     ])
     setStatus(s)
@@ -62,6 +71,10 @@ export function RagAdminPage () {
         <span>埋め込み待ち: {status.embedding_pending}</span>
         <span>失敗: {status.pipeline_failed}</span>
         <span>同期済み: {status.vectors_synced}</span>
+        <span className={status.not_enabled_candidates > 0 ? 'stat-warn' : ''}>
+          未ナレッジ化候補: {status.not_enabled_candidates}
+        </span>
+        <span>自動ON予約: {status.auto_enable_reserved}</span>
       </div>
 
       <div className="filter-panel">
@@ -73,6 +86,14 @@ export function RagAdminPage () {
             <option value="">すべて</option>
             {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
           </select>
+        </label>
+        <label className="inline-check">
+          <input
+            type="checkbox"
+            checked={candidatesOnly}
+            onChange={(e) => setCandidatesOnly(e.target.checked)}
+          />
+          未ナレッジ化候補のみ
         </label>
         <button type="button" onClick={() => void reload()}>再読み込み</button>
       </div>
@@ -86,13 +107,18 @@ export function RagAdminPage () {
             <th>種別</th>
             <th>閲覧範囲</th>
             <th>パイプライン</th>
+            <th>状態</th>
+            <th>自動ON予約</th>
             <th>㋹ RAG</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={`${item.source_kind}-${item.id}`}>
+            <tr
+              key={`${item.source_kind}-${item.id}`}
+              className={item.is_knowledge_candidate ? 'rag-row-candidate' : undefined}
+            >
               <td>{item.file_name}</td>
               <td>{item.source_kind === 'case_attachment' ? 'ケース添付' : '単独'}</td>
               <td>
@@ -102,6 +128,12 @@ export function RagAdminPage () {
                 )}
               </td>
               <td><span className={`status status-${item.extraction_status}`}>{item.pipeline_status}</span></td>
+              <td>
+                <span className={`rag-visibility rag-visibility-${item.rag_visibility_state}`}>
+                  {item.rag_visibility_label}
+                </span>
+              </td>
+              <td>{item.auto_enable_rag_on_extraction ? 'ON' : '—'}</td>
               <td>
                 <input
                   type="checkbox"

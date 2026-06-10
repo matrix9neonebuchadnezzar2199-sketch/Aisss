@@ -173,7 +173,11 @@ export type RagFileItem = {
   editable_viewing_range: boolean
   pipeline_status: string
   rag_enabled: boolean
+  auto_enable_rag_on_extraction: boolean
   extraction_status: string
+  rag_visibility_state: string
+  rag_visibility_label: string
+  is_knowledge_candidate: boolean
 }
 
 export async function fetchRagStatus (): Promise<{
@@ -181,6 +185,8 @@ export async function fetchRagStatus (): Promise<{
   embedding_pending: number
   pipeline_failed: number
   vectors_synced: number
+  not_enabled_candidates: number
+  auto_enable_reserved: number
 }> {
   return apiFetch('/api/rag/status')
 }

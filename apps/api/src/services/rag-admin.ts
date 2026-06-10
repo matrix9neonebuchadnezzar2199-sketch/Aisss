@@ -32,7 +32,7 @@ async function enqueueEmbeddingJob (
 }
 
 export async function getRagStatus (pool: pg.Pool) {
-  const [chunks, pending, failed, synced] = await Promise.all([
+  const [chunks, pending, failed, synced, attachCandidates, standaloneCandidates, autoReserved] = await Promise.all([
     pool.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM rag_chunks`),
     pool.query<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM jobs WHERE job_type = 'embedding' AND status = 'pending'`
@@ -42,13 +42,35 @@ export async function getRagStatus (pool: pg.Pool) {
     ),
     pool.query<{ count: string }>(
       `SELECT COUNT(*)::text AS count FROM rag_sync_states WHERE sync_status = 'synced'`
+    ),
+    pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM attachments
+       WHERE rag_enabled = FALSE
+         AND auto_enable_rag_on_extraction = FALSE
+         AND extraction_status = 'completed'`
+    ),
+    pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM standalone_files
+       WHERE deleted_at IS NULL
+         AND rag_enabled = FALSE
+         AND extraction_status = 'completed'`
+    ),
+    pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM attachments
+       WHERE rag_enabled = FALSE
+         AND auto_enable_rag_on_extraction = TRUE
+         AND extraction_status IN ('pending', 'running', 'completed')`
     )
   ])
+  const notEnabledCandidates =
+    Number(attachCandidates.rows[0]?.count ?? 0) + Number(standaloneCandidates.rows[0]?.count ?? 0)
   return {
     chunk_count: Number(chunks.rows[0]?.count ?? 0),
     embedding_pending: Number(pending.rows[0]?.count ?? 0),
     pipeline_failed: Number(failed.rows[0]?.count ?? 0),
-    vectors_synced: Number(synced.rows[0]?.count ?? 0)
+    vectors_synced: Number(synced.rows[0]?.count ?? 0),
+    not_enabled_candidates: notEnabledCandidates,
+    auto_enable_reserved: Number(autoReserved.rows[0]?.count ?? 0)
   }
 }
 
@@ -64,7 +86,11 @@ type RagFileRow = {
   editable_viewing_range: boolean
   pipeline_status: string
   rag_enabled: boolean
+  auto_enable_rag_on_extraction: boolean
   extraction_status: string
+  rag_visibility_state: RagVisibilityState
+  rag_visibility_label: string
+  is_knowledge_candidate: boolean
   tags?: string[]
   genre?: string
 }
@@ -89,18 +115,54 @@ function pipelineStatus (extraction: string, chunkCount: number, syncedCount: nu
   return 'ready'
 }
 
+export type RagVisibilityState =
+  | 'rag_enabled'
+  | 'auto_enable_reserved'
+  | 'knowledge_candidate'
+  | 'extraction_failed'
+  | 'extracting'
+  | 'rag_disabled'
+
+export function resolveRagVisibilityState (input: {
+  rag_enabled: boolean
+  auto_enable_rag_on_extraction: boolean
+  extraction_status: string
+}): {
+  state: RagVisibilityState
+  label: string
+  is_knowledge_candidate: boolean
+} {
+  if (input.rag_enabled) {
+    return { state: 'rag_enabled', label: 'RAG有効', is_knowledge_candidate: false }
+  }
+  if (input.extraction_status === 'failed') {
+    return { state: 'extraction_failed', label: '抽出失敗', is_knowledge_candidate: false }
+  }
+  if (input.extraction_status === 'pending' || input.extraction_status === 'running') {
+    return { state: 'extracting', label: '抽出中', is_knowledge_candidate: false }
+  }
+  if (input.auto_enable_rag_on_extraction) {
+    return { state: 'auto_enable_reserved', label: '自動ON予約', is_knowledge_candidate: false }
+  }
+  if (input.extraction_status === 'completed') {
+    return { state: 'knowledge_candidate', label: '未ナレッジ化候補', is_knowledge_candidate: true }
+  }
+  return { state: 'rag_disabled', label: 'RAG無効', is_knowledge_candidate: false }
+}
+
 export async function listRagFiles (
   pool: pg.Pool,
   query: {
     q?: string
     viewing_range_id?: string
     tag?: string
+    knowledge_candidates_only?: boolean
   }
 ): Promise<{ items: RagFileRow[] }> {
   const items: RagFileRow[] = []
 
   const attachSql = `
-    SELECT a.id, a.file_name, a.rag_enabled, a.extraction_status,
+    SELECT a.id, a.file_name, a.rag_enabled, a.auto_enable_rag_on_extraction, a.extraction_status,
            c.id AS case_id, c.display_id AS case_display_id, c.title AS case_title,
            (SELECT COUNT(*)::int FROM rag_chunks rc WHERE rc.attachment_id = a.id) AS chunk_count,
            (SELECT COUNT(*)::int FROM rag_sync_states rs
@@ -122,6 +184,11 @@ export async function listRagFiles (
     const title = `${row.case_title} / ${row.file_name}`
     if (query.q && !title.toLowerCase().includes(query.q.toLowerCase())) continue
 
+    const visibility = resolveRagVisibilityState({
+      rag_enabled: row.rag_enabled,
+      auto_enable_rag_on_extraction: row.auto_enable_rag_on_extraction === true,
+      extraction_status: row.extraction_status
+    })
     items.push({
       id: row.id,
       source_kind: 'case_attachment',
@@ -138,7 +205,11 @@ export async function listRagFiles (
         row.synced_count
       ),
       rag_enabled: row.rag_enabled,
+      auto_enable_rag_on_extraction: row.auto_enable_rag_on_extraction === true,
       extraction_status: row.extraction_status,
+      rag_visibility_state: visibility.state,
+      rag_visibility_label: visibility.label,
+      is_knowledge_candidate: visibility.is_knowledge_candidate,
       genre: 'case'
     })
   }
@@ -165,6 +236,11 @@ export async function listRagFiles (
     if (query.q && !row.title.toLowerCase().includes(query.q.toLowerCase())) continue
     if (query.tag && !(row.tags ?? []).includes(query.tag)) continue
 
+    const visibility = resolveRagVisibilityState({
+      rag_enabled: row.rag_enabled,
+      auto_enable_rag_on_extraction: false,
+      extraction_status: row.extraction_status
+    })
     items.push({
       id: row.id,
       source_kind: 'standalone',
@@ -181,13 +257,20 @@ export async function listRagFiles (
         row.synced_count
       ),
       rag_enabled: row.rag_enabled,
+      auto_enable_rag_on_extraction: false,
       extraction_status: row.extraction_status,
+      rag_visibility_state: visibility.state,
+      rag_visibility_label: visibility.label,
+      is_knowledge_candidate: visibility.is_knowledge_candidate,
       tags: row.tags ?? [],
       genre: 'standalone_reference'
     })
   }
 
-  return { items }
+  const filtered = query.knowledge_candidates_only
+    ? items.filter((item) => item.is_knowledge_candidate)
+    : items
+  return { items: filtered }
 }
 
 export async function getRagTree (pool: pg.Pool) {
