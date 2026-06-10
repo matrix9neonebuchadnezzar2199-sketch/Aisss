@@ -79,6 +79,10 @@ export function RegisterPage () {
     setSaving(true)
     setError(null)
     try {
+      if (form.viewing_range_ids.length === 0) {
+        setError('閲覧範囲を1つ以上選択してください。全員公開や管理者のみの場合も明示的に選択してください。')
+        return
+      }
       const payload = {
         ...form,
         material_type_id: form.material_type_id || null,
@@ -144,14 +148,16 @@ export function RegisterPage () {
         <label>事象終了日
           <input type="date" value={form.event_end_date} onChange={(e) => update('event_end_date', e.target.value)} />
         </label>
-        <label>閲覧範囲
+        <label>閲覧範囲 *
           <select
             multiple
+            required
             value={form.viewing_range_ids}
             onChange={(e) => update('viewing_range_ids', Array.from(e.target.selectedOptions, (o) => o.value))}
           >
             {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
+          <span className="hint">必ず1つ以上選択してください。「全員」「管理者のみ」も閲覧範囲として選択します。</span>
         </label>
         <label className="full">要約
           <textarea rows={3} value={form.summary} onChange={(e) => update('summary', e.target.value)} />

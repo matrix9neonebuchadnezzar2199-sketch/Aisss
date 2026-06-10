@@ -181,10 +181,10 @@ async function validateRow (
     }
     parsed.viewing_range_ids = ids
   } else {
-    warnings.push({
-      level: 'warning',
+    errors.push({
+      level: 'error',
       code: 'missing_viewing_range',
-      message: 'No viewing_ranges set.'
+      message: 'viewing_ranges is required.'
     })
     parsed.viewing_range_ids = []
   }

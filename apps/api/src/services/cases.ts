@@ -5,6 +5,7 @@ import { canAccessCase, isAdmin } from './permissions.js'
 import { nextDisplayId } from './display-id.js'
 import { writeAuditLog } from './audit.js'
 import { enqueueCaseBodyEmbedding } from './rag-admin.js'
+import { ALL_USERS_VIEWING_RANGE_ID } from '../lib/viewing-ranges.js'
 
 export type CaseInput = {
   material_number?: string | null
@@ -77,9 +78,17 @@ function permissionSql (user: AuthUser, paramIndex: number): string {
   if (isAdmin(user)) return 'TRUE'
   return `EXISTS (
     SELECT 1 FROM case_viewing_ranges cvr
-    JOIN group_viewing_ranges gvr ON gvr.viewing_range_id = cvr.viewing_range_id
-    JOIN user_groups ug ON ug.group_id = gvr.group_id
-    WHERE cvr.case_id = c.id AND ug.user_id = $${paramIndex}
+    WHERE cvr.case_id = c.id
+      AND (
+        cvr.viewing_range_id = '${ALL_USERS_VIEWING_RANGE_ID}'::uuid
+        OR EXISTS (
+          SELECT 1
+          FROM group_viewing_ranges gvr
+          JOIN user_groups ug ON ug.group_id = gvr.group_id
+          WHERE gvr.viewing_range_id = cvr.viewing_range_id
+            AND ug.user_id = $${paramIndex}
+        )
+      )
   )`
 }
 
@@ -267,6 +276,21 @@ async function syncJoinIds (
   }
 }
 
+function requireViewingRanges (
+  ids: string[] | undefined,
+  context: 'create' | 'update'
+) {
+  if (ids === undefined) {
+    if (context === 'create') {
+      throw new AppError('validation_error', 'viewing_range_ids must contain at least one item.', 400)
+    }
+    return
+  }
+  if (ids.length === 0) {
+    throw new AppError('validation_error', 'viewing_range_ids must contain at least one item.', 400)
+  }
+}
+
 export async function createCase (
   pool: pg.Pool,
   user: AuthUser,
@@ -275,6 +299,7 @@ export async function createCase (
   if (!input.title?.trim()) {
     throw new AppError('validation_error', 'title is required.', 400)
   }
+  requireViewingRanges(input.viewing_range_ids, 'create')
 
   const client = await pool.connect()
   try {
@@ -368,6 +393,7 @@ export async function updateCase (
   caseId: string,
   input: Partial<CaseInput>
 ) {
+  requireViewingRanges(input.viewing_range_ids, 'update')
   const existing = await getCaseById(pool, user, caseId)
   const fields: string[] = []
   const values: unknown[] = []

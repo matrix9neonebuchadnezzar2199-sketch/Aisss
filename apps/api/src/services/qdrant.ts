@@ -1,4 +1,5 @@
 import { AppError } from '../lib/errors.js'
+import { ALL_USERS_VIEWING_RANGE_ID } from '../lib/viewing-ranges.js'
 
 export type QdrantPoint = {
   id: string
@@ -100,13 +101,11 @@ export function buildViewingRangeFilter (
   isAdmin: boolean
 ): Record<string, unknown> | undefined {
   if (isAdmin) return undefined
-  if (viewingRangeIds.length === 0) {
-    return { must: [{ key: 'viewing_range_ids', match: { any: ['__none__'] } }] }
-  }
+  const allowedRangeIds = Array.from(new Set([...viewingRangeIds, ALL_USERS_VIEWING_RANGE_ID]))
   return {
     must: [
       { key: 'rag_enabled', match: { value: true } },
-      { key: 'viewing_range_ids', match: { any: viewingRangeIds } }
+      { key: 'viewing_range_ids', match: { any: allowedRangeIds } }
     ]
   }
 }

@@ -28,7 +28,7 @@ Use the downloadable template from `GET /api/imports/excel/template` or the colu
 | `reliability` | No | Master name (strict) |
 | `accuracy` | No | Master name (strict) |
 | `rank` | No | Master name (strict) |
-| `viewing_ranges` | No | Semicolon-separated master names |
+| `viewing_ranges` | **Yes** | Semicolon-separated master names |
 | `conditions` | No | Semicolon-separated condition names |
 | `classification_number` | No | 分類番号 |
 | `keyword1` … `keyword6` | No | Auto-created on confirm if new |
