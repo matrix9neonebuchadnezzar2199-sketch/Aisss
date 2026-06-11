@@ -53,11 +53,13 @@ test('probeEmbeddingModel returns vector length from embed function', async () =
 test('probeEmbeddingModel throws 400 AppError when embed fails', async () => {
   await assert.rejects(
     () => probeEmbeddingModel('http://ollama', 'bad-model', async () => {
-      throw new Error('model does not support embeddings')
+      throw new AppError('ollama_error', 'Ollama embed failed: HTTP 500: model does not support embeddings', 502)
     }),
     (error: unknown) => {
       assert.ok(error instanceof AppError)
       assert.equal(error.statusCode, 400)
+      assert.equal(error.code, 'validation_error')
+      assert.match(error.message, /model does not support embeddings/)
       return true
     }
   )

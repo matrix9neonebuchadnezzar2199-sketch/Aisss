@@ -1,23 +1,68 @@
 import { AppError } from '../lib/errors.js'
 
+type OllamaEmbedResponse = {
+  embeddings?: number[][]
+  embedding?: number[]
+}
+
+async function readOllamaErrorDetail (response: Response): Promise<string> {
+  try {
+    const body = await response.json() as { error?: string }
+    if (typeof body.error === 'string' && body.error.trim()) {
+      return `${response.status}: ${body.error.trim()}`
+    }
+  } catch {
+    // 本文が JSON でない場合は status のみ
+  }
+  return `HTTP ${response.status}`
+}
+
+function extractEmbeddingVector (body: OllamaEmbedResponse): number[] | null {
+  const fromBatch = body.embeddings?.[0]
+  if (fromBatch?.length) return fromBatch
+  if (body.embedding?.length) return body.embedding
+  return null
+}
+
+/** Ollama `/api/embed`（現行）→ 404 時のみ legacy `/api/embeddings` にフォールバック */
 export async function embedText (
   baseUrl: string,
   model: string,
   text: string
 ): Promise<number[]> {
-  const response = await fetch(new URL('/api/embeddings', baseUrl), {
+  const embedResponse = await fetch(new URL('/api/embed', baseUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, input: text })
+  })
+
+  if (embedResponse.ok) {
+    const body = await embedResponse.json() as OllamaEmbedResponse
+    const vector = extractEmbeddingVector(body)
+    if (vector) return vector
+    throw new AppError('ollama_error', 'Ollama returned empty embedding.', 502)
+  }
+
+  if (embedResponse.status !== 404) {
+    const detail = await readOllamaErrorDetail(embedResponse)
+    throw new AppError('ollama_error', `Ollama embed failed: ${detail}`, 502)
+  }
+
+  const legacyResponse = await fetch(new URL('/api/embeddings', baseUrl), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, prompt: text })
   })
-  if (!response.ok) {
-    throw new AppError('ollama_error', `Ollama embeddings failed: HTTP ${response.status}`, 502)
+  if (!legacyResponse.ok) {
+    const detail = await readOllamaErrorDetail(legacyResponse)
+    throw new AppError('ollama_error', `Ollama embeddings failed: ${detail}`, 502)
   }
-  const body = await response.json() as { embedding?: number[] }
-  if (!body.embedding?.length) {
+  const legacyBody = await legacyResponse.json() as OllamaEmbedResponse
+  const legacyVector = extractEmbeddingVector(legacyBody)
+  if (!legacyVector) {
     throw new AppError('ollama_error', 'Ollama returned empty embedding.', 502)
   }
-  return body.embedding
+  return legacyVector
 }
 
 export async function chatCompletion (

@@ -51,7 +51,16 @@ export async function probeEmbeddingModel (
     }
     return vector.length
   } catch (error) {
-    if (error instanceof AppError) throw error
+    if (error instanceof AppError) {
+      if (error.code === 'ollama_error') {
+        throw new AppError(
+          'validation_error',
+          `Embedding precheck failed for "${modelName}": ${error.message}`,
+          400
+        )
+      }
+      throw error
+    }
     const message = error instanceof Error ? error.message : String(error)
     throw new AppError(
       'validation_error',
