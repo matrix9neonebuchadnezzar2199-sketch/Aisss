@@ -10,6 +10,7 @@ import { getCaseById } from './cases.js'
 import { isOperator } from './permissions.js'
 import { deleteObject, putObject } from './storage.js'
 import { writeAuditLog } from './audit.js'
+import { deleteJobsForAttachment } from './job-cleanup.js'
 import { purgeRagDataForSource } from './rag-admin.js'
 
 // RAG 自動有効化の予約は実質的な RAG 有効化トリガーのため、手動有効化（setRagEnabled）と同じく operator 以上に限定する
@@ -233,10 +234,23 @@ export async function deleteAttachment (
   if (!row) throw new AppError('not_found', 'Attachment not found.', 404)
 
   await purgeRagDataForSource(pool, settings, attachmentId, 'attachment')
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await deleteJobsForAttachment(client, attachmentId)
+    await client.query(`DELETE FROM attachments WHERE id = $1`, [attachmentId])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+
   if (row.storage_key) {
     await deleteObject(storage, storageConfig.bucket, row.storage_key).catch(() => {})
   }
-  await pool.query(`DELETE FROM attachments WHERE id = $1`, [attachmentId])
 
   await writeAuditLog(pool, {
     userId: user.id,

@@ -11,6 +11,7 @@ import { writeAuditLog } from './audit.js'
 import { deletePoints } from './qdrant.js'
 import type { Settings } from '../settings.js'
 import { getRagStorageBreakdown } from './rag-storage-breakdown.js'
+import { deleteJobsForStandaloneFile } from './job-cleanup.js'
 
 function requireOperator (user: AuthUser) {
   if (!isAdmin(user) && user.role !== 'operator') {
@@ -654,6 +655,7 @@ export async function deleteStandaloneFile (
   if (!rows[0]) throw new AppError('not_found', 'Standalone file not found.', 404)
 
   await purgeRagDataForSource(pool, settings, fileId, 'standalone')
+  await deleteJobsForStandaloneFile(pool, fileId)
   await pool.query(
     `UPDATE standalone_files SET deleted_at = NOW(), rag_enabled = FALSE, updated_at = NOW()
      WHERE id = $1`,
