@@ -158,8 +158,55 @@ a.nav-link-style:hover {
   margin: 0;
 }
 
+.excel-import-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.excel-import-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.excel-import-hint {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
+/* Mock-style drop zone: hide native file widget (prevents overlap / white OS button) */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 5.5rem;
+}
+
+.upload-zone-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-zone-label {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
 .excel-import-embedded .upload-zone {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .excel-import-panel .preview-block,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getUserId } from '../lib/api'
 
@@ -50,6 +50,7 @@ async function downloadTemplate () {
 }
 
 export function ExcelImportPanel ({ embedded = false }: { embedded?: boolean }) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<PreviewResult | null>(null)
   const [confirm, setConfirm] = useState<ConfirmResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -107,7 +108,7 @@ export function ExcelImportPanel ({ embedded = false }: { embedded?: boolean }) 
   return (
     <section className={`excel-import-panel${embedded ? ' excel-import-embedded' : ''}`}>
       {!embedded && <h3>Excel 一括取り込み</h3>}
-      <p className="rag-register-note">
+      <div className="excel-import-toolbar">
         <button
           type="button"
           className="btn btn-sm btn-excel"
@@ -117,17 +118,31 @@ export function ExcelImportPanel ({ embedded = false }: { embedded?: boolean }) 
         >
           テンプレートをダウンロード
         </button>
-        {' '}プレビュー → 確認の 2 段階。エラー行はスキップされます。
-      </p>
-      <label className="upload-zone">
+        <p className="rag-register-note excel-import-hint">
+          プレビュー → 確認の 2 段階。エラー行はスキップされます。
+        </p>
+      </div>
+      <div className="upload-zone">
         <input
+          ref={fileInputRef}
           type="file"
+          className="upload-zone-file"
           accept=".xlsx,.xls,.csv"
           disabled={loading}
           onChange={(e) => void uploadPreview(e.target.files)}
         />
-        {loading ? '処理中…' : 'Excel ファイルを選択してプレビュー'}
-      </label>
+        <p className="upload-zone-label">
+          {loading ? '処理中…' : 'Excel ファイルを選択してプレビュー'}
+        </p>
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={loading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          ファイルを選択
+        </button>
+      </div>
       {error && <p className="error">{error}</p>}
 
       {preview && (

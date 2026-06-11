@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   downloadAttachment,
   fetchExtractedText,
@@ -16,6 +16,7 @@ type AttachmentPanelProps = {
 }
 
 export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [items, setItems] = useState<AttachmentItem[]>(initial)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -104,15 +105,27 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
         />
         抽出成功後に自動でRAG有効化する
       </label>
-      <label className="upload-zone">
+      <div className="upload-zone">
         <input
+          ref={fileInputRef}
           type="file"
+          className="upload-zone-file"
           multiple
           disabled={uploading}
           onChange={(e) => void onFileChange(e.target.files)}
         />
-        {uploading ? 'アップロード中…' : 'ファイルを選択（PDF / TXT / DOCX 等）'}
-      </label>
+        <p className="upload-zone-label">
+          {uploading ? 'アップロード中…' : 'ファイルを選択（PDF / TXT / DOCX 等）'}
+        </p>
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          ファイルを選択
+        </button>
+      </div>
       {error && <p className="error">{error}</p>}
       <ul className="attachment-list">
         {items.map((item) => (
