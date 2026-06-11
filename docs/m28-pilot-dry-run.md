@@ -1,63 +1,63 @@
-# M28 Pilot Dry Run / Go-No-Go
+# M28 パイロット dry-run / Go-No-Go
 
-M28 gate before wider pilot. Complements [19-operational-runbook.md](./19-operational-runbook.md) and [20-webui-wiring-checklist.md](./20-webui-wiring-checklist.md#m28-pilot-dry-run--go-no-go).
+wider pilot 前の M28 gate。詳細運用は [19-operational-runbook.md](./19-operational-runbook.md)、WebUI 観点は [20-webui-wiring-checklist.md](./20-webui-wiring-checklist.md#m28-pilot-dry-run--go-no-go) を参照。
 
-## Prerequisites
+## 前提
 
-| Item | Windows (PowerShell) | Unix |
+| 項目 | Windows (PowerShell) | Unix |
 |---|---|---|
-| Stack up | `docker compose -f aisss/docker-compose.yaml up -d` | `make up` |
-| Host Ollama | `ollama list` shows chat model | same |
-| Dev users | admin `…000001`, operator `…000002`, pilot `…000003` | seed `003_dev_seed.sql`, `007_m6_m7_ops_pilot.sql` |
+| スタック起動 | `docker compose -f aisss/docker-compose.yaml up -d` | `make up` |
+| ホスト Ollama | `ollama list` で chat モデルが見える | 同上 |
+| 開発ユーザー | admin `…000001`, operator `…000002`, pilot `…000003` | seed `003_dev_seed.sql`, `007_m6_m7_ops_pilot.sql` |
 
-## Automated baseline (run first)
+## 自動 baseline（最初に実行）
 
 ```powershell
 cd F:\Cursor\Aisss
 pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck
 ```
 
-Covers: `/api/health`, `/api/ollama/health`, `rag-eval.test.ts`, full API/worker tests, web build, Docker verify, admin dashboard, optional `POST /api/admin/backup-checks`.
+対象: `/api/health`, `/api/ollama/health`, `rag-eval.test.ts`, API/worker 全テスト, web build, Docker verify, 管理ダッシュボード, 任意で `POST /api/admin/backup-checks`。
 
-## Manual dry-run steps (12)
+## 手動 dry-run（12 ステップ）
 
-Record each step as **ok | warn | err** in [m28-go-no-go-results.md](./m28-go-no-go-results.md) and `ObsidianVault/90_DevLog/YYYY-MM-DD.md`.
+各ステップを **ok | warn | err** で [m28-go-no-go-results.md](./m28-go-no-go-results.md) と `ObsidianVault/90_DevLog/YYYY-MM-DD.md` に記録する。
 
-| Step | Actor | Action | Expected | Evidence location |
+| Step | 担当 | 操作 | 期待結果 | 証跡の場所 |
 |---|---|---|---|---|
-| 1 | Admin | Stack + `/api/health` | 200, `status: ok` | pilot-smoke `api_health` |
-| 2 | Admin | Register case, viewing range `全員` | Saved; PATCH rejects empty ranges | `/register`, audit `case.create` |
-| 3 | Operator | Upload PDF, auto-enable OFF | `extraction_status=succeeded`, RAG OFF | `/cases/:id`, `/jobs` |
-| 4 | Operator | Enable `抽出後RAG自動ON`, re-upload | `auto_enable_rag_on_extraction=true` | attachment row |
-| 5 | Operator | `/rag` | 未ナレッジ化候補 visible | stats card + table highlight |
-| 6 | Operator | Enable RAG on extracted file | embedding job `pending`→`completed` | `/jobs?job_type=embedding` |
-| 7 | Pilot | `/ai` query on in-range case | Citation with authorized `display_id` only | chat + audit `ai.chat` |
-| 8 | Pilot | Query re `照会禁止` case | No citation/context leak | pilot-smoke `rag_eval` + manual spot-check |
-| 9 | Pilot | `/search` or case list | Sees `全員` cases only, not analyst-only | switch user header / UI |
-| 10 | Admin | `/audit?query_id=…` | `details_json.excluded_counts` present; no denied titles | audit detail dialog |
-| 11 | Operator | `/jobs` retry failed job | Status → pending; audit `job.retry` | jobs table + audit |
-| 12 | All | CI parity | Tests + build green | pilot-smoke summary |
+| 1 | Admin | スタック + `/api/health` | 200, `status: ok` | pilot-smoke `api_health` |
+| 2 | Admin | ケース登録、閲覧範囲 `全員` | 保存成功; 空範囲は PATCH 拒否 | `/register`, audit `case.create` |
+| 3 | Operator | PDF アップロード、自動 ON は OFF | `extraction_status=succeeded`, RAG OFF | `/cases/:id`, `/jobs` |
+| 4 | Operator | `抽出後RAG自動ON` を有効化して再アップロード | `auto_enable_rag_on_extraction=true` | attachment 行 |
+| 5 | Operator | `/rag` | 未ナレッジ化候補が表示される | stats カード + テーブルハイライト |
+| 6 | Operator | 抽出済みファイルで RAG 有効化 | embedding job `pending`→`completed` | `/jobs?job_type=embedding` |
+| 7 | Pilot | 範囲内ケースで `/ai` 照会 | 許可された `display_id` の citation のみ | チャット + audit `ai.chat` |
+| 8 | Pilot | `照会禁止` ケースに触れる照会 | citation / コンテキスト漏洩なし | pilot-smoke `rag_eval` + 手動 spot-check |
+| 9 | Pilot | `/search` またはケース一覧 | `全員` のみ見える。analyst-only は不可 | ユーザ切替 / UI |
+| 10 | Admin | `/audit?query_id=…` | `details_json.excluded_counts` あり; 禁止タイトル漏洩なし | audit 詳細ダイアログ |
+| 11 | Operator | `/jobs` で失敗 job を retry | status → pending; audit `job.retry` | jobs 表 + audit |
+| 12 | All | CI 同等 | テスト + build 成功 | pilot-smoke サマリ |
 
-## Go / No-Go criteria
+## Go / No-Go 判定
 
-| Decision | Condition |
+| 判定 | 条件 |
 |---|---|
-| **Go** | All automated smoke steps ok; manual steps 2–11 ok or warn with documented owner+date; backup-check recorded; no open **err** blockers |
-| **Conditional go** | Ollama warn only (step 1 ok, ollama warn); manual RAG/AI steps deferred 1 week with owner |
-| **No-go** | Any **err** on permission regression (step 8), audit leak (step 10), or failed job retry broken (step 11) |
+| **Go** | 自動 smoke 全項目 ok; 手動 steps 2–11 が ok、または owner+期限付き warn; backup-check 記録済; **err** blocker なし |
+| **Conditional go（条件付き Go）** | Ollama のみ warn（step 1 ok, ollama warn）; 手動 RAG/AI ステップは owner 付きで 1 週間延期 |
+| **No-go** | 権限回帰 **err**（step 8）、audit 漏洩 **err**（step 10）、job retry 不具合 **err**（step 11）のいずれか |
 
-## Blocker → backlog routing
+## Blocker → backlog 振り分け
 
-| Pattern | Route |
+| パターン | 行き先 |
 |---|---|
-| UI/layout regression | M28 fix PR → re-run affected checklist rows |
-| OCR/ASR needed (2+ pilot files) | Post-MVP per runbook cut criteria |
-| Retrieval quality misses | M26 eval expansion + embedding model review |
-| Missing audit keys | API fix + re-run step 10 |
+| UI / レイアウト回帰 | M28 fix PR → 該当 checklist 行を再実行 |
+| OCR/ASR 必要（パイロットファイル 2 件以上） | runbook の cut 基準どおり Post-MVP |
+| 検索品質ミス | M26 eval 拡張 + embedding モデル見直し |
+| audit キー欠落 | API 修正 + step 10 再実行 |
 
-## Persona header (dev)
+## ペルソナ切替（開発）
 
-Set in WebUI home or `localStorage` / request header:
+WebUI ホームまたは `localStorage` / リクエストヘッダで設定:
 
 - Admin: `X-AISSS-User-Id: 00000000-0000-4000-8000-000000000001`
 - Operator: `00000000-0000-4000-8000-000000000002`

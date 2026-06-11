@@ -201,16 +201,16 @@ Create explicit Post-MVP tasks when pilot feedback shows one of these patterns:
 
 Run once with admin, operator, and pilot users before loading representative production data.
 
-**M28 gate:** Use [m28-pilot-dry-run.md](./m28-pilot-dry-run.md) for full procedure, go/no-go criteria, and [m28-go-no-go-results.md](./m28-go-no-go-results.md) for per-step recording.
+**M28 gate:** 手順・go/no-go 基準は [m28-pilot-dry-run.md](./m28-pilot-dry-run.md)、ステップ別記録は [m28-go-no-go-results.md](./m28-go-no-go-results.md)。
 
-### Automated baseline (Windows)
+### 自動 baseline（Windows）
 
 ```powershell
 cd F:\Cursor\Aisss
 pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck
 ```
 
-Equivalent checks without `make`:
+`make` なしで同等確認する場合:
 
 ```powershell
 docker compose -f aisss/docker-compose.yaml up -d
@@ -219,7 +219,7 @@ npm test -w @aisss/api -- src/rag-eval.test.ts
 pwsh scripts/verify-docker-deploy.ps1
 ```
 
-Record smoke output in `90_DevLog/` and update `m28-go-no-go-results.md`.
+smoke 出力は `90_DevLog/` に記録し、`m28-go-no-go-results.md` を更新する。
 
 | Step | Actor | Route / action | Expected result | Automated check |
 |---|---|---|---|---|
@@ -236,7 +236,7 @@ Record smoke output in `90_DevLog/` and update `m28-go-no-go-results.md`.
 | 11 | Operator | `/jobs` failed job retry | Retry audit recorded | Manual |
 | 12 | All | `npm test` + `npm run build` | Green before pilot week | CI |
 
-Record dry-run outcomes in `90_DevLog/` with `status: ok|warn|err` per step. Blockers become M28 fix tasks (or Post-MVP if cut criteria match).
+dry-run 結果は `90_DevLog/` にステップごと `status: ok|warn|err` で記録する。blocker は M28 fix タスク（cut 基準に合えば Post-MVP）へ振り分ける。
 
 ## Deploy verification (running containers)
 

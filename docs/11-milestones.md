@@ -351,27 +351,27 @@ Done when:
 - PostgreSQL/MinIO/Qdrant rebuild steps documented and verifiable.
 - Wider pilot decision materials in `/admin`, `/jobs`, `/audit`, DevLog.
 
-## Milestone 28: Pilot Dry Run / Go-No-Go Closure
+## Milestone 28: パイロット dry-run / Go-No-Go クローズ
 
-Goal: Execute wider-pilot gate with recorded evidence — not new feature scope.
+目的: 新機能追加ではなく、証跡付きで wider pilot gate を実行する。
 
-Deliverables:
+成果物:
 
-- [M28 pilot dry-run guide](./m28-pilot-dry-run.md) with 12-step checklist and go/no-go criteria.
-- [M28 go/no-go results](./m28-go-no-go-results.md) with per-step `ok|warn|err`.
-- `scripts/pilot-smoke.ps1` for automated baseline (health, rag-eval, tests, build, Docker verify, optional backup-check).
-- [WebUI Wiring Checklist § M28](./20-webui-wiring-checklist.md#m28-pilot-dry-run--go-no-go) sign-off.
-- DevLog entry with decision summary and Post-MVP backlog items.
+- [M28 dry-run 手順](./m28-pilot-dry-run.md) — 12 ステップ checklist と go/no-go 基準。
+- [M28 go/no-go 結果](./m28-go-no-go-results.md) — ステップ別 `ok|warn|err`。
+- `scripts/pilot-smoke.ps1` — 自動 baseline（health, rag-eval, tests, build, Docker verify, 任意 backup-check）。
+- [WebUI Wiring Checklist § M28](./20-webui-wiring-checklist.md#m28-pilot-dry-run--go-no-go) sign-off。
+- 判定サマリと Post-MVP backlog を含む DevLog エントリ。
 
-Done when:
+完了条件:
 
-- Dry-run 12 steps recorded (automated + manual).
-- `POST /api/admin/backup-checks` evidence exists for full-stack or component scopes.
-- AI audit shows `excluded_counts` without denied titles (step 10).
-- Job retry / DLQ visible and auditable (step 11).
-- `pilot-smoke.ps1` exits 0 on gate environment.
+- dry-run 12 ステップを記録済（自動 + 手動）。
+- `POST /api/admin/backup-checks` に full-stack またはコンポーネント scope の証跡がある。
+- AI audit に `excluded_counts` があり、禁止タイトル漏洩なし（step 10）。
+- Job retry / DLQ が表示・監査可能（step 11）。
+- gate 環境で `pilot-smoke.ps1` が exit 0。
 
-**Non-scope:** OCR/ASR implementation, MAP search, ReRank execution ON, new registration/search fields.
+**スコープ外:** OCR/ASR 実装、MAP 検索、ReRank 実行 ON、登録/検索フィールドの新規追加。
 
 ## Post-MVP Ideas
 

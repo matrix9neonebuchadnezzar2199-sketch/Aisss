@@ -162,40 +162,40 @@ Pilot regression closure after M21 RAG delete FK fix and extended search/registe
 | `verify-docker-deploy.ps1` | ok |
 | Regression table above | ok — API/unit coverage; pilot browser walkthrough: warn |
 
-## M28 Pilot Dry Run / Go-No-Go
+## M28 パイロット dry-run / Go-No-Go
 
-Wider pilot gate. Full procedure: [m28-pilot-dry-run.md](./m28-pilot-dry-run.md). Results: [m28-go-no-go-results.md](./m28-go-no-go-results.md).
+wider pilot 前の gate。手順: [m28-pilot-dry-run.md](./m28-pilot-dry-run.md)。結果: [m28-go-no-go-results.md](./m28-go-no-go-results.md)。
 
-### Automated baseline
+### 自動 baseline
 
 ```powershell
 pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck
 ```
 
-### Manual persona walkthrough
+### 手動 persona walkthrough
 
-| Step | Area | Actor | Expected |
+| Step | 領域 | 担当 | 期待結果 |
 |---|---|---|---|
-| 2 | Case register + viewing range | Admin | `全員` required; PATCH rejects empty |
-| 3–4 | Attachment extract + auto-RAG reservation | Operator | extract ok; reservation flag stored |
-| 5–6 | RAG admin enable + embedding | Operator | 未ナレッジ化候補 → job completed |
-| 7–9 | AI + permission list | Pilot | in-range citation only; no analyst-only leak |
-| 10 | Audit AI query | Admin | `excluded_counts`; no denied titles |
+| 2 | ケース登録 + 閲覧範囲 | Admin | `全員` 必須; 空範囲は PATCH 拒否 |
+| 3–4 | 添付抽出 + RAG 自動 ON 予約 | Operator | 抽出成功; 予約フラグ保存 |
+| 5–6 | RAG 管理で有効化 + embedding | Operator | 未ナレッジ化候補 → job completed |
+| 7–9 | AI + 権限付き一覧 | Pilot | 範囲内 citation のみ; analyst-only 漏洩なし |
+| 10 | AI 照会 audit | Admin | `excluded_counts`; 禁止タイトル漏洩なし |
 | 11 | Job retry | Operator | retry → pending; audit `job.retry` |
 
 ### Go / No-Go
 
-| Decision | Criteria |
+| 判定 | 条件 |
 |---|---|
-| Go | `pilot-smoke.ps1` exit 0; steps 2–11 ok or documented warn; backup-check recorded |
-| No-go | err on step 8 (permission), 10 (audit leak), or 11 (retry broken) |
+| Go | `pilot-smoke.ps1` exit 0; steps 2–11 が ok または文書化済 warn; backup-check 記録済 |
+| No-go | step 8（権限）, 10（audit 漏洩）, 11（retry 不具合）のいずれか err |
 
 ### M28 sign-off
 
-| Check | Result |
+| チェック | 結果 |
 |---|---|
-| `pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck` | ok (2026-06-11, exit 0 after web redeploy bfe90e7) |
-| Manual steps 2–7, 9, 11 | warn — operator env pending |
-| Automated step 8 (rag-eval) + 10 (audit keys) | ok |
-| `docs/m28-go-no-go-results.md` | ok — **Conditional Go** |
-| DevLog M28 entry | ok (2026-06-11) |
+| `pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck` | ok（2026-06-11, web redeploy bfe90e7 後 exit 0） |
+| 手動 steps 2–7, 9, 11 | warn — operator 環境待ち |
+| 自動 step 8（rag-eval）+ 10（audit キー） | ok |
+| `docs/m28-go-no-go-results.md` | ok — **Conditional Go（条件付き Go）** |
+| DevLog M28 エントリ | ok（2026-06-11） |
