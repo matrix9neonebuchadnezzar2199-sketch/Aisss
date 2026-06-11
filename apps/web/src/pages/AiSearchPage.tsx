@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { AiChatComposer } from '../components/ai/AiChatComposer'
+import { AiHistorySidebar } from '../components/ai/AiHistorySidebar'
+import { AiMessageList } from '../components/ai/AiMessageList'
+import { useAiChatHistory } from '../hooks/useAiChatHistory'
+import { useMe } from '../hooks/useMe'
 import {
   fetchAuditLogByQueryId,
   fetchOllamaHealth,
@@ -8,20 +13,34 @@ import {
   type AiChatResponse,
   type AuditLogEntry
 } from '../lib/api'
+import type { AiChatMessage } from '../types/ai-chat'
 
 export function AiSearchPage () {
   const [searchParams] = useSearchParams()
   const queryIdParam = searchParams.get('query_id')
+  const me = useMe()
+  const {
+    sessions,
+    activeSession,
+    activeSessionId,
+    ensureActiveSession,
+    startNewSession,
+    selectSession,
+    deleteSession,
+    appendToActiveSession
+  } = useAiChatHistory(me?.user_id)
+
   const [message, setMessage] = useState('')
   const [model, setModel] = useState('')
   const [models, setModels] = useState<string[]>([])
   const [ollamaStatus, setOllamaStatus] = useState('unknown')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<AiChatResponse | null>(null)
+  const [lastPolicies, setLastPolicies] = useState<AiChatResponse['effective_policies'] | null>(null)
   const [copied, setCopied] = useState(false)
   const [auditRef, setAuditRef] = useState<AuditLogEntry | null>(null)
   const [auditRefError, setAuditRefError] = useState<string | null>(null)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
   useEffect(() => {
     void Promise.all([fetchOllamaModels(), fetchOllamaHealth()]).then(([m, h]) => {
@@ -33,6 +52,11 @@ export function AiSearchPage () {
       setOllamaStatus(h.status)
     }).catch((e: Error) => setError(e.message))
   }, [])
+
+  useEffect(() => {
+    if (!me?.user_id) return
+    if (sessions.length === 0) startNewSession()
+  }, [me?.user_id, sessions.length, startNewSession])
 
   useEffect(() => {
     if (!queryIdParam) {
@@ -51,13 +75,42 @@ export function AiSearchPage () {
       })
   }, [queryIdParam])
 
+  const messages = activeSession?.messages ?? []
+  const auditModel = auditRef?.details_json?.model as string | undefined
+  const chatDisabled = ollamaStatus === 'down'
+
   async function onSubmit () {
-    if (!message.trim() || ollamaStatus === 'down') return
+    const text = message.trim()
+    if (!text || chatDisabled) return
+
+    ensureActiveSession()
     setLoading(true)
     setError(null)
+
+    const userMsg: AiChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: text,
+      createdAt: new Date().toISOString(),
+      model,
+      attachments: pendingFiles.map((f) => ({ name: f.name, size: f.size }))
+    }
+    appendToActiveSession([userMsg])
+    setMessage('')
+    setPendingFiles([])
+
     try {
-      const res = await sendAiChat(message.trim(), model || undefined)
-      setResult(res)
+      const res = await sendAiChat(text, model || undefined)
+      setLastPolicies(res.effective_policies)
+      const assistantMsg: AiChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: res.answer,
+        createdAt: new Date().toISOString(),
+        queryId: res.query_id,
+        citations: res.citations
+      }
+      appendToActiveSession([assistantMsg])
     } catch (e) {
       setError(e instanceof Error ? e.message : '送信に失敗しました')
     } finally {
@@ -65,15 +118,9 @@ export function AiSearchPage () {
     }
   }
 
-  const printDisabled = result?.effective_policies.export_policy === 'deny_print' ||
-    result?.effective_policies.export_policy === 'deny_all'
-  const copyDisabled = result?.effective_policies.export_policy === 'deny_copy' ||
-    result?.effective_policies.export_policy === 'deny_all'
-
-  async function copyAnswer () {
-    if (!result || copyDisabled) return
+  async function copyAnswer (text: string) {
     try {
-      await navigator.clipboard.writeText(result.answer)
+      await navigator.clipboard.writeText(text)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -81,25 +128,40 @@ export function AiSearchPage () {
     }
   }
 
-  function printAnswer () {
-    if (printDisabled) return
-    window.print()
+  function onFilesSelected (files: FileList | null) {
+    if (!files?.length) return
+    setPendingFiles((prev) => [...prev, ...Array.from(files)])
   }
-
-  const auditModel = auditRef?.details_json?.model as string | undefined
 
   return (
     <section className="view active ai-page" id="view-ai">
-      <div className="panel">
-        <div className="panel-header">
-          <h2>AI 検索</h2>
-          <span className={`label label-${ollamaStatus === 'ok' ? 'success' : 'danger'}`} data-status={ollamaStatus}>
-            Ollama: {ollamaStatus}
-          </span>
-        </div>
-        <div className="panel-body">
+      <div className="ai-page-grid">
+        <AiHistorySidebar
+          sessions={sessions}
+          activeSessionId={activeSessionId}
+          onSelect={selectSession}
+          onNewChat={() => {
+            startNewSession()
+            setMessage('')
+            setPendingFiles([])
+            setError(null)
+          }}
+          onDelete={deleteSession}
+        />
+
+        <div className="ai-chat-shell">
+          <header className="ai-chat-header">
+            <div>
+              <h2>AI 検索</h2>
+              <p className="ai-chat-sub">権限フィルタ ON · 取扱条件を適用</p>
+            </div>
+            <span className={`label label-${ollamaStatus === 'ok' ? 'success' : 'danger'}`}>
+              Ollama: {ollamaStatus}
+            </span>
+          </header>
+
           {queryIdParam && (
-            <div className="policy-banner">
+            <div className="policy-banner ai-audit-banner">
               監査参照: クエリ ID <span className="mono">{queryIdParam}</span>
               {auditRef && (
                 <>
@@ -110,100 +172,41 @@ export function AiSearchPage () {
                 </>
               )}
               {auditRefError && <span className="error"> — {auditRefError}</span>}
-              <p className="meta" style={{ marginTop: 6 }}>
-                過去の質問・回答本文は監査ログに保存されていません。新しい質問を送信してください。
-              </p>
             </div>
           )}
 
-          {ollamaStatus === 'down' && (
+          {chatDisabled && (
             <p className="error">Ollama が利用できません。チャット入力は無効です。</p>
           )}
 
-          <div className="chat-panel">
-            <label>
-              モデル
-              <select value={model} onChange={(e) => setModel(e.target.value)} disabled={models.length === 0}>
-                {models.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </label>
-
-            {result && (
-              <div className="policy-banner">
-                出力制限: 引用={result.effective_policies.quote_policy} /
-                エクスポート={result.effective_policies.export_policy}
-                {printDisabled && ' · 印刷禁止'}
-                {copyDisabled && ' · 複製禁止'}
-              </div>
-            )}
-
-            <label>
-              質問
-              <textarea
-                rows={3}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                disabled={ollamaStatus === 'down'}
-                placeholder="ケース内容について質問してください"
-              />
-            </label>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => void onSubmit()}
-              disabled={loading || ollamaStatus === 'down'}
-            >
-              {loading ? '生成中…' : '送信'}
-            </button>
-          </div>
+          {lastPolicies && (
+            <div className="policy-banner ai-policy-banner">
+              出力制限: 引用={lastPolicies.quote_policy} / エクスポート={lastPolicies.export_policy}
+            </div>
+          )}
 
           {error && <p className="error">{error}</p>}
 
-          {result && (
-            <div className="chat-result">
-              <div className="panel-header">
-                <h3>回答</h3>
-                <div className="inline-actions">
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    disabled={copyDisabled}
-                    title={copyDisabled ? '複製禁止のためコピーできません' : '回答をコピー'}
-                    onClick={() => void copyAnswer()}
-                  >
-                    {copied ? 'コピーしました' : 'コピー'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    disabled={printDisabled}
-                    title={printDisabled ? '印刷禁止のため印刷できません' : '回答を印刷'}
-                    onClick={printAnswer}
-                  >
-                    印刷
-                  </button>
-                </div>
-              </div>
-              <div className="chat-bubble chat-bubble-assistant">{result.answer}</div>
-              <h4>引用</h4>
-              <ul className="citation-list">
-                {result.citations.map((c, i) => (
-                  <li key={`${c.title}-${i}`}>
-                    {c.display_id
-                      ? (
-                          <Link to={`/cases/${c.display_id}`} target="_blank" rel="noopener noreferrer">
-                            {c.display_id}
-                          </Link>
-                        )
-                      : null}
-                    {' '}{c.title}
-                    <span className="meta"> ({c.source_type})</span>
-                  </li>
-                ))}
-                {result.citations.length === 0 && <li className="meta">許可済み引用なし</li>}
-              </ul>
-            </div>
-          )}
+          <AiMessageList
+            messages={messages}
+            effectivePolicies={lastPolicies}
+            copied={copied}
+            onCopyAnswer={(text) => void copyAnswer(text)}
+          />
+
+          <AiChatComposer
+            message={message}
+            model={model}
+            models={models}
+            pendingFiles={pendingFiles}
+            loading={loading}
+            disabled={chatDisabled}
+            onMessageChange={setMessage}
+            onModelChange={setModel}
+            onFilesSelected={onFilesSelected}
+            onRemoveFile={(index) => setPendingFiles((prev) => prev.filter((_, i) => i !== index))}
+            onSubmit={() => void onSubmit()}
+          />
         </div>
       </div>
     </section>

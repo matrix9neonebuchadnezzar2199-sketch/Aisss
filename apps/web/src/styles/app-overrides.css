@@ -248,3 +248,367 @@ a.nav-link-style:hover {
   font-size: 13px;
   margin-top: 8px;
 }
+
+/* AI search — Gemini-style layout (history sidebar + composer) */
+.ai-page {
+  margin: 0;
+}
+
+.ai-page-grid {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  min-height: calc(100vh - 11rem);
+}
+
+.ai-history-sidebar {
+  background: var(--canvas-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  padding: 12px;
+  position: sticky;
+  top: 12px;
+  max-height: calc(100vh - 10rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-history-new {
+  width: 100%;
+  justify-content: center;
+}
+
+.ai-history-heading {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ai-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ai-history-list li {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.ai-history-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--fg-default);
+  padding: 8px 28px 8px 10px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ai-history-item:hover {
+  background: var(--canvas-inset);
+  border-color: var(--border-muted);
+}
+
+.ai-history-item.active {
+  background: var(--info-subtle);
+  border-color: rgba(56, 139, 253, 0.45);
+}
+
+.ai-history-item-title {
+  display: block;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-history-item-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--fg-subtle);
+}
+
+.ai-history-delete {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--fg-subtle);
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  opacity: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ai-history-list li:hover .ai-history-delete,
+.ai-history-delete:focus {
+  opacity: 1;
+}
+
+.ai-history-delete:hover {
+  background: var(--canvas-inset);
+  color: var(--danger-fg);
+}
+
+.ai-history-empty {
+  font-size: 12px;
+  color: var(--fg-subtle);
+  padding: 8px 4px;
+}
+
+.ai-chat-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 11rem);
+  background: var(--canvas-default);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  padding: 16px 18px 14px;
+}
+
+.ai-chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.ai-chat-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ai-chat-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.ai-audit-banner,
+.ai-policy-banner {
+  margin-bottom: 10px;
+}
+
+.ai-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 2px 16px;
+  min-height: 200px;
+}
+
+.ai-chat-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--fg-muted);
+  padding: 32px 16px;
+}
+
+.ai-chat-empty h3 {
+  margin: 0 0 8px;
+  color: var(--fg-default);
+  font-size: 20px;
+}
+
+.ai-chat-empty p {
+  margin: 0;
+  max-width: 28rem;
+  line-height: 1.6;
+}
+
+.ai-msg-body {
+  white-space: pre-wrap;
+}
+
+.ai-msg-attachments {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.ai-msg-attachments li::before {
+  content: '添付: ';
+  color: var(--fg-subtle);
+}
+
+.ai-chat-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.ai-composer-wrap {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-muted);
+}
+
+.ai-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.ai-composer-box {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 18px;
+  background: var(--canvas-subtle);
+  padding: 8px 10px;
+}
+
+.ai-composer-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ai-composer-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--canvas-inset);
+  border: 1px solid var(--border-muted);
+  color: var(--fg-default);
+}
+
+.ai-composer-file-chip button {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.ai-composer-main {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.ai-composer-attach {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-default);
+  background: var(--canvas-default);
+  color: var(--fg-default);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ai-composer-attach:hover:not(:disabled) {
+  background: var(--canvas-inset);
+  border-color: var(--accent-emphasis);
+  color: var(--accent-fg);
+}
+
+.ai-composer-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  max-height: 160px;
+  resize: vertical;
+  border: none;
+  background: transparent;
+  color: var(--input-fg);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 6px 4px;
+}
+
+.ai-composer-input:focus {
+  outline: none;
+}
+
+.ai-composer-model {
+  flex-shrink: 0;
+  max-width: 11rem;
+  border: 1px solid var(--border-muted);
+  border-radius: 999px;
+  background: var(--canvas-default);
+  color: var(--fg-muted);
+  font-size: 11px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.ai-composer-send {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--success-fg);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ai-composer-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ai-composer-send:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
+.ai-composer-note {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--fg-subtle);
+}
+
+@media (max-width: 960px) {
+  .ai-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-history-sidebar {
+    position: static;
+    max-height: 180px;
+  }
+}
