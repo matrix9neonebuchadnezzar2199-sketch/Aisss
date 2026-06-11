@@ -190,6 +190,19 @@ export async function fetchOllamaModels (): Promise<OllamaModelsResponse> {
   return apiFetch('/api/ollama/models')
 }
 
+/** Models marked チャット有効 in model management (saved in DB). */
+export function getEnabledChatModelNames (response: OllamaModelsResponse): string[] {
+  return response.defaults.enabled_chat_models
+}
+
+export function resolveDefaultChatModel (
+  enabled: string[],
+  defaultName: string | null
+): string {
+  if (defaultName && enabled.includes(defaultName)) return defaultName
+  return enabled[0] ?? ''
+}
+
 export async function fetchOllamaHealth (): Promise<{ status: string; latency_ms: number | null }> {
   try {
     const res = await fetch('/api/ollama/health')

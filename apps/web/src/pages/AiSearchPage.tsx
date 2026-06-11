@@ -9,6 +9,8 @@ import {
   fetchAuditLogByQueryId,
   fetchOllamaHealth,
   fetchOllamaModels,
+  getEnabledChatModelNames,
+  resolveDefaultChatModel,
   sendAiChat,
   type AiChatResponse,
   type AuditLogEntry
@@ -44,11 +46,12 @@ export function AiSearchPage () {
 
   useEffect(() => {
     void Promise.all([fetchOllamaModels(), fetchOllamaHealth()]).then(([m, h]) => {
-      const enabled = m.defaults.enabled_chat_models.length
-        ? m.defaults.enabled_chat_models
-        : m.models.map((x) => x.name)
+      const enabled = getEnabledChatModelNames(m)
       setModels(enabled)
-      setModel(m.defaults.chat_model ?? enabled[0] ?? '')
+      setModel((current) => {
+        if (current && enabled.includes(current)) return current
+        return resolveDefaultChatModel(enabled, m.defaults.chat_model)
+      })
       setOllamaStatus(h.status)
     }).catch((e: Error) => setError(e.message))
   }, [])
@@ -179,6 +182,14 @@ export function AiSearchPage () {
             <p className="error">Ollama が利用できません。チャット入力は無効です。</p>
           )}
 
+          {!chatDisabled && models.length === 0 && (
+            <p className="error">
+              チャット有効なモデルがありません。
+              <Link to="/models"> モデル管理</Link>
+              で「チャット有効」を ON にして保存してください。
+            </p>
+          )}
+
           {lastPolicies && (
             <div className="policy-banner ai-policy-banner">
               出力制限: 引用={lastPolicies.quote_policy} / エクスポート={lastPolicies.export_policy}
@@ -200,7 +211,7 @@ export function AiSearchPage () {
             models={models}
             pendingFiles={pendingFiles}
             loading={loading}
-            disabled={chatDisabled}
+            disabled={chatDisabled || models.length === 0}
             onMessageChange={setMessage}
             onModelChange={setModel}
             onFilesSelected={onFilesSelected}

@@ -612,3 +612,28 @@ a.nav-link-style:hover {
     max-height: 180px;
   }
 }
+
+/* Model management */
+.models-page-note {
+  margin: 10px 0 0;
+}
+
+.models-page-note code {
+  font-size: 11px;
+}
+
+.models-table tbody tr.model-row-chat-enabled {
+  background: rgba(56, 139, 253, 0.1);
+}
+
+.models-table tbody tr.model-row-chat-enabled td {
+  border-color: rgba(56, 139, 253, 0.22);
+}
+
+.models-table tbody tr.model-row-default-chat {
+  box-shadow: inset 3px 0 0 var(--accent-emphasis);
+}
+
+.models-table tbody tr.model-row-chat-enabled:hover {
+  background: rgba(56, 139, 253, 0.16);
+}
