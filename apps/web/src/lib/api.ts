@@ -486,6 +486,13 @@ export async function saveModelRoles (input: {
   })
 }
 
+export async function deleteOllamaModelFromHost (modelName: string): Promise<void> {
+  await apiFetch('/api/admin/ollama/models/delete', {
+    method: 'POST',
+    body: JSON.stringify({ model_name: modelName })
+  })
+}
+
 export type JobItem = {
   id: string
   job_type: string

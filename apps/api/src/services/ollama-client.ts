@@ -45,6 +45,18 @@ export async function chatCompletion (
   return body.message?.content?.trim() ?? ''
 }
 
+/** ホスト Ollama からモデルバイナリを削除する。 */
+export async function deleteOllamaModel (baseUrl: string, model: string): Promise<void> {
+  const response = await fetch(new URL('/api/delete', baseUrl), {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: model })
+  })
+  if (!response.ok) {
+    throw new AppError('ollama_error', `Ollama delete failed: HTTP ${response.status}`, 502)
+  }
+}
+
 export async function* chatCompletionStream (
   baseUrl: string,
   model: string,

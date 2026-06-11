@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  deleteOllamaModelFromHost,
   fetchOllamaHealth,
   fetchOllamaInferenceStatus,
   fetchOllamaModels,
@@ -8,6 +9,7 @@ import {
   type ModelCapabilityTag,
   type OllamaModelsResponse
 } from '../lib/api'
+import { ModelDeleteDialog } from '../components/models/ModelDeleteDialog'
 
 type ModelRow = {
   name: string
@@ -108,6 +110,8 @@ export function ModelsPage () {
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(false)
   const [inferenceNotice, setInferenceNotice] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ModelRow | null>(null)
+  const [deletePending, setDeletePending] = useState(false)
   const initialChatRolesRef = useRef<Map<string, { enabled: boolean; defaultChat: boolean }>>(new Map())
 
   const reloadFromOllama = useCallback(async () => {
@@ -218,6 +222,22 @@ export function ModelsPage () {
     }
   }
 
+  async function onConfirmDeleteModel () {
+    if (!deleteTarget) return
+    setDeletePending(true)
+    setError(null)
+    try {
+      await deleteOllamaModelFromHost(deleteTarget.name)
+      setDeleteTarget(null)
+      setSaved(false)
+      await reloadFromOllama()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'モデルの削除に失敗しました')
+    } finally {
+      setDeletePending(false)
+    }
+  }
+
   const enabledChatCount = models.filter((m) => m.enabled_for_chat && !isEmbedOnlyModel(m)).length
 
   return (
@@ -259,7 +279,7 @@ export function ModelsPage () {
         </div>
         <div className="panel-body">
           <div className="policy-banner">
-            ホスト Ollama のモデル一覧（<code>GET /api/ollama/models</code>）。pull / delete はホスト CLI で実施。ロール割当は管理者が WebUI で設定します。
+            ホスト Ollama のモデル一覧（<code>GET /api/ollama/models</code>）。pull はホスト CLI、delete は管理者が一覧から実行可能。ロール割当は WebUI で設定します。
           </div>
           {inferenceNotice && (
             <div className="policy-banner models-runtime-notice" role="alert">
@@ -279,6 +299,7 @@ export function ModelsPage () {
                 <th scope="col">既定チャット</th>
                 <th scope="col">既定埋め込み</th>
                 <th scope="col">ReRank</th>
+                <th scope="col">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -367,6 +388,16 @@ export function ModelsPage () {
                       onChange={(e) => updateModel(m.name, { is_rerank: e.target.checked })}
                     />
                   </td>
+                  <td className="model-actions-cell">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      aria-label={`${m.name} をホストから削除`}
+                      onClick={() => setDeleteTarget(m)}
+                    >
+                      削除
+                    </button>
+                  </td>
                 </tr>
                 )
               })}
@@ -396,6 +427,16 @@ export function ModelsPage () {
           </div>
         </div>
       </div>
+
+      <ModelDeleteDialog
+        open={deleteTarget != null}
+        targetLabel={deleteTarget?.name ?? ''}
+        pending={deletePending}
+        onCancel={() => {
+          if (!deletePending) setDeleteTarget(null)
+        }}
+        onConfirm={() => void onConfirmDeleteModel()}
+      />
     </section>
   )
 }

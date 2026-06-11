@@ -34,7 +34,7 @@ ollama pull nomic-embed-text
 ollama pull llama3.2
 ```
 
-Model pull and delete remain **host CLI operations** in the initial release. WebUI shows available models and assigns roles only.
+Model pull remains a **host CLI** operation (`ollama pull`). Administrators may delete local models via `POST /api/admin/ollama/models/delete` (WebUI **削除** on `/models`), which proxies Ollama `DELETE /api/delete` and removes AISSS role rows.
 
 ## Model Roles (AISSS Configuration)
 
@@ -111,6 +111,10 @@ Proxies Ollama `GET /api/tags` and merges AISSS role assignments.
 ### Admin model roles
 
 `PUT /api/admin/ollama/model-roles` — administrator only.
+
+### Delete local model
+
+`POST /api/admin/ollama/models/delete` — administrator only. Body: `{ "model_name": "llama3.2:latest" }`. Proxies Ollama `DELETE /api/delete`, then removes `ollama_model_roles` row. Returns 409 if that model is currently used for AI chat inference.
 
 ## Embedding Flow (Workers)
 

@@ -99,7 +99,7 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
   await app.register(jobRoutes, { pool })
   await app.register(opsRoutes, { pool })
   await app.register(ollamaRoutes, { pool, settings })
-  await app.register(adminOllamaRoutes, { pool })
+  await app.register(adminOllamaRoutes, { pool, settings })
   await app.register(ragRoutes, {
     pool,
     settings,

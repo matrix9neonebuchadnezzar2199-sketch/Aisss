@@ -107,6 +107,7 @@ test('operational routes reject general users before data queries', async (t) =>
     { method: 'GET', url: '/api/admin/dashboard' },
     { method: 'POST', url: '/api/admin/backup-checks', payload: { scope: 'daily' } },
     { method: 'PUT', url: '/api/admin/ollama/model-roles', payload: { assignments: [] } },
+    { method: 'POST', url: '/api/admin/ollama/models/delete', payload: { model_name: 'test:latest' } },
     { method: 'GET', url: '/api/audit-logs?export=csv' },
     { method: 'PATCH', url: '/api/rag/files/file-1/enable', payload: { enabled: true, source_kind: 'case_attachment' } },
     { method: 'POST', url: '/api/masters/material-types', payload: { name: 'new type' } },

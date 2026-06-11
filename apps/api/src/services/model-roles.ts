@@ -139,3 +139,15 @@ export async function updateModelRoles (
 
   return getModelDefaults(pool)
 }
+
+/** Ollama から消えたモデルの AISSS ロール行を削除する。 */
+export async function removeModelRole (
+  pool: pg.Pool,
+  user: AuthUser,
+  modelName: string
+): Promise<void> {
+  if (!isAdmin(user)) {
+    throw new AppError('permission_denied', 'Administrator role required.', 403)
+  }
+  await pool.query(`DELETE FROM ollama_model_roles WHERE model_name = $1`, [modelName])
+}

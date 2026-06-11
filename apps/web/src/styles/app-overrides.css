@@ -884,6 +884,10 @@ a.nav-link-style:hover {
   font-size: 12px;
 }
 
+.model-actions-cell {
+  white-space: nowrap;
+}
+
 .models-table tbody tr.model-row-chat-enabled td {
   border-color: rgba(56, 139, 253, 0.22);
 }
