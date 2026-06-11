@@ -164,6 +164,20 @@ a.nav-link-style:hover {
   margin-top: 8px;
 }
 
+/* ケース（事象）登録 — 未入力フィールドを薄いピンクで表示 */
+.register-panel .form-group-empty input:not([type='checkbox']):not([type='radio']),
+.register-panel .form-group-empty select,
+.register-panel .form-group-empty textarea {
+  background-color: var(--empty-field-bg);
+}
+
+.register-panel .form-group-empty .viewing-range-checkboxes {
+  background-color: var(--empty-field-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
 .register-panel .form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1201,6 +1215,32 @@ a.nav-link-style:hover {
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.theme-font-scale-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.theme-font-scale-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent-emphasis);
+}
+
+.theme-font-scale-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-default);
+  min-width: 3rem;
+  text-align: right;
+}
+
+.theme-font-scale-hint {
+  margin-top: 4px;
+  margin-bottom: 0;
 }
 
 .gh-header-tools {

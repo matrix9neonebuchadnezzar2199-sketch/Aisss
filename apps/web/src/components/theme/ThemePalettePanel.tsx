@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { useThemeSettings } from '../../hooks/useThemeSettings'
-import { THEME_COLOR_OPTIONS, type ThemeMode } from '../../lib/theme-settings'
+import { FONT_SCALE_OPTIONS, THEME_COLOR_OPTIONS, type ThemeMode } from '../../lib/theme-settings'
 
 const MODE_OPTIONS: Array<{ id: ThemeMode; label: string }> = [
   { id: 'light', label: 'ライト' },
@@ -15,6 +15,7 @@ export function ThemePalettePanel () {
     settings,
     effectiveTheme,
     setMode,
+    setFontScale,
     setCustomColor,
     clearCustomColor,
     resetCustomColors,
@@ -55,6 +56,33 @@ export function ThemePalettePanel () {
         <p className="theme-palette-meta">
           適用中: <strong>{effectiveTheme === 'light' ? 'ライト' : 'ダーク'}</strong>
           {settings.mode === 'system' ? '（OS 設定）' : ''}
+        </p>
+
+        <p className="theme-palette-heading">文字サイズ</p>
+        <div className="theme-font-scale-row">
+          <input
+            id="theme-font-scale"
+            type="range"
+            className="theme-font-scale-slider"
+            min={0}
+            max={FONT_SCALE_OPTIONS.length - 1}
+            step={1}
+            value={Math.max(0, FONT_SCALE_OPTIONS.indexOf(settings.fontScale))}
+            onChange={(e) => {
+              const scale = FONT_SCALE_OPTIONS[Number(e.target.value)]
+              if (scale) setFontScale(scale)
+            }}
+            aria-valuemin={100}
+            aria-valuemax={200}
+            aria-valuenow={settings.fontScale}
+            aria-valuetext={`${settings.fontScale}%`}
+          />
+          <output className="theme-font-scale-value" htmlFor="theme-font-scale">
+            {settings.fontScale}%
+          </output>
+        </div>
+        <p className="theme-palette-hint theme-font-scale-hint">
+          100% · 125% · 150% · 175% · 200%
         </p>
 
         <p className="theme-palette-heading">カラーパレット</p>

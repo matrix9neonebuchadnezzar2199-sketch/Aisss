@@ -3,6 +3,11 @@
  * Custom overrides may be set inline on documentElement (--fg-default, etc.).
  */
 
+html {
+  --font-scale: 1;
+  font-size: calc(14px * var(--font-scale));
+}
+
 :root,
 [data-theme='dark'] {
   --canvas-default: #161b22;
@@ -42,6 +47,7 @@
   --purple-fg: #a371f7;
   --pink-subtle: rgba(219, 97, 162, 0.15);
   --pink-fg: #db61a2;
+  --empty-field-bg: rgba(255, 182, 193, 0.38);
   --orange-subtle: rgba(219, 109, 40, 0.15);
   --orange-fg: #db6d28;
   --shadow: 0 1px 3px rgba(1, 4, 9, 0.5);
@@ -89,6 +95,7 @@
   --purple-fg: #8250df;
   --pink-subtle: rgba(219, 97, 162, 0.12);
   --pink-fg: #bf3989;
+  --empty-field-bg: rgba(255, 192, 203, 0.55);
   --orange-subtle: rgba(219, 109, 40, 0.12);
   --orange-fg: #bc4c00;
   --shadow: 0 1px 3px rgba(31, 35, 40, 0.12);

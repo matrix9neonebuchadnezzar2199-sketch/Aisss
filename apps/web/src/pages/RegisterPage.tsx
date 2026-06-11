@@ -22,6 +22,11 @@ const emptyForm = {
   viewing_range_ids: [] as string[]
 }
 
+function isFormFieldEmpty (value: string | string[]): boolean {
+  if (Array.isArray(value)) return value.length === 0
+  return value.trim() === ''
+}
+
 export function RegisterPage () {
   const [params] = useSearchParams()
   const editDisplayId = params.get('edit')
@@ -147,7 +152,7 @@ export function RegisterPage () {
           <div className="form-section">
             <h3>基本情報</h3>
             <div className="form-grid">
-              <FormGroup label="表題" required>
+              <FormGroup label="表題" required empty={isFormFieldEmpty(form.title)}>
                 <input
                   id="field-title"
                   value={form.title}
@@ -156,14 +161,14 @@ export function RegisterPage () {
                   required
                 />
               </FormGroup>
-              <FormGroup label="資料番号">
+              <FormGroup label="資料番号" empty={isFormFieldEmpty(form.material_number)}>
                 <input
                   id="field-material-number"
                   value={form.material_number}
                   onChange={(e) => update('material_number', e.target.value)}
                 />
               </FormGroup>
-              <FormGroup label="資料区分">
+              <FormGroup label="資料区分" empty={isFormFieldEmpty(form.material_type_id)}>
                 <select
                   id="field-material-type"
                   value={form.material_type_id}
@@ -174,7 +179,7 @@ export function RegisterPage () {
                 </select>
               </FormGroup>
             </div>
-            <FormGroup label="要約" wide>
+            <FormGroup label="要約" wide empty={isFormFieldEmpty(form.summary)}>
               <textarea
                 id="field-summary"
                 rows={2}
@@ -187,7 +192,7 @@ export function RegisterPage () {
           <div className="form-section">
             <h3>事象・出所</h3>
             <div className="form-grid">
-              <FormGroup label="事象発生（開始）">
+              <FormGroup label="事象発生（開始）" empty={isFormFieldEmpty(form.event_start_date)}>
                 <input
                   type="date"
                   id="field-event-start"
@@ -195,7 +200,7 @@ export function RegisterPage () {
                   onChange={(e) => update('event_start_date', e.target.value)}
                 />
               </FormGroup>
-              <FormGroup label="事象発生（終了）">
+              <FormGroup label="事象発生（終了）" empty={isFormFieldEmpty(form.event_end_date)}>
                 <input
                   type="date"
                   id="field-event-end"
@@ -203,7 +208,7 @@ export function RegisterPage () {
                   onChange={(e) => update('event_end_date', e.target.value)}
                 />
               </FormGroup>
-              <FormGroup label="登録部署">
+              <FormGroup label="登録部署" empty={isFormFieldEmpty(form.registering_department_id)}>
                 <select
                   id="field-department"
                   value={form.registering_department_id}
@@ -213,7 +218,7 @@ export function RegisterPage () {
                   {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
               </FormGroup>
-              <FormGroup label="ランク">
+              <FormGroup label="ランク" empty={isFormFieldEmpty(form.rank_id)}>
                 <select
                   id="field-rank"
                   value={form.rank_id}
@@ -228,7 +233,7 @@ export function RegisterPage () {
 
           <div className="form-section">
             <h3>取扱・閲覧</h3>
-            <FormGroup label="閲覧範囲" required wide>
+            <FormGroup label="閲覧範囲" required wide empty={isFormFieldEmpty(form.viewing_range_ids)}>
               <ViewingRangeCheckboxGroup
                 id="field-viewing-range"
                 options={viewingRanges}
@@ -245,7 +250,7 @@ export function RegisterPage () {
           <div className="form-section">
             <h3>本文（登録時は分割、表示時は結合）</h3>
             <div className="form-body-stack">
-              <FormGroup label="1 要約">
+              <FormGroup label="1 要約" empty={isFormFieldEmpty(form.body_summary)}>
                 <textarea
                   id="field-body-summary"
                   rows={3}
@@ -253,7 +258,7 @@ export function RegisterPage () {
                   onChange={(e) => update('body_summary', e.target.value)}
                 />
               </FormGroup>
-              <FormGroup label="2 記事">
+              <FormGroup label="2 記事" empty={isFormFieldEmpty(form.body_article)}>
                 <textarea
                   id="field-body-article"
                   rows={8}
@@ -261,7 +266,7 @@ export function RegisterPage () {
                   onChange={(e) => update('body_article', e.target.value)}
                 />
               </FormGroup>
-              <FormGroup label="3 所見">
+              <FormGroup label="3 所見" empty={isFormFieldEmpty(form.body_assessment)}>
                 <textarea
                   id="field-body-assessment"
                   rows={3}
@@ -269,7 +274,7 @@ export function RegisterPage () {
                   onChange={(e) => update('body_assessment', e.target.value)}
                 />
               </FormGroup>
-              <FormGroup label="4 その他参考事項">
+              <FormGroup label="4 その他参考事項" empty={isFormFieldEmpty(form.body_reference)}>
                 <textarea
                   id="field-body-reference"
                   rows={3}

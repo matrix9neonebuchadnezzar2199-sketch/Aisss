@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AISSS</title>
-    <script>(function(){try{var k='aisss-theme-settings';var raw=localStorage.getItem(k);var s=raw?JSON.parse(raw):{mode:'dark',customColors:{}};var m=s.mode||'dark';var eff=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;document.documentElement.setAttribute('data-theme',eff);var cc=s.customColors||{};Object.keys(cc).forEach(function(key){if(cc[key])document.documentElement.style.setProperty('--'+key,cc[key]);});}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+    <script>(function(){try{var k='aisss-theme-settings';var raw=localStorage.getItem(k);var s=raw?JSON.parse(raw):{mode:'dark',fontScale:100,customColors:{}};var m=s.mode||'dark';var eff=m==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):m;document.documentElement.setAttribute('data-theme',eff);var fs=s.fontScale||100;document.documentElement.style.setProperty('--font-scale',String(fs/100));var cc=s.customColors||{};Object.keys(cc).forEach(function(key){if(cc[key])document.documentElement.style.setProperty('--'+key,cc[key]);});}catch(e){document.documentElement.setAttribute('data-theme','dark');document.documentElement.style.setProperty('--font-scale','1');}})();</script>
   </head>
   <body>
     <div id="root"></div>

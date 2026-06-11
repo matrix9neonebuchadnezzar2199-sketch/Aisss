@@ -6,7 +6,7 @@
       --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font); font-size: 14px; line-height: 1.5; color: var(--fg-default); background: var(--canvas-subtle); min-height: 100vh; }
+    body { font-family: var(--font); font-size: 1rem; line-height: 1.5; color: var(--fg-default); background: var(--canvas-subtle); min-height: 100vh; }
     .gh-header {
       background: var(--header-bg); color: var(--header-fg); padding: 12px 24px;
       display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--header-border);

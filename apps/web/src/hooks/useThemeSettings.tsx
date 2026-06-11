@@ -14,6 +14,7 @@ import {
   saveThemeSettings,
   type ThemeColorKey,
   type ThemeMode,
+  type FontScale,
   type ThemeSettings
 } from '../lib/theme-settings'
 
@@ -21,6 +22,7 @@ type ThemeSettingsContextValue = {
   settings: ThemeSettings
   effectiveTheme: 'light' | 'dark'
   setMode: (mode: ThemeMode) => void
+  setFontScale: (scale: FontScale) => void
   setCustomColor: (key: ThemeColorKey, value: string) => void
   clearCustomColor: (key: ThemeColorKey) => void
   resetCustomColors: () => void
@@ -58,6 +60,10 @@ export function ThemeSettingsProvider ({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, mode }))
   }, [])
 
+  const setFontScale = useCallback((fontScale: FontScale) => {
+    setSettings((prev) => ({ ...prev, fontScale }))
+  }, [])
+
   const setCustomColor = useCallback((key: ThemeColorKey, value: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -78,7 +84,7 @@ export function ThemeSettingsProvider ({ children }: { children: ReactNode }) {
   }, [])
 
   const resetAll = useCallback(() => {
-    setSettings({ mode: 'dark', customColors: {} })
+    setSettings({ mode: 'dark', fontScale: 100, customColors: {} })
   }, [])
 
   const value = useMemo(
@@ -86,12 +92,13 @@ export function ThemeSettingsProvider ({ children }: { children: ReactNode }) {
       settings,
       effectiveTheme,
       setMode,
+      setFontScale,
       setCustomColor,
       clearCustomColor,
       resetCustomColors,
       resetAll
     }),
-    [settings, effectiveTheme, setMode, setCustomColor, clearCustomColor, resetCustomColors, resetAll]
+    [settings, effectiveTheme, setMode, setFontScale, setCustomColor, clearCustomColor, resetCustomColors, resetAll]
   )
 
   return (
