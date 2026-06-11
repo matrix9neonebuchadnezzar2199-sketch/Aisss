@@ -60,11 +60,11 @@ export function useAiChatHistory (userId: string | undefined) {
     setHydrated(true)
   }, [userId])
 
-  /** 常に最新 store を参照して更新する（非同期 append の stale closure 防止） */
-  const updateStore = useCallback((updater: (prev: AiChatHistoryStore) => AiChatHistoryStore) => {
+  /** 常に最新 store を参照して更新する（非同期 append の stale closure 防止）。persist=false で localStorage 保存を省略 */
+  const updateStore = useCallback((updater: (prev: AiChatHistoryStore) => AiChatHistoryStore, persist = true) => {
     setStore((prev) => {
       const next = updater(prev)
-      if (userId) saveStore(userId, next)
+      if (userId && persist) saveStore(userId, next)
       return next
     })
   }, [userId])
@@ -156,7 +156,7 @@ export function useAiChatHistory (userId: string | undefined) {
 
   const appendToActiveSession = useCallback((
     messages: AiChatMessage[],
-    options?: { replaceAssistantId?: string }
+    options?: { replaceAssistantId?: string; persist?: boolean }
   ) => {
     if (!userId || messages.length === 0) return null
 
@@ -200,7 +200,7 @@ export function useAiChatHistory (userId: string | undefined) {
         activeSessionId: updated.id,
         sessions: [updated, ...others].slice(0, MAX_SESSIONS)
       }
-    })
+    }, options?.persist !== false)
     return result
   }, [updateStore, userId])
 

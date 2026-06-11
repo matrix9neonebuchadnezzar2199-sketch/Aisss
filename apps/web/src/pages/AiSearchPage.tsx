@@ -39,6 +39,7 @@ export function AiSearchPage () {
   const [models, setModels] = useState<string[]>([])
   const [ollamaStatus, setOllamaStatus] = useState('unknown')
   const [loading, setLoading] = useState(false)
+  const [streamStarted, setStreamStarted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastPolicies, setLastPolicies] = useState<AiChatResponse['effective_policies'] | null>(null)
   const [copied, setCopied] = useState(false)
@@ -85,6 +86,7 @@ export function AiSearchPage () {
 
     ensureActiveSession()
     setLoading(true)
+    setStreamStarted(false)
     setError(null)
 
     const userMsg: AiChatMessage = {
@@ -99,30 +101,53 @@ export function AiSearchPage () {
     setMessage('')
     setPendingFiles([])
 
-    try {
-      let meta: AiChatStreamEvent & { type: 'meta' } | null = null
-      let answer = ''
-      const assistantId = crypto.randomUUID()
+    // 閉包内代入の TS narrowing 問題を避けるため ref オブジェクトに保持
+    const metaRef = { current: null as (AiChatStreamEvent & { type: 'meta' }) | null }
+    const errRef = { current: null as string | null }
+    let answer = ''
+    const assistantId = crypto.randomUUID()
 
+    try {
       await sendAiChatStream(text, model || undefined, (event) => {
         if (event.type === 'meta') {
-          meta = event
+          metaRef.current = event
           setLastPolicies(event.effective_policies)
         } else if (event.type === 'token') {
           answer += event.content
+          setStreamStarted(true)
+          // streaming 中は localStorage に書かず UI のみ更新（完了時に 1 回永続化）
           appendToActiveSession([{
             id: assistantId,
             role: 'assistant',
             content: answer,
-            createdAt: new Date().toISOString(),
-            queryId: meta?.query_id,
-            citations: meta?.citations
-          }], { replaceAssistantId: assistantId })
+            createdAt: new Date().toISOString()
+          }], { replaceAssistantId: assistantId, persist: false })
+        } else if (event.type === 'error') {
+          errRef.current = event.message
         }
       })
 
+      const meta = metaRef.current
       if (!meta) {
         throw new Error('ストリーム応答が空でした')
+      }
+
+      // 完了時の確定メッセージ（途中失敗で空ならエラー表示に任せて何も残さない）
+      const finalContent = answer || (errRef.current ? '' : '（回答が生成されませんでした）')
+      if (finalContent) {
+        appendToActiveSession([{
+          id: assistantId,
+          role: 'assistant',
+          content: finalContent,
+          createdAt: new Date().toISOString(),
+          queryId: meta.query_id,
+          citations: meta.citations
+        }], { replaceAssistantId: assistantId })
+      }
+      if (errRef.current) {
+        throw new Error(answer
+          ? 'AI 応答が途中で失敗しました。途中までの回答を表示しています。'
+          : 'AI 応答の生成に失敗しました。Ollama の状態を確認してください。')
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : '送信に失敗しました')
@@ -211,6 +236,7 @@ export function AiSearchPage () {
           <AiMessageList
             messages={messages}
             loading={loading}
+            thinking={loading && !streamStarted}
             effectivePolicies={lastPolicies}
             copied={copied}
             onCopyAnswer={(text) => void copyAnswer(text)}

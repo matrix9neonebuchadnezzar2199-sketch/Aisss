@@ -6,6 +6,8 @@ import type { AiChatResponse } from '../../lib/api'
 type AiMessageListProps = {
   messages: AiChatMessage[]
   loading?: boolean
+  /** 「考え中…」スピナー表示。未指定時は loading に追従（streaming 中は最初の token 後に消す） */
+  thinking?: boolean
   effectivePolicies?: AiChatResponse['effective_policies'] | null
   onCopyAnswer?: (text: string) => void
   copied: boolean
@@ -14,10 +16,12 @@ type AiMessageListProps = {
 export function AiMessageList ({
   messages,
   loading = false,
+  thinking,
   effectivePolicies,
   onCopyAnswer,
   copied
 }: AiMessageListProps) {
+  const showThinking = thinking ?? loading
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,7 +83,7 @@ export function AiMessageList ({
         </article>
       ))}
 
-      {loading && (
+      {showThinking && (
         <article className="chat-msg chat-ai chat-thinking" aria-live="polite" aria-busy="true">
           <div className="chat-msg-role">AI</div>
           <div className="ai-thinking-row">
