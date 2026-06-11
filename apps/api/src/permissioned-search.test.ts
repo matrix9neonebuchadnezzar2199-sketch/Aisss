@@ -156,9 +156,11 @@ async function runPermissionedSearch (
   overrides: {
     embeddingModel?: string | null
     searchError?: Error
+    activeCollection?: string
   } = {}
 ) {
-  return permissionedSearch(
+  let searchedCollection: string | null = null
+  const result = await permissionedSearch(
     createPoolMock(fixture),
     settings,
     user,
@@ -169,17 +171,22 @@ async function runPermissionedSearch (
       getEmbeddingModel: async () => (
         Object.hasOwn(overrides, 'embeddingModel') ? overrides.embeddingModel ?? null : 'embed-model'
       ),
+      getActiveCollection: async () => ({
+        collectionName: overrides.activeCollection ?? settings.vectorCollection
+      }),
       embed: async () => [0.1, 0.2],
-      search: async () => {
+      search: async (_baseUrl, collection) => {
+        searchedCollection = collection
         if (overrides.searchError) throw overrides.searchError
         return hits
       }
     }
   )
+  return { result, searchedCollection }
 }
 
 test('permissionedSearch excludes search_policy deny even for admin override', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     {
       cases: {
         'case-1': {
@@ -203,7 +210,7 @@ test('permissionedSearch excludes search_policy deny even for admin override', a
 })
 
 test('permissionedSearch excludes out-of-range cases for regular users', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     { cases: { 'case-1': { viewingRangeIds: ['range-a'] } } },
     regularUser(['range-b']),
     [caseHit('case-1')]
@@ -215,7 +222,7 @@ test('permissionedSearch excludes out-of-range cases for regular users', async (
 })
 
 test('permissionedSearch returns in-range cases for regular users', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     { cases: { 'case-1': { viewingRangeIds: ['range-a'] } } },
     regularUser(['range-a']),
     [caseHit('case-1', { display_id: 'CASE-1', title: 'Allowed case' })]
@@ -228,7 +235,7 @@ test('permissionedSearch returns in-range cases for regular users', async () => 
 })
 
 test('permissionedSearch excludes search_policy deny for in-range regular users', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     {
       cases: {
         'case-1': {
@@ -251,7 +258,7 @@ test('permissionedSearch excludes search_policy deny for in-range regular users'
 })
 
 test('permissionedSearch excludes rag-disabled chunks for every user', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     { cases: { 'case-1': { viewingRangeIds: ['range-a'] } } },
     admin,
     [caseHit('case-1', { rag_enabled: false })]
@@ -264,7 +271,7 @@ test('permissionedSearch excludes rag-disabled chunks for every user', async () 
 })
 
 test('permissionedSearch filters standalone files by viewing range', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     {
       standaloneFiles: {
         'file-allowed': { viewingRangeIds: ['range-a'] },
@@ -284,7 +291,7 @@ test('permissionedSearch filters standalone files by viewing range', async () =>
 })
 
 test('permissionedSearch does not leak denied case citations or titles', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     {
       cases: {
         allowed: { viewingRangeIds: ['range-a'] },
@@ -310,7 +317,7 @@ test('permissionedSearch does not leak denied case citations or titles', async (
 })
 
 test('permissionedSearch aggregates effective policies from allowed contexts', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     {
       cases: {
         'case-print': {
@@ -344,7 +351,7 @@ test('permissionedSearch aggregates effective policies from allowed contexts', a
 
 test('permissionedSearch excludes chunks of deleted cases even if vectors remain', async () => {
   // Qdrant にベクタが残っていても、DB に行が無ければ（論理削除済みなら）出さない
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     { cases: {} },
     admin,
     [caseHit('deleted-case', { display_id: 'DELETED-1', title: 'Deleted case title' })]
@@ -356,7 +363,7 @@ test('permissionedSearch excludes chunks of deleted cases even if vectors remain
 
 test('permissionedSearch excludes standalone chunks disabled in DB despite stale payload', async () => {
   // payload.rag_enabled=true のまま Qdrant 削除に失敗しても、DB の rag_enabled=false で fail-closed
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     {
       standaloneFiles: {
         'file-stale': { viewingRangeIds: ['range-a'], ragEnabled: false }
@@ -371,7 +378,7 @@ test('permissionedSearch excludes standalone chunks disabled in DB despite stale
 })
 
 test('permissionedSearch fails closed when no embedding model is configured', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     { cases: { 'case-1': { viewingRangeIds: ['range-a'] } } },
     regularUser(['range-a']),
     [caseHit('case-1')],
@@ -383,7 +390,7 @@ test('permissionedSearch fails closed when no embedding model is configured', as
 })
 
 test('permissionedSearch fails closed when vector search throws', async () => {
-  const result = await runPermissionedSearch(
+  const { result } = await runPermissionedSearch(
     { cases: { 'case-1': { viewingRangeIds: ['range-a'] } } },
     regularUser(['range-a']),
     [caseHit('case-1')],
@@ -392,4 +399,14 @@ test('permissionedSearch fails closed when vector search throws', async () => {
 
   assert.deepEqual(result.contexts, [])
   assert.equal(result.excluded_counts.vector_search_error, 1)
+})
+
+test('permissionedSearch resolves collection via getActiveCollection', async () => {
+  const { searchedCollection } = await runPermissionedSearch(
+    { cases: { 'case-1': { viewingRangeIds: ['range-a'] } } },
+    regularUser(['range-a']),
+    [],
+    { activeCollection: 'aisss_chunks_green' }
+  )
+  assert.equal(searchedCollection, 'aisss_chunks_green')
 })

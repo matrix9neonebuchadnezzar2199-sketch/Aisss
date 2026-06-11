@@ -10,6 +10,7 @@ import { deleteObject, putObject } from './storage.js'
 import { writeAuditLog } from './audit.js'
 import { deletePoints } from './qdrant.js'
 import type { Settings } from '../settings.js'
+import { deletePointsAcrossCollections } from './embedding-config.js'
 import { getRagStorageBreakdown } from './rag-storage-breakdown.js'
 import { deleteJobsForStandaloneFile } from './job-cleanup.js'
 
@@ -425,20 +426,13 @@ async function deleteQdrantPointsForSource (
   kind: 'attachment' | 'standalone'
 ) {
   const col = kind === 'attachment' ? 'attachment_id' : 'standalone_file_id'
-  const { rows } = await pool.query<{ vector_point_id: string }>(
-    `SELECT rs.vector_point_id
-     FROM rag_sync_states rs
-     JOIN rag_chunks rc ON rc.id = rs.chunk_id
-     WHERE rc.${col} = $1`,
-    [fileId]
+  await deletePointsAcrossCollections(
+    pool,
+    settings.vectorDbUrl,
+    `rc.${col} = $1`,
+    [fileId],
+    deletePoints
   )
-  const ids = rows.map((r) => r.vector_point_id)
-  if (ids.length === 0) return
-  try {
-    await deletePoints(settings.vectorDbUrl, settings.vectorCollection, ids)
-  } catch {
-    // vectors may already be gone
-  }
 }
 
 async function syncDisableVectors (
@@ -614,22 +608,13 @@ export async function purgeCaseVectors (
   settings: Settings,
   caseId: string
 ) {
-  const { rows } = await pool.query<{ vector_point_id: string }>(
-    `SELECT rs.vector_point_id
-     FROM rag_sync_states rs
-     JOIN rag_chunks rc ON rc.id = rs.chunk_id
-     WHERE rc.case_id = $1`,
-    [caseId]
+  await deletePointsAcrossCollections(
+    pool,
+    settings.vectorDbUrl,
+    'rc.case_id = $1',
+    [caseId],
+    deletePoints
   )
-  try {
-    await deletePoints(
-      settings.vectorDbUrl,
-      settings.vectorCollection,
-      rows.map((r) => r.vector_point_id)
-    )
-  } catch {
-    // 検索側 authorizeChunk が cases.deleted_at を再確認するため、残存ベクタは露出しない
-  }
   await pool.query(
     `DELETE FROM rag_sync_states WHERE chunk_id IN (
       SELECT id FROM rag_chunks WHERE case_id = $1

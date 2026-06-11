@@ -3,6 +3,7 @@ import { loadConfig } from './config.js'
 import { createStorageClient } from './storage.js'
 import { claimNextJob, markJobFailed, processExtractionJob, requeueStaleRunningJobs } from './processor.js'
 import { processEmbeddingJob } from './embedding.js'
+import { processReindexJob } from './reindex.js'
 
 const { Pool } = pg
 
@@ -29,6 +30,18 @@ async function main () {
         } catch (error) {
           const failed = await markJobFailed(pool, extractionJob, error)
           console.error('[aisss-worker] extraction failed', extractionJob.id, failed.error)
+        }
+      }
+
+      const reindexJob = await claimNextJob(pool, 'reindex')
+      if (reindexJob) {
+        console.log('[aisss-worker] reindex', reindexJob.id)
+        try {
+          const result = await processReindexJob(pool, config, reindexJob)
+          console.log('[aisss-worker] reindex done', reindexJob.id, result.status)
+        } catch (error) {
+          const failed = await markJobFailed(pool, reindexJob, error)
+          console.error('[aisss-worker] reindex failed', reindexJob.id, failed.error)
         }
       }
 

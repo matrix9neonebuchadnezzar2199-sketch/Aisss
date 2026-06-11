@@ -1,6 +1,15 @@
 export async function ensureCollection (baseUrl, collection, vectorSize) {
   const check = await fetch(new URL(`/collections/${collection}`, baseUrl))
-  if (check.ok) return
+  if (check.ok) {
+    const info = await check.json()
+    const existingSize = info.result?.config?.params?.vectors?.size
+    if (existingSize != null && existingSize !== vectorSize) {
+      throw new Error(
+        `Qdrant collection "${collection}" dimension mismatch: expected ${vectorSize}, got ${existingSize}. Reindex required.`
+      )
+    }
+    return
+  }
   const create = await fetch(new URL(`/collections/${collection}`, baseUrl), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

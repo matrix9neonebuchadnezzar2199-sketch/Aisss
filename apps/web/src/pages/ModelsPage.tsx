@@ -4,12 +4,16 @@ import {
   fetchOllamaHealth,
   fetchOllamaInferenceStatus,
   fetchOllamaModels,
+  fetchReindexStatus,
   INFERENCE_CHAT_ROLE_BLOCK_MESSAGE,
   saveModelRoles,
+  startReindex,
   type ModelCapabilityTag,
-  type OllamaModelsResponse
+  type OllamaModelsResponse,
+  type ReindexJobStatus
 } from '../lib/api'
 import { ModelDeleteDialog } from '../components/models/ModelDeleteDialog'
+import { ReindexConfirmDialog } from '../components/models/ReindexConfirmDialog'
 
 type ModelRow = {
   name: string
@@ -113,6 +117,12 @@ export function ModelsPage () {
   const [deleteTarget, setDeleteTarget] = useState<ModelRow | null>(null)
   const [deletePending, setDeletePending] = useState(false)
   const initialChatRolesRef = useRef<Map<string, { enabled: boolean; defaultChat: boolean }>>(new Map())
+  const initialEmbeddingRef = useRef<string | null>(null)
+  const [reindexDialogOpen, setReindexDialogOpen] = useState(false)
+  const [pendingEmbedModel, setPendingEmbedModel] = useState<string | null>(null)
+  const [reindexPending, setReindexPending] = useState(false)
+  const [reindexJob, setReindexJob] = useState<ReindexJobStatus | null>(null)
+  const [reindexNotice, setReindexNotice] = useState<string | null>(null)
 
   const reloadFromOllama = useCallback(async () => {
     setLoading(true)
@@ -126,6 +136,7 @@ export function ModelsPage () {
         enabled: row.enabled_for_chat,
         defaultChat: row.is_default_chat
       }]))
+      initialEmbeddingRef.current = rows.find((r) => r.is_default_embedding)?.name ?? null
       setRerankEnabled(m.defaults.rerank_enabled)
       setHealth(h.status)
       setLatency(h.latency_ms)
@@ -139,6 +150,40 @@ export function ModelsPage () {
   useEffect(() => {
     void reloadFromOllama()
   }, [reloadFromOllama])
+
+  const reindexActive = reindexJob != null
+    && (reindexJob.status === 'pending' || reindexJob.status === 'running')
+
+  useEffect(() => {
+    let cancelled = false
+    let intervalId: ReturnType<typeof setInterval> | undefined
+
+    async function pollReindex () {
+      try {
+        const { job } = await fetchReindexStatus()
+        if (cancelled) return
+        setReindexJob(job)
+        if (job?.status === 'completed') {
+          setReindexNotice('新モデルへの切替が完了しました。')
+          void reloadFromOllama()
+        } else if (job?.status === 'failed') {
+          setReindexNotice(job.error_message ?? '再埋め込みに失敗しました。検索は旧モデルで継続中です。')
+        }
+      } catch {
+        // 進捗取得失敗は無視（次回ポーリングで再試行）
+      }
+    }
+
+    void pollReindex()
+    if (reindexActive) {
+      intervalId = setInterval(() => { void pollReindex() }, 2500)
+    }
+
+    return () => {
+      cancelled = true
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [reindexActive, reloadFromOllama])
 
   function updateModel (name: string, patch: Partial<ModelRow>) {
     setSaved(false)
@@ -185,9 +230,60 @@ export function ModelsPage () {
     return false
   }
 
+  function currentDefaultEmbedding (): string | null {
+    return models.find((m) => m.is_default_embedding)?.name ?? null
+  }
+
+  function embeddingChangedFromInitial (): boolean {
+    const current = currentDefaultEmbedding()
+    const initial = initialEmbeddingRef.current
+    return current != null && initial != null && current !== initial
+  }
+
+  function buildAssignments (keepInitialEmbedding: boolean) {
+    const initialEmbed = initialEmbeddingRef.current
+    return models.map((m) => {
+      const embedOnly = isEmbedOnlyModel(m)
+      const enabled_for_chat = embedOnly ? false : m.enabled_for_chat
+      const is_default_chat = embedOnly ? false : m.is_default_chat
+      const is_default_embedding = keepInitialEmbedding
+        ? m.name === initialEmbed
+        : m.is_default_embedding
+      return {
+        model_name: m.name,
+        roles: [
+          ...(enabled_for_chat ? ['chat'] : []),
+          ...(is_default_embedding ? ['embedding'] : []),
+          ...(m.is_rerank ? ['rerank'] : [])
+        ],
+        enabled_for_chat,
+        is_default_chat,
+        is_default_embedding,
+        is_rerank: m.is_rerank
+      }
+    })
+  }
+
+  async function persistModelRoles (keepInitialEmbedding: boolean) {
+    await saveModelRoles({
+      rerank_enabled: rerankEnabled,
+      assignments: buildAssignments(keepInitialEmbedding)
+    })
+  }
+
+  function revertEmbeddingSelection () {
+    const initialEmbed = initialEmbeddingRef.current
+    if (!initialEmbed) return
+    setModels((rows) => rows.map((r) => ({
+      ...r,
+      is_default_embedding: r.name === initialEmbed
+    })))
+  }
+
   async function onSave () {
     setError(null)
     setSaved(false)
+    setReindexNotice(null)
     try {
       const status = await fetchOllamaInferenceStatus()
       if (status.active && chatRolesChangedFromInitial()) {
@@ -195,31 +291,59 @@ export function ModelsPage () {
         return
       }
       setInferenceNotice(null)
-      await saveModelRoles({
-        rerank_enabled: rerankEnabled,
-        assignments: models.map((m) => {
-          const embedOnly = isEmbedOnlyModel(m)
-          const enabled_for_chat = embedOnly ? false : m.enabled_for_chat
-          const is_default_chat = embedOnly ? false : m.is_default_chat
-          return {
-            model_name: m.name,
-            roles: [
-              ...(enabled_for_chat ? ['chat'] : []),
-              ...(m.is_default_embedding ? ['embedding'] : []),
-              ...(m.is_rerank ? ['rerank'] : [])
-            ],
-            enabled_for_chat,
-            is_default_chat,
-            is_default_embedding: m.is_default_embedding,
-            is_rerank: m.is_rerank
-          }
-        })
-      })
+
+      if (embeddingChangedFromInitial()) {
+        const newModel = currentDefaultEmbedding()
+        if (newModel) {
+          setPendingEmbedModel(newModel)
+          setReindexDialogOpen(true)
+        }
+        return
+      }
+
+      await persistModelRoles(false)
       setSaved(true)
       await reloadFromOllama()
     } catch (e) {
       setError(e instanceof Error ? e.message : '保存失敗')
     }
+  }
+
+  async function onConfirmReindex () {
+    if (!pendingEmbedModel) return
+    setReindexPending(true)
+    setError(null)
+    try {
+      await persistModelRoles(true)
+      await startReindex(pendingEmbedModel)
+      setReindexDialogOpen(false)
+      setPendingEmbedModel(null)
+      setSaved(true)
+      const { job } = await fetchReindexStatus()
+      setReindexJob(job)
+      setReindexNotice('再埋め込みを開始しました。完了まで旧モデルで検索を継続します。')
+      await reloadFromOllama()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '再埋め込みの開始に失敗しました')
+    } finally {
+      setReindexPending(false)
+    }
+  }
+
+  function onCancelReindex () {
+    if (reindexPending) return
+    revertEmbeddingSelection()
+    setReindexDialogOpen(false)
+    setPendingEmbedModel(null)
+    void (async () => {
+      try {
+        await persistModelRoles(true)
+        setSaved(true)
+        await reloadFromOllama()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '保存失敗')
+      }
+    })()
   }
 
   async function onConfirmDeleteModel () {
@@ -284,6 +408,27 @@ export function ModelsPage () {
           {inferenceNotice && (
             <div className="policy-banner models-runtime-notice" role="alert">
               {inferenceNotice}
+            </div>
+          )}
+          {reindexActive && reindexJob && (
+            <div className="policy-banner models-reindex-progress" role="status">
+              <p>
+                再埋め込み中: {reindexJob.processed_chunks} / {reindexJob.total_chunks} チャンク
+                （{reindexJob.percent}%）
+                {reindexJob.failed_chunks > 0 && ` · 失敗 ${reindexJob.failed_chunks}`}
+                {reindexJob.model_name && ` · ${reindexJob.model_name}`}
+              </p>
+              <div className="models-reindex-progress-bar" aria-hidden="true">
+                <div
+                  className="models-reindex-progress-fill"
+                  style={{ width: `${reindexJob.percent}%` }}
+                />
+              </div>
+            </div>
+          )}
+          {reindexNotice && !reindexActive && (
+            <div className="policy-banner models-reindex-notice" role="status">
+              {reindexNotice}
             </div>
           )}
 
@@ -376,6 +521,7 @@ export function ModelsPage () {
                       type="radio"
                       name="default_embed"
                       checked={m.is_default_embedding}
+                      disabled={reindexActive}
                       aria-label={`${m.name} を既定埋め込み`}
                       onChange={() => updateModel(m.name, { is_default_embedding: true })}
                     />
@@ -436,6 +582,14 @@ export function ModelsPage () {
           if (!deletePending) setDeleteTarget(null)
         }}
         onConfirm={() => void onConfirmDeleteModel()}
+      />
+
+      <ReindexConfirmDialog
+        open={reindexDialogOpen}
+        targetLabel={pendingEmbedModel ?? ''}
+        pending={reindexPending}
+        onCancel={onCancelReindex}
+        onConfirm={() => void onConfirmReindex()}
       />
     </section>
   )

@@ -11,6 +11,7 @@ import {
 import { embedText } from './ollama-client.js'
 import { buildViewingRangeFilter, searchPoints } from './qdrant.js'
 import { getDefaultEmbeddingModel } from './model-roles.js'
+import { getActiveCollection } from './embedding-config.js'
 
 export type SearchContext = {
   chunk_id: string
@@ -31,6 +32,7 @@ export type PermissionedSearchResult = {
 
 export type PermissionedSearchDeps = {
   getEmbeddingModel?: (pool: pg.Pool) => Promise<string | null>
+  getActiveCollection?: (pool: pg.Pool, settings: Settings) => Promise<{ collectionName: string }>
   embed?: (baseUrl: string, model: string, text: string) => Promise<number[]>
   search?: (
     baseUrl: string,
@@ -175,12 +177,13 @@ export async function permissionedSearch (
 
   const vector = await (deps.embed ?? embedText)(settings.ollamaBaseUrl, embeddingModel, query)
   const filter = buildViewingRangeFilter(user.viewingRangeIds, isAdmin(user))
+  const activeCollection = await (deps.getActiveCollection ?? getActiveCollection)(pool, settings)
 
   let hits
   try {
     hits = await (deps.search ?? searchPoints)(
       settings.vectorDbUrl,
-      settings.vectorCollection,
+      activeCollection.collectionName,
       vector,
       topK * 3,
       filter

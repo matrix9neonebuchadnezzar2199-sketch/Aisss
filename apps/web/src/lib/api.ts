@@ -493,6 +493,34 @@ export async function deleteOllamaModelFromHost (modelName: string): Promise<voi
   })
 }
 
+export type ReindexJobStatus = {
+  id: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  total_chunks: number
+  processed_chunks: number
+  failed_chunks: number
+  percent: number
+  model_name: string | null
+  started_at: string | null
+  finished_at: string | null
+  error_message: string | null
+}
+
+export async function startReindex (modelName: string): Promise<{
+  reindex_job_id: string
+  collection_name: string
+  dimensions: number
+}> {
+  return apiFetch('/api/admin/reindex', {
+    method: 'POST',
+    body: JSON.stringify({ model_name: modelName })
+  })
+}
+
+export async function fetchReindexStatus (): Promise<{ job: ReindexJobStatus | null }> {
+  return apiFetch('/api/admin/reindex/current')
+}
+
 export type JobItem = {
   id: string
   job_type: string

@@ -7,6 +7,7 @@ import { AppError, sendError } from './lib/errors.js'
 import { authPlugin } from './plugins/auth.js'
 import { attachmentRoutes } from './routes/attachments.js'
 import { adminOllamaRoutes } from './routes/admin-ollama.js'
+import { adminReindexRoutes } from './routes/admin-reindex.js'
 import { aiRoutes } from './routes/ai.js'
 import { ragRoutes } from './routes/rag.js'
 import { auditRoutes } from './routes/audit.js'
@@ -100,6 +101,7 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
   await app.register(opsRoutes, { pool })
   await app.register(ollamaRoutes, { pool, settings })
   await app.register(adminOllamaRoutes, { pool, settings })
+  await app.register(adminReindexRoutes, { pool, settings })
   await app.register(ragRoutes, {
     pool,
     settings,

@@ -888,6 +888,28 @@ a.nav-link-style:hover {
   white-space: nowrap;
 }
 
+.models-reindex-progress {
+  margin-bottom: 12px;
+}
+
+.models-reindex-progress-bar {
+  margin-top: 8px;
+  height: 8px;
+  background: var(--border-muted, rgba(127, 127, 127, 0.25));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.models-reindex-progress-fill {
+  height: 100%;
+  background: var(--accent-emphasis, #388bfd);
+  transition: width 0.3s ease;
+}
+
+.models-reindex-notice {
+  margin-bottom: 12px;
+}
+
 .models-table tbody tr.model-row-chat-enabled td {
   border-color: rgba(56, 139, 253, 0.22);
 }

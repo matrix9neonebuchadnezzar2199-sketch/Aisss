@@ -19,7 +19,20 @@ export async function ensureCollection (
   vectorSize: number
 ): Promise<void> {
   const check = await fetch(new URL(`/collections/${collection}`, baseUrl))
-  if (check.ok) return
+  if (check.ok) {
+    const info = await check.json() as {
+      result?: { config?: { params?: { vectors?: { size?: number } } } }
+    }
+    const existingSize = info.result?.config?.params?.vectors?.size
+    if (existingSize != null && existingSize !== vectorSize) {
+      throw new AppError(
+        'vector_db_error',
+        `Qdrant collection "${collection}" dimension mismatch: expected ${vectorSize}, got ${existingSize}. Reindex required.`,
+        502
+      )
+    }
+    return
+  }
 
   const create = await fetch(new URL(`/collections/${collection}`, baseUrl), {
     method: 'PUT',
@@ -31,6 +44,19 @@ export async function ensureCollection (
   if (!create.ok) {
     throw new AppError('vector_db_error', `Qdrant create collection failed: HTTP ${create.status}`, 502)
   }
+}
+
+/** 新規コレクションを明示的に作成（reindex 開始時） */
+export async function createCollection (
+  baseUrl: string,
+  collection: string,
+  vectorSize: number
+): Promise<void> {
+  const check = await fetch(new URL(`/collections/${collection}`, baseUrl))
+  if (check.ok) {
+    throw new AppError('vector_db_error', `Qdrant collection "${collection}" already exists.`, 409)
+  }
+  await ensureCollection(baseUrl, collection, vectorSize)
 }
 
 export async function upsertPoints (
