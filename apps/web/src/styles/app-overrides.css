@@ -831,6 +831,15 @@ a.nav-link-style:hover {
   font-size: 12px;
 }
 
+.model-capability-tags {
+  margin-top: 4px;
+}
+
+.model-capability-tags .label {
+  font-size: 10px;
+  padding: 1px 6px;
+}
+
 .model-name-sub,
 .model-digest {
   font-size: 11px;

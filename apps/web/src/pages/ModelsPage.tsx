@@ -5,6 +5,7 @@ import {
   fetchOllamaModels,
   INFERENCE_CHAT_ROLE_BLOCK_MESSAGE,
   saveModelRoles,
+  type ModelCapabilityTag,
   type OllamaModelsResponse
 } from '../lib/api'
 
@@ -15,6 +16,7 @@ type ModelRow = {
   modified_at: string
   digest: string | null
   details: OllamaModelsResponse['models'][number]['details']
+  capability_tags: ModelCapabilityTag[]
   enabled_for_chat: boolean
   is_default_chat: boolean
   is_default_embedding: boolean
@@ -55,6 +57,19 @@ function formatModelSpec (details: ModelRow['details']): string {
   return parts.length > 0 ? parts.join(' · ') : '—'
 }
 
+function capabilityTagClass (id: ModelCapabilityTag['id']): string {
+  switch (id) {
+    case 'text': return 'label-info'
+    case 'embed': return 'label-purple'
+    case 'vision': return 'label-orange'
+    case 'audio': return 'label-pink'
+    case 'moe': return 'label-warning'
+    case 'rerank': return 'label-default'
+    case 'cloud': return 'label-success'
+    default: return 'label-default'
+  }
+}
+
 function mapModelsResponse (m: OllamaModelsResponse): ModelRow[] {
   return m.models.map((x) => ({
     name: x.name,
@@ -63,6 +78,7 @@ function mapModelsResponse (m: OllamaModelsResponse): ModelRow[] {
     modified_at: x.modified_at,
     digest: x.digest,
     details: x.details,
+    capability_tags: x.capability_tags,
     enabled_for_chat: x.enabled_for_chat,
     is_default_chat: x.is_default_chat,
     is_default_embedding: x.is_default_embedding,
@@ -259,6 +275,18 @@ export function ModelsPage () {
                   <td>
                     <div className="model-name-cell">
                       <code className="model-name-primary">{m.name}</code>
+                      {m.capability_tags.length > 0 && (
+                        <div className="label-row model-capability-tags">
+                          {m.capability_tags.map((tag) => (
+                            <span
+                              key={`${m.name}-${tag.id}`}
+                              className={`label ${capabilityTagClass(tag.id)}`}
+                            >
+                              {tag.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {m.model_id !== m.name && (
                         <span className="model-name-sub">{m.model_id}</span>
                       )}

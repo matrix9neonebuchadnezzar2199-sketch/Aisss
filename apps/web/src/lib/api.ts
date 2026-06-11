@@ -185,6 +185,20 @@ export type OllamaModelDetails = {
   quantization_level?: string
 }
 
+export type ModelCapabilityTagId =
+  | 'text'
+  | 'embed'
+  | 'audio'
+  | 'vision'
+  | 'moe'
+  | 'rerank'
+  | 'cloud'
+
+export type ModelCapabilityTag = {
+  id: ModelCapabilityTagId
+  label: string
+}
+
 export type OllamaModelsResponse = {
   models: Array<{
     name: string
@@ -193,6 +207,7 @@ export type OllamaModelsResponse = {
     modified_at: string
     digest: string | null
     details: OllamaModelDetails | null
+    capability_tags: ModelCapabilityTag[]
     enabled_for_chat: boolean
     is_default_chat: boolean
     is_default_embedding: boolean

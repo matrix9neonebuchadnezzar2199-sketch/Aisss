@@ -3,6 +3,7 @@ import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
 import type { Settings } from '../settings.js'
 import { getAiInferenceStatus } from '../services/ai-inference-tracker.js'
+import { inferModelCapabilityTags } from '../services/model-capability-tags.js'
 
 export const ollamaRoutes: FastifyPluginAsync<{
   pool: pg.Pool
@@ -49,6 +50,7 @@ export const ollamaRoutes: FastifyPluginAsync<{
           modified_at: m.modified_at,
           digest: m.digest ?? null,
           details: m.details ?? null,
+          capability_tags: inferModelCapabilityTags(m.name, m.details ?? null),
           roles: role?.roles ?? [],
           enabled_for_chat: role?.enabled_for_chat ?? false,
           is_default_chat: role?.is_default_chat ?? false,
