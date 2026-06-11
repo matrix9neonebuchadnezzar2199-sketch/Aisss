@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:22-alpine AS build
 
 WORKDIR /repo
@@ -5,7 +6,8 @@ WORKDIR /repo
 COPY package.json package-lock.json* ./
 COPY apps/api/package.json ./apps/api/
 
-RUN npm install -w @aisss/api
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -w @aisss/api
 
 COPY apps/api/tsconfig.json ./apps/api/
 COPY apps/api/src ./apps/api/src
@@ -22,7 +24,8 @@ ENV NODE_ENV=production
 ENV MIGRATIONS_DIR=/infra/migrations
 
 COPY apps/api/package.json ./
-RUN npm install --omit=dev
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --omit=dev
 
 COPY --from=build /repo/apps/api/dist ./dist
 COPY --from=build /repo/infra/migrations /infra/migrations

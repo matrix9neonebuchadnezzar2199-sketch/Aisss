@@ -1,0 +1,44 @@
+# Build context is repo root (aisss/docker-compose.yaml context: ..)
+# See docs/13-deployment-docker.md § Build cache
+
+# Git / IDE
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Host node_modules — installed inside image
+**/node_modules/
+**/.npm/
+**/npm-debug.log
+
+# Host build outputs — rebuilt in container
+**/dist/
+**/coverage/
+**/.turbo/
+
+# Env / secrets
+.env
+.env.*
+*.local
+
+# Docs and ops notes — not COPY'd into images
+docs/
+scripts/
+
+# Tests (not needed in production images)
+**/*.test.ts
+**/*.test.tsx
+**/vitest.config.*
+**/pytest_cache/
+
+# Large / dev-only (security policy: no samples in images)
+**/samples/
+**/output/
+**/*.bin
+**/*.exe
+
+# Keep mockups/ — web Dockerfile COPY mockups for static reference in dist

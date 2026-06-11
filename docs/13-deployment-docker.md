@@ -88,6 +88,28 @@ Or:
 docker compose -f aisss/docker-compose.yaml up -d
 ```
 
+## Build cache (fast rebuild)
+
+AISSS Dockerfiles follow [layer-cache best practices](https://eastondev.com/blog/ja/posts/dev/20251217-docker-build-cache/):
+
+1. **`.dockerignore`** at repo root — excludes `node_modules/`, `.git/`, `docs/`, host `dist/`, etc. from build context.
+2. **Stable-before-volatile COPY order** — `package.json` + lockfile → `npm install` → application source.
+3. **BuildKit cache mounts** — `RUN --mount=type=cache,target=/root/.npm` on npm steps (`# syntax=docker/dockerfile:1` in each Dockerfile).
+
+`Makefile` sets `DOCKER_BUILDKIT=1`. After **source-only** changes, rebuild only the affected service:
+
+```powershell
+make deploy-web     # apps/web
+make deploy-api     # apps/api
+make deploy-worker  # apps/workers
+```
+
+Use `make deploy` when Dockerfiles, lockfile, or multiple services change.
+
+Confirm cache hits in build output (`CACHED` / `Using cache`). If `npm install` reruns on every UI tweak, check Dockerfile layer order (do not `COPY` full source before install).
+
+See also `docs/19-operational-runbook.md` § Deploy verification and Cursor rule `56-aisss-docker-build-cache.mdc`.
+
 ## Environment
 
 Copy [`aisss/.env.example`](../aisss/.env.example). Key variables:

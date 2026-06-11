@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+# Layer order: deps (stable) → source (volatile). npm cache mount: BuildKit.
 FROM node:22-alpine AS build
 
 WORKDIR /repo
@@ -5,7 +7,8 @@ WORKDIR /repo
 COPY package.json package-lock.json* ./
 COPY apps/web/package.json ./apps/web/
 
-RUN npm install -w @aisss/web
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -w @aisss/web
 
 COPY apps/web ./apps/web
 COPY mockups ./mockups

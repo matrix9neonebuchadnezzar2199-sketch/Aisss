@@ -183,8 +183,18 @@ Docker serves **built images**, not the git working tree. Stale images caused:
 
 ### Procedure
 
+**Scoped rebuild (preferred when one app changed):**
+
 ```powershell
 cd F:\Cursor\Aisss
+make deploy-web      # apps/web only
+make deploy-api      # apps/api only
+make deploy-worker   # apps/workers only
+```
+
+**Full stack** (Dockerfile, lockfile, or multiple apps):
+
+```powershell
 make deploy
 ```
 
@@ -195,6 +205,8 @@ make build
 docker compose -f aisss/docker-compose.yaml up -d web api worker
 make verify-deploy
 ```
+
+Build cache (faster rebuilds): `docs/13-deployment-docker.md` § Build cache — `.dockerignore`, layer order, BuildKit npm cache mounts.
 
 Linux/macOS verify script: `bash scripts/verify-docker-deploy.sh`
 
