@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { AppVersionLabel } from '../AppVersionLabel'
 import { adminSubmenuItems, topNavItems, type TopNavItem } from '../../routes'
 import { useMe } from '../../hooks/useMe'
 import { OllamaStatusBadge } from '../OllamaStatusBadge'
@@ -56,6 +57,7 @@ export function GhHeader () {
         </details>
       </nav>
       <OllamaStatusBadge />
+      <AppVersionLabel className="gh-version-label" />
       <span className="gh-user">{me?.display_name ?? '—'} / {me?.role ?? '…'}</span>
     </header>
   )

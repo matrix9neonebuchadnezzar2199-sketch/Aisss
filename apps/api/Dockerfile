@@ -18,10 +18,15 @@ RUN npm run build
 
 FROM node:22-alpine
 
+ARG APP_VERSION=0.0.0
+ARG GIT_SHA=dev
+
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV MIGRATIONS_DIR=/infra/migrations
+ENV AISSS_VERSION=$APP_VERSION
+ENV AISSS_GIT_SHA=$GIT_SHA
 
 COPY apps/api/package.json ./
 RUN --mount=type=cache,target=/root/.npm \

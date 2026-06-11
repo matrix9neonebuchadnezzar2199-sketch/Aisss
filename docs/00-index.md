@@ -28,9 +28,10 @@ The central design rule is simple: the case management database is the source of
 16. [RAG Admin Guide](./16-rag-admin-guide.md)
 17. [Viewing Range Permission Flow](./17-viewing-range-permission-flow.md)
 18. [Operational Runbook](./19-operational-runbook.md)
-19. [WebUI Mockup](../mockups/webui.html)（HTML）
-20. [Case Detail Mockup](../mockups/case-detail.html)（HTML）
-21. [Development Diary](./dev-diary.md)
+19. [Versioning](./21-versioning.md) — SemVer + git SHA in UI and `/api/health`
+20. [WebUI Mockup](../mockups/webui.html)（HTML）
+21. [Case Detail Mockup](../mockups/case-detail.html)（HTML）
+22. [Development Diary](./dev-diary.md)
 
 ## Flow-Oriented Reading
 

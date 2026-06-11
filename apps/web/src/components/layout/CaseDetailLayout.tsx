@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom'
+import { AppVersionLabel } from '../AppVersionLabel'
 import { OllamaStatusBadge } from '../OllamaStatusBadge'
 import { useMe } from '../../hooks/useMe'
 
@@ -20,6 +21,9 @@ export function CaseDetailLayout () {
       </header>
       <div className="container">
         <Outlet />
+        <p className="app-footer-mock-ref">
+          <AppVersionLabel />
+        </p>
       </div>
     </div>
   )

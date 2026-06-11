@@ -23,6 +23,9 @@ services:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-0.0.0}
+        GIT_SHA: ${GIT_SHA:-unknown}
     env_file:
       - .env
     depends_on:
@@ -37,6 +40,9 @@ services:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-0.0.0}
+        GIT_SHA: ${GIT_SHA:-unknown}
     env_file:
       - .env
     depends_on:

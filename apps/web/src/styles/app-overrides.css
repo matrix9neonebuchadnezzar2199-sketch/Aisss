@@ -82,6 +82,11 @@ a.nav-link-style:hover {
 }
 
 .app-footer-mock-ref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: center;
+  align-items: center;
   text-align: center;
   font-size: 11px;
   color: var(--fg-subtle);
@@ -90,6 +95,85 @@ a.nav-link-style:hover {
   border-top: 1px solid var(--border-muted);
 }
 
+.app-footer-sep {
+  opacity: 0.5;
+}
+
+.app-version-label {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--fg-muted);
+  letter-spacing: 0.02em;
+}
+
+.app-version-label:hover {
+  color: var(--accent-fg);
+}
+
+.gh-version-label {
+  font-size: 11px;
+  color: var(--fg-subtle);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
 .app-footer-mock-ref a {
   color: var(--accent-fg);
+}
+
+/* Register / edit form layout (mock form-section parity) */
+.register-panel .form-section > .form-group-wide {
+  margin-top: 12px;
+}
+
+.register-panel .form-group-wide .rag-register-note {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.register-panel .viewing-range-multi {
+  min-height: 6.5rem;
+}
+
+.register-panel .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-muted);
+}
+
+.register-panel .register-edit-banner {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.register-panel .register-attach-hint {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.excel-import-embedded {
+  margin: 0;
+}
+
+.excel-import-embedded .upload-zone {
+  margin-top: 8px;
+}
+
+.excel-import-panel .preview-block,
+.excel-import-panel .confirm-block {
+  margin-top: 12px;
+}
+
+.excel-import-panel .preview-block .data-table {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.excel-import-panel .error {
+  color: var(--danger-fg);
+  font-size: 13px;
+  margin-top: 8px;
 }

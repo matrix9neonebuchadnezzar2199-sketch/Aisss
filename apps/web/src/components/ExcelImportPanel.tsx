@@ -49,7 +49,7 @@ async function downloadTemplate () {
   URL.revokeObjectURL(url)
 }
 
-export function ExcelImportPanel () {
+export function ExcelImportPanel ({ embedded = false }: { embedded?: boolean }) {
   const [preview, setPreview] = useState<PreviewResult | null>(null)
   const [confirm, setConfirm] = useState<ConfirmResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -105,19 +105,19 @@ export function ExcelImportPanel () {
   }
 
   return (
-    <section className="excel-import-panel">
-      <h3>Excel 一括取り込み</h3>
-      <p className="hint">
+    <section className={`excel-import-panel${embedded ? ' excel-import-embedded' : ''}`}>
+      {!embedded && <h3>Excel 一括取り込み</h3>}
+      <p className="rag-register-note">
         <button
           type="button"
-          className="linkish"
+          className="btn btn-sm btn-excel"
           onClick={() => {
             void downloadTemplate().catch((e: Error) => setError(e.message))
           }}
         >
           テンプレートをダウンロード
         </button>
-        （プレビュー → 確認の 2 段階。エラー行はスキップされます）
+        {' '}プレビュー → 確認の 2 段階。エラー行はスキップされます。
       </p>
       <label className="upload-zone">
         <input
@@ -154,7 +154,7 @@ export function ExcelImportPanel () {
               ))}
             </tbody>
           </table>
-          <button type="button" disabled={loading || preview.summary.valid_rows === 0} onClick={() => void runConfirm()}>
+          <button type="button" className="btn btn-sm btn-primary" disabled={loading || preview.summary.valid_rows === 0} onClick={() => void runConfirm()}>
             有効行を登録する
           </button>
         </div>

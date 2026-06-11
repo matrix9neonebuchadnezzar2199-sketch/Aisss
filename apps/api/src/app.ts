@@ -18,6 +18,7 @@ import { ollamaRoutes } from './routes/ollama.js'
 import { opsRoutes } from './routes/ops.js'
 import { permissionRoutes } from './routes/permissions.js'
 import { checkOllamaHealth } from './services/ollama-health.js'
+import { getBuildInfo } from './lib/build-info.js'
 import type { Settings } from './settings.js'
 
 export type AppDeps = {
@@ -56,6 +57,8 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
     return {
       status: database ? 'ok' : 'degraded',
       service: 'aisss-api',
+      version: getBuildInfo().version,
+      git_sha: getBuildInfo().gitSha,
       database,
       checked_at: new Date().toISOString()
     }

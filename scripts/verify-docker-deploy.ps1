@@ -39,6 +39,40 @@ Then re-run: pwsh scripts/verify-docker-deploy.ps1
   Write-Host "OK web: CSS ${size} bytes, gh-header present"
 }
 
+function Test-WebBuildVersion {
+  $name = 'aisss-web-1'
+  Assert-ContainerRunning $name
+
+  $expectedSha = $null
+  try {
+    $expectedSha = (git rev-parse --short HEAD 2>$null).Trim()
+  } catch {
+    Write-Warning 'Not a git repo; skipping build SHA check'
+    return
+  }
+  if (-not $expectedSha) {
+    Write-Warning 'Could not resolve git HEAD; skipping build SHA check'
+    return
+  }
+
+  $found = docker exec $name sh -c "grep -l '$expectedSha' /usr/share/nginx/html/assets/*.js 2>/dev/null | head -1"
+  if (-not $found) {
+    throw @"
+STALE web image: bundled JS does not contain commit $expectedSha.
+Fix: pwsh scripts/deploy-web.ps1  (or make deploy-web)
+"@
+  }
+
+  $pkg = Get-Content (Join-Path $PSScriptRoot '..\package.json') -Raw | ConvertFrom-Json
+  $ver = $pkg.version
+  $verFound = docker exec $name sh -c "grep -l '$ver' /usr/share/nginx/html/assets/*.js 2>/dev/null | head -1"
+  if (-not $verFound) {
+    throw "STALE web image: bundled JS missing version $ver. Rebuild web container."
+  }
+
+  Write-Host "OK web: build label v$ver ($expectedSha) in bundle"
+}
+
 function Test-ApiCsvBom {
   $port = if ($env:AISSS_API_PORT) { $env:AISSS_API_PORT } else { '8000' }
   $userId = '00000000-0000-4000-8000-000000000001'
@@ -55,6 +89,7 @@ function Test-ApiCsvBom {
 }
 
 Test-WebImageFresh
+Test-WebBuildVersion
 if (-not $SkipApiBom) {
   try { Test-ApiCsvBom } catch { Write-Warning $_.Exception.Message }
 }

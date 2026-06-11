@@ -12,6 +12,8 @@ make deploy        # multiple services / Dockerfile / lockfile
 
 Do not mark work complete until `make verify-deploy` passes.
 
+After deploy, confirm the footer shows **`vX.Y.Z (abcdef0)`** matching `git rev-parse --short HEAD`. See `docs/21-versioning.md`.
+
 ## Build speed
 
 - Root `.dockerignore` + BuildKit npm cache mounts in Dockerfiles (see `docs/13-deployment-docker.md` § Build cache).

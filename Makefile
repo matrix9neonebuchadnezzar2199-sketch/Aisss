@@ -4,6 +4,12 @@
 
 AISSS_COMPOSE ?= aisss/docker-compose.yaml
 
+# SemVer + git SHA baked into web/api images (docs/21-versioning.md)
+APP_VERSION := $(shell node -p "require('./package.json').version")
+GIT_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
+export APP_VERSION
+export GIT_SHA
+
 # BuildKit: required for RUN --mount=type=cache in Dockerfiles (see rule 56)
 export DOCKER_BUILDKIT := 1
 export COMPOSE_DOCKER_CLI_BUILD := 1

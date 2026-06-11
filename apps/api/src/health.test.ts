@@ -39,9 +39,11 @@ test('GET /api/health returns service payload', async (t) => {
 
   const response = await app.inject({ method: 'GET', url: '/api/health' })
   assert.equal(response.statusCode, 200)
-  const body = response.json() as { service: string; status: string }
+  const body = response.json() as { service: string; status: string; version: string; git_sha: string }
   assert.equal(body.service, 'aisss-api')
   assert.equal(body.status, 'ok')
+  assert.match(body.version, /^\d+\.\d+\.\d+$/)
+  assert.ok(body.git_sha.length >= 3)
 })
 
 test('checkOllamaHealth reports down when unreachable', async () => {

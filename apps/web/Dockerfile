@@ -2,6 +2,11 @@
 # Layer order: deps (stable) → source (volatile). npm cache mount: BuildKit.
 FROM node:22-alpine AS build
 
+ARG APP_VERSION=0.0.0
+ARG GIT_SHA=dev
+ENV VITE_APP_VERSION=$APP_VERSION
+ENV VITE_GIT_SHA=$GIT_SHA
+
 WORKDIR /repo
 
 COPY package.json package-lock.json* ./

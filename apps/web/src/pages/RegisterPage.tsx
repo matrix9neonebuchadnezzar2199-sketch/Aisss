@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AttachmentPanel } from '../components/AttachmentPanel'
 import { ExcelImportPanel } from '../components/ExcelImportPanel'
@@ -18,6 +18,28 @@ const emptyForm = {
   registering_department_id: '',
   rank_id: '',
   viewing_range_ids: [] as string[]
+}
+
+function FormGroup ({
+  label,
+  required,
+  wide,
+  children
+}: {
+  label: string
+  required?: boolean
+  wide?: boolean
+  children: ReactNode
+}) {
+  return (
+    <div className={`form-group${wide ? ' form-group-wide' : ''}`}>
+      <label>
+        {label}
+        {required ? ' *' : ''}
+      </label>
+      {children}
+    </div>
+  )
 }
 
 export function RegisterPage () {
@@ -115,88 +137,195 @@ export function RegisterPage () {
 
   return (
     <section className="view active" id="view-register">
-      <div className="panel">
+      <div className="panel register-panel">
         <div className="panel-header">
-          <h2>{caseId ? `ケース編集 · ${editDisplayId}` : 'ケース（事象）登録'}</h2>
-          {editDisplayId && (
-            <Link className="btn btn-sm" to={`/cases/${editDisplayId}`} target="_blank" rel="noopener noreferrer">
-              キャンセル（詳細へ）
-            </Link>
+          <div className="panel-header-title-row">
+            <h2>{caseId ? `ケース（事象）編集 · ${editDisplayId}` : 'ケース（事象）登録'}</h2>
+          </div>
+          <div className="label-row">
+            <span className={`label ${caseId ? 'label-info' : 'label-default'}`}>
+              {caseId ? '編集モード' : '新規登録'}
+            </span>
+          </div>
+          {caseId && (
+            <p className="rag-register-note register-edit-banner">
+              既存ケースの<strong>上書き更新</strong>です。保存後、詳細を新しいタブで開きます。
+            </p>
           )}
         </div>
+
         <div className="panel-body">
-          {!caseId && <ExcelImportPanel />}
           {error && <p className="error">{error}</p>}
 
-          <div className="form-grid">
-            <label>表題 *
-              <input value={form.title} onChange={(e) => update('title', e.target.value)} required />
-            </label>
-            <label>資料番号
-              <input value={form.material_number} onChange={(e) => update('material_number', e.target.value)} />
-            </label>
-            <label>資料区分
-              <select value={form.material_type_id} onChange={(e) => update('material_type_id', e.target.value)}>
-                <option value="">—</option>
-                {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </label>
-            <label>登録部署
-              <select value={form.registering_department_id} onChange={(e) => update('registering_department_id', e.target.value)}>
-                <option value="">—</option>
-                {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </label>
-            <label>ランク
-              <select value={form.rank_id} onChange={(e) => update('rank_id', e.target.value)}>
-                <option value="">—</option>
-                {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </label>
-            <label>事象開始日
-              <input type="date" value={form.event_start_date} onChange={(e) => update('event_start_date', e.target.value)} />
-            </label>
-            <label>事象終了日
-              <input type="date" value={form.event_end_date} onChange={(e) => update('event_end_date', e.target.value)} />
-            </label>
-            <label>閲覧範囲 *
+          {!caseId && (
+            <div className="form-section form-section-excel">
+              <h3>Excel 一括取り込み</h3>
+              <ExcelImportPanel embedded />
+            </div>
+          )}
+
+          <div className="form-section">
+            <h3>基本情報</h3>
+            <div className="form-grid">
+              <FormGroup label="表題" required>
+                <input
+                  id="field-title"
+                  value={form.title}
+                  onChange={(e) => update('title', e.target.value)}
+                  placeholder="資料の表題"
+                  required
+                />
+              </FormGroup>
+              <FormGroup label="資料番号">
+                <input
+                  id="field-material-number"
+                  value={form.material_number}
+                  onChange={(e) => update('material_number', e.target.value)}
+                />
+              </FormGroup>
+              <FormGroup label="資料区分">
+                <select
+                  id="field-material-type"
+                  value={form.material_type_id}
+                  onChange={(e) => update('material_type_id', e.target.value)}
+                >
+                  <option value="">—</option>
+                  {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </FormGroup>
+            </div>
+            <FormGroup label="要約" wide>
+              <textarea
+                id="field-summary"
+                rows={2}
+                value={form.summary}
+                onChange={(e) => update('summary', e.target.value)}
+              />
+            </FormGroup>
+          </div>
+
+          <div className="form-section">
+            <h3>事象・出所</h3>
+            <div className="form-grid">
+              <FormGroup label="事象発生（開始）">
+                <input
+                  type="date"
+                  id="field-event-start"
+                  value={form.event_start_date}
+                  onChange={(e) => update('event_start_date', e.target.value)}
+                />
+              </FormGroup>
+              <FormGroup label="事象発生（終了）">
+                <input
+                  type="date"
+                  id="field-event-end"
+                  value={form.event_end_date}
+                  onChange={(e) => update('event_end_date', e.target.value)}
+                />
+              </FormGroup>
+              <FormGroup label="登録部署">
+                <select
+                  id="field-department"
+                  value={form.registering_department_id}
+                  onChange={(e) => update('registering_department_id', e.target.value)}
+                >
+                  <option value="">—</option>
+                  {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </FormGroup>
+              <FormGroup label="ランク">
+                <select
+                  id="field-rank"
+                  value={form.rank_id}
+                  onChange={(e) => update('rank_id', e.target.value)}
+                >
+                  <option value="">—</option>
+                  {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </FormGroup>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3>取扱・閲覧</h3>
+            <FormGroup label="閲覧範囲" required wide>
               <select
+                id="field-viewing-range"
+                className="viewing-range-multi"
                 multiple
                 required
+                size={Math.min(Math.max(viewingRanges.length, 3), 6)}
                 value={form.viewing_range_ids}
                 onChange={(e) => update('viewing_range_ids', Array.from(e.target.selectedOptions, (o) => o.value))}
               >
                 {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
-              <span className="rag-register-note">必ず1つ以上選択。「全員」「管理者のみ」も閲覧範囲として選択します。</span>
-            </label>
-            <label className="full">要約
-              <textarea rows={3} value={form.summary} onChange={(e) => update('summary', e.target.value)} />
-            </label>
+              <p className="rag-register-note">
+                必ず1つ以上選択（Ctrl+クリックで複数）。「全員」「管理者のみ」も明示的に選びます。
+              </p>
+            </FormGroup>
           </div>
 
-          <div className="form-body-stack">
-            <label>1 要約
-              <textarea rows={3} value={form.body_summary} onChange={(e) => update('body_summary', e.target.value)} />
-            </label>
-            <label className="body-article">2 記事
-              <textarea rows={8} value={form.body_article} onChange={(e) => update('body_article', e.target.value)} />
-            </label>
-            <label>3 所見
-              <textarea rows={3} value={form.body_assessment} onChange={(e) => update('body_assessment', e.target.value)} />
-            </label>
-            <label>4 その他参考事項
-              <textarea rows={3} value={form.body_reference} onChange={(e) => update('body_reference', e.target.value)} />
-            </label>
+          <div className="form-section">
+            <h3>本文（登録時は分割、表示時は結合）</h3>
+            <div className="form-body-stack">
+              <FormGroup label="1 要約">
+                <textarea
+                  id="field-body-summary"
+                  rows={3}
+                  value={form.body_summary}
+                  onChange={(e) => update('body_summary', e.target.value)}
+                />
+              </FormGroup>
+              <FormGroup label="2 記事">
+                <textarea
+                  id="field-body-article"
+                  rows={8}
+                  value={form.body_article}
+                  onChange={(e) => update('body_article', e.target.value)}
+                />
+              </FormGroup>
+              <FormGroup label="3 所見">
+                <textarea
+                  id="field-body-assessment"
+                  rows={3}
+                  value={form.body_assessment}
+                  onChange={(e) => update('body_assessment', e.target.value)}
+                />
+              </FormGroup>
+              <FormGroup label="4 その他参考事項">
+                <textarea
+                  id="field-body-reference"
+                  rows={3}
+                  value={form.body_reference}
+                  onChange={(e) => update('body_reference', e.target.value)}
+                />
+              </FormGroup>
+            </div>
           </div>
 
-          <button type="button" className="btn btn-primary" onClick={() => void submit()} disabled={saving}>
-            {caseId ? '更新する' : '登録する'}
-          </button>
+          {caseId && (
+            <div className="form-section">
+              <h3>添付</h3>
+              <AttachmentPanel caseId={caseId} />
+            </div>
+          )}
 
-          {caseId && <AttachmentPanel caseId={caseId} />}
+          <div className="form-actions">
+            <button type="button" className="btn btn-primary" onClick={() => void submit()} disabled={saving}>
+              {caseId ? '更新する' : '登録する'}
+            </button>
+            {editDisplayId && (
+              <Link className="btn" to={`/cases/${editDisplayId}`} target="_blank" rel="noopener noreferrer">
+                キャンセル
+              </Link>
+            )}
+          </div>
+
           {!caseId && (
-            <p className="rag-register-note">添付ファイルは登録後（編集モード）または詳細画面からアップロードできます。</p>
+            <p className="rag-register-note register-attach-hint">
+              添付ファイルは登録後（編集モード）または詳細画面からアップロードできます。
+            </p>
           )}
         </div>
       </div>
