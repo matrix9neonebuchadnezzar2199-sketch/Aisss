@@ -2,11 +2,16 @@ import type { FastifyPluginAsync } from 'fastify'
 import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
 import type { Settings } from '../settings.js'
+import { getAiInferenceStatus } from '../services/ai-inference-tracker.js'
 
 export const ollamaRoutes: FastifyPluginAsync<{
   pool: pg.Pool
   settings: Settings
 }> = async (app, { pool, settings }) => {
+  app.get('/api/ollama/inference-status', async () => {
+    return getAiInferenceStatus()
+  })
+
   app.get('/api/ollama/models', async (request, reply) => {
     try {
       const response = await fetch(new URL('/api/tags', settings.ollamaBaseUrl))

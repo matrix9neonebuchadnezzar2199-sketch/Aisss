@@ -227,6 +227,14 @@ export async function fetchOllamaModels (): Promise<OllamaModelsResponse> {
   return apiFetch('/api/ollama/models')
 }
 
+export async function fetchOllamaInferenceStatus (): Promise<{ active: boolean; models: string[] }> {
+  return apiFetch('/api/ollama/inference-status')
+}
+
+/** 推論中にチャットロール変更を試みたときの案内文 */
+export const INFERENCE_CHAT_ROLE_BLOCK_MESSAGE =
+  'モデルが動作中です。強制的にチャット有効対象を変更して有効化したい場合は Ollama を強制終了して再起動してください。'
+
 /** Models marked チャット有効 in model management (saved in DB). */
 export function getEnabledChatModelNames (response: OllamaModelsResponse): string[] {
   return response.defaults.enabled_chat_models

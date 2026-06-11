@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchOllamaHealth,
+  fetchOllamaInferenceStatus,
   fetchOllamaModels,
+  INFERENCE_CHAT_ROLE_BLOCK_MESSAGE,
   saveModelRoles,
   type OllamaModelsResponse
 } from '../lib/api'
@@ -76,6 +78,8 @@ export function ModelsPage () {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [inferenceNotice, setInferenceNotice] = useState<string | null>(null)
+  const initialChatRolesRef = useRef<Map<string, { enabled: boolean; defaultChat: boolean }>>(new Map())
 
   const reloadFromOllama = useCallback(async () => {
     setLoading(true)
@@ -83,7 +87,12 @@ export function ModelsPage () {
     setSaved(false)
     try {
       const [m, h] = await Promise.all([fetchOllamaModels(), fetchOllamaHealth()])
-      setModels(mapModelsResponse(m))
+      const rows = mapModelsResponse(m)
+      setModels(rows)
+      initialChatRolesRef.current = new Map(rows.map((row) => [row.name, {
+        enabled: row.enabled_for_chat,
+        defaultChat: row.is_default_chat
+      }]))
       setRerankEnabled(m.defaults.rerank_enabled)
       setHealth(h.status)
       setLatency(h.latency_ms)
@@ -111,10 +120,48 @@ export function ModelsPage () {
     }))
   }
 
+  async function tryChatRoleChange (name: string, patch: Partial<ModelRow>) {
+    const affectsChat = patch.enabled_for_chat !== undefined || patch.is_default_chat !== undefined
+    if (!affectsChat) {
+      setInferenceNotice(null)
+      updateModel(name, patch)
+      return
+    }
+    try {
+      const status = await fetchOllamaInferenceStatus()
+      if (status.active) {
+        setInferenceNotice(INFERENCE_CHAT_ROLE_BLOCK_MESSAGE)
+        return
+      }
+      setInferenceNotice(null)
+      updateModel(name, patch)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '推論状態の確認に失敗しました')
+    }
+  }
+
+  function chatRolesChangedFromInitial (): boolean {
+    for (const m of models) {
+      const init = initialChatRolesRef.current.get(m.name)
+      if (!init) {
+        if (m.enabled_for_chat || m.is_default_chat) return true
+        continue
+      }
+      if (m.enabled_for_chat !== init.enabled || m.is_default_chat !== init.defaultChat) return true
+    }
+    return false
+  }
+
   async function onSave () {
     setError(null)
     setSaved(false)
     try {
+      const status = await fetchOllamaInferenceStatus()
+      if (status.active && chatRolesChangedFromInitial()) {
+        setInferenceNotice(INFERENCE_CHAT_ROLE_BLOCK_MESSAGE)
+        return
+      }
+      setInferenceNotice(null)
       await saveModelRoles({
         rerank_enabled: rerankEnabled,
         assignments: models.map((m) => ({
@@ -180,9 +227,11 @@ export function ModelsPage () {
           <div className="policy-banner">
             ホスト Ollama のモデル一覧（<code>GET /api/ollama/models</code>）。pull / delete はホスト CLI で実施。ロール割当は管理者が WebUI で設定します。
           </div>
-          <div className="policy-banner models-runtime-notice">
-            モデルが動作中です。強制的にチャット有効対象を変更して有効化したい場合は Ollama を強制終了して再起動してください。AISSS は VRAM 上のモデル読み込み・切替は行いません（DB のロール設定のみ更新します）。
-          </div>
+          {inferenceNotice && (
+            <div className="policy-banner models-runtime-notice" role="alert">
+              {inferenceNotice}
+            </div>
+          )}
 
           <table className="data-table models-table">
             <thead>
@@ -228,7 +277,7 @@ export function ModelsPage () {
                       type="checkbox"
                       checked={m.enabled_for_chat}
                       aria-label={`${m.name} をチャット有効`}
-                      onChange={(e) => updateModel(m.name, {
+                      onChange={(e) => void tryChatRoleChange(m.name, {
                         enabled_for_chat: e.target.checked,
                         ...(e.target.checked ? {} : { is_default_chat: false })
                       })}
@@ -240,7 +289,7 @@ export function ModelsPage () {
                       name="default_chat"
                       checked={m.is_default_chat}
                       aria-label={`${m.name} を既定チャット`}
-                      onChange={() => updateModel(m.name, { is_default_chat: true, enabled_for_chat: true })}
+                      onChange={() => void tryChatRoleChange(m.name, { is_default_chat: true, enabled_for_chat: true })}
                     />
                   </td>
                   <td>

@@ -48,6 +48,29 @@ export async function getDefaultChatModel (pool: pg.Pool): Promise<string | null
   return defaults.chat_model
 }
 
+/** チャット有効 / 既定チャットが DB と異なる割当が含まれるか。 */
+export async function chatRolesWouldChange (
+  pool: pg.Pool,
+  assignments: ModelRoleAssignment[]
+): Promise<boolean> {
+  const { rows } = await pool.query<{
+    model_name: string
+    enabled_for_chat: boolean
+    is_default_chat: boolean
+  }>(
+    `SELECT model_name, enabled_for_chat, is_default_chat FROM ollama_model_roles`
+  )
+  const current = new Map(rows.map((r) => [r.model_name, r]))
+  for (const a of assignments) {
+    const prev = current.get(a.model_name)
+    const nextEnabled = a.enabled_for_chat ?? false
+    const nextDefault = a.is_default_chat ?? false
+    if (nextEnabled !== (prev?.enabled_for_chat ?? false)) return true
+    if (nextDefault !== (prev?.is_default_chat ?? false)) return true
+  }
+  return false
+}
+
 export async function updateModelRoles (
   pool: pg.Pool,
   user: AuthUser,

@@ -50,7 +50,7 @@ Stored in PostgreSQL or admin configuration:
 
 Administrators update roles via `PUT /api/admin/ollama/model-roles`.
 
-**Runtime model loading (out of scope for AISSS):** Changing chat-enabled models or defaults updates PostgreSQL only. AISSS does not unload or preload models in host Ollama VRAM. If a model is already loaded and operators must force a different chat target to take effect immediately, restart Ollama on the host (force quit and start again). WebUI shows this notice on `/models`.
+**Runtime model loading (out of scope for AISSS):** Changing chat-enabled models or defaults updates PostgreSQL only. AISSS does not unload or preload models in host Ollama VRAM. While AI chat inference is active (`GET /api/ollama/inference-status`), the WebUI blocks chat-role edits and shows a notice to restart Ollama if operators must force a switch.
 
 ## API Contract
 

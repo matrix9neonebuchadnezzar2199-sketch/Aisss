@@ -10,6 +10,7 @@ import { isAdmin } from './permissions.js'
 import { getDefaultChatModel, getModelDefaults } from './model-roles.js'
 import { writeAuditLog } from './audit.js'
 import { checkOllamaHealth } from './ollama-health.js'
+import { beginAiInference, endAiInference } from './ai-inference-tracker.js'
 
 const WEBUI_CHAT_CHANNEL = 'webui_chat'
 
@@ -85,12 +86,18 @@ export async function runAiChat (
     quoteHint
   )
 
-  const answer = await (deps.complete ?? chatCompletion)(
-    settings.ollamaBaseUrl,
-    model,
-    systemPrompt,
-    input.message.trim()
-  )
+  beginAiInference(model)
+  let answer: string
+  try {
+    answer = await (deps.complete ?? chatCompletion)(
+      settings.ollamaBaseUrl,
+      model,
+      systemPrompt,
+      input.message.trim()
+    )
+  } finally {
+    endAiInference(model)
+  }
 
   await (deps.audit ?? writeAuditLog)(pool, {
     userId: user.id,
@@ -191,14 +198,19 @@ export async function* streamAiChat (
     effective_policies: search.effective_policies
   }
 
-  for await (const token of chatCompletionStream(
-    settings.ollamaBaseUrl,
-    model,
-    systemPrompt,
-    input.message.trim()
-  )) {
-    yield { type: 'token' as const, content: token }
-  }
+  beginAiInference(model)
+  try {
+    for await (const token of chatCompletionStream(
+      settings.ollamaBaseUrl,
+      model,
+      systemPrompt,
+      input.message.trim()
+    )) {
+      yield { type: 'token' as const, content: token }
+    }
 
-  yield { type: 'done' as const }
+    yield { type: 'done' as const }
+  } finally {
+    endAiInference(model)
+  }
 }
