@@ -8,11 +8,10 @@ import {
   type CaseListItem,
   type MasterItem
 } from '../lib/api'
-import { useSearchFilterCollapsed } from '../hooks/useSidebarCollapsed'
+import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
 
 export function SearchPage () {
   const navigate = useNavigate()
-  const [filterCollapsed, toggleFilter] = useSearchFilterCollapsed()
   const [items, setItems] = useState<CaseListItem[]>([])
   const [total, setTotal] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -116,55 +115,43 @@ export function SearchPage () {
           <Link className="btn btn-primary btn-sm" to="/register">+ 新規登録</Link>
         </div>
         <div className="panel-body">
-          <div className={`filter-panel${filterCollapsed ? ' collapsed' : ''}`} id="searchFilterPanel">
-            <button
-              type="button"
-              className="filter-panel-toggle"
-              aria-expanded={!filterCollapsed}
-              onClick={toggleFilter}
-            >
-              <span className="filter-chevron">{filterCollapsed ? '▶' : '▼'}</span>
-              <span>検索条件</span>
-              <span className="filter-collapsed-hint">クリックで展開</span>
-            </button>
-            <div className="filter-panel-body" id="searchFilterBody">
-              <div className="search-filter-panel">
-                <div className="filter-bar search-filter-row search-filter-keyword">
-                  <input
-                    type="search"
-                    placeholder="キーワード・全文検索…"
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                  />
-                </div>
-                <div className="filter-bar search-filter-row search-filter-masters">
-                  <select title="資料区分" value={materialTypeId} onChange={(e) => setMaterialTypeId(e.target.value)}>
-                    <option value="">資料区分</option>
-                    {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  </select>
-                  <select title="登録部署" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
-                    <option value="">登録部署</option>
-                    {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  </select>
-                  <select title="ランク" value={rankId} onChange={(e) => setRankId(e.target.value)}>
-                    <option value="">ランク</option>
-                    {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  </select>
-                </div>
-                <div className="filter-bar search-filter-row search-filter-viewing">
-                  <select title="閲覧範囲" value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
-                    <option value="">閲覧範囲</option>
-                    {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  </select>
-                </div>
-                <div className="filter-bar search-filter-row search-filter-actions">
-                  <button type="button" className="btn btn-sm btn-primary" onClick={() => void runSearch()} disabled={loading}>
-                    検索
-                  </button>
-                </div>
+          <CollapsibleFilterPanel storageKey="aisss-search-filter-collapsed" title="検索条件">
+            <div className="search-filter-panel">
+              <div className="filter-bar search-filter-row search-filter-keyword">
+                <input
+                  type="search"
+                  placeholder="キーワード・全文検索…"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
+              <div className="filter-bar search-filter-row search-filter-masters">
+                <select title="資料区分" value={materialTypeId} onChange={(e) => setMaterialTypeId(e.target.value)}>
+                  <option value="">資料区分</option>
+                  {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <select title="登録部署" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+                  <option value="">登録部署</option>
+                  {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <select title="ランク" value={rankId} onChange={(e) => setRankId(e.target.value)}>
+                  <option value="">ランク</option>
+                  {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </div>
+              <div className="filter-bar search-filter-row search-filter-viewing">
+                <select title="閲覧範囲" value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
+                  <option value="">閲覧範囲</option>
+                  {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </div>
+              <div className="filter-bar search-filter-row search-filter-actions">
+                <button type="button" className="btn btn-sm btn-primary" onClick={() => void runSearch()} disabled={loading}>
+                  検索
+                </button>
               </div>
             </div>
-          </div>
+          </CollapsibleFilterPanel>
 
           <p className="search-hint">
             表題クリックでケース詳細を表示。2件比較は <strong>Ctrl+クリック</strong>（Mac: <strong>⌘+クリック</strong>）で別タブ、または詳細画面の「別タブで開く」を使用。

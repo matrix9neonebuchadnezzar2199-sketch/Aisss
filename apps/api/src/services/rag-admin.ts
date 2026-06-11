@@ -10,6 +10,7 @@ import { putObject } from './storage.js'
 import { writeAuditLog } from './audit.js'
 import { deletePoints } from './qdrant.js'
 import type { Settings } from '../settings.js'
+import { getRagStorageBreakdown } from './rag-storage-breakdown.js'
 
 function requireOperator (user: AuthUser) {
   if (!isAdmin(user) && user.role !== 'operator') {
@@ -64,13 +65,15 @@ export async function getRagStatus (pool: pg.Pool) {
   ])
   const notEnabledCandidates =
     Number(attachCandidates.rows[0]?.count ?? 0) + Number(standaloneCandidates.rows[0]?.count ?? 0)
+  const storage_breakdown = await getRagStorageBreakdown(pool)
   return {
     chunk_count: Number(chunks.rows[0]?.count ?? 0),
     embedding_pending: Number(pending.rows[0]?.count ?? 0),
     pipeline_failed: Number(failed.rows[0]?.count ?? 0),
     vectors_synced: Number(synced.rows[0]?.count ?? 0),
     not_enabled_candidates: notEnabledCandidates,
-    auto_enable_reserved: Number(autoReserved.rows[0]?.count ?? 0)
+    auto_enable_reserved: Number(autoReserved.rows[0]?.count ?? 0),
+    storage_breakdown
   }
 }
 
@@ -287,7 +290,16 @@ export async function getRagTree (pool: pg.Pool) {
     const groups = genres[genreKey].groups as Record<string, {
       id: string
       label: string
-      files: Array<{ id: string; label: string; rag_enabled: boolean }>
+      files: Array<{
+        id: string
+        label: string
+        rag_enabled: boolean
+        source_kind: 'case_attachment' | 'standalone'
+        extraction_status: string
+        auto_enable_rag_on_extraction: boolean
+        rag_visibility_state: RagVisibilityState
+        rag_visibility_label: string
+      }>
     }>
     if (!groups[groupName]) {
       groups[groupName] = { id: groupName, label: groupName, files: [] }
@@ -295,7 +307,12 @@ export async function getRagTree (pool: pg.Pool) {
     groups[groupName].files.push({
       id: item.id,
       label: item.file_name,
-      rag_enabled: item.rag_enabled
+      rag_enabled: item.rag_enabled,
+      source_kind: item.source_kind,
+      extraction_status: item.extraction_status,
+      auto_enable_rag_on_extraction: item.auto_enable_rag_on_extraction,
+      rag_visibility_state: item.rag_visibility_state,
+      rag_visibility_label: item.rag_visibility_label
     })
   }
 

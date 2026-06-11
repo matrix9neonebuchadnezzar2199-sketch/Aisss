@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useFilterPanelCollapsed } from './useFilterPanelCollapsed'
 
 const STORAGE_KEY = 'aisss-sidebar-collapsed'
 
@@ -23,17 +24,5 @@ export function useSidebarCollapsed (): [boolean, () => void] {
 }
 
 export function useSearchFilterCollapsed (): [boolean, () => void] {
-  const [collapsed, setCollapsed] = useState(() => {
-    return localStorage.getItem('aisss-search-filter-collapsed') === 'true'
-  })
-
-  const toggle = useCallback(() => {
-    setCollapsed((prev) => {
-      const next = !prev
-      localStorage.setItem('aisss-search-filter-collapsed', String(next))
-      return next
-    })
-  }, [])
-
-  return [collapsed, toggle]
+  return useFilterPanelCollapsed('aisss-search-filter-collapsed')
 }

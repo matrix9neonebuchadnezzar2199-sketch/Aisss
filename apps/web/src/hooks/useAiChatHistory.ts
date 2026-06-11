@@ -49,16 +49,45 @@ export function useAiChatHistory (userId: string | undefined) {
   const [store, setStore] = useState<AiChatHistoryStore>(() => (
     userId ? loadStore(userId) : { version: STORAGE_VERSION, activeSessionId: null, sessions: [] }
   ))
+  const [hydrated, setHydrated] = useState(() => Boolean(userId))
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) {
+      setHydrated(false)
+      return
+    }
     setStore(loadStore(userId))
+    setHydrated(true)
   }, [userId])
 
-  const persist = useCallback((next: AiChatHistoryStore) => {
-    setStore(next)
-    if (userId) saveStore(userId, next)
+  /** 常に最新 store を参照して更新する（非同期 append の stale closure 防止） */
+  const updateStore = useCallback((updater: (prev: AiChatHistoryStore) => AiChatHistoryStore) => {
+    setStore((prev) => {
+      const next = updater(prev)
+      if (userId) saveStore(userId, next)
+      return next
+    })
   }, [userId])
+
+  /** localStorage 読込後: 初回のみ空なら作成、active が無効なら最新セッションを復元 */
+  useEffect(() => {
+    if (!userId || !hydrated) return
+    updateStore((prev) => {
+      if (prev.sessions.length === 0) {
+        const session = newSession()
+        return {
+          version: STORAGE_VERSION,
+          activeSessionId: session.id,
+          sessions: [session]
+        }
+      }
+      const activeValid = prev.activeSessionId &&
+        prev.sessions.some((s) => s.id === prev.activeSessionId)
+      if (activeValid) return prev
+      const latest = [...prev.sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+      return { ...prev, activeSessionId: latest?.id ?? prev.activeSessionId }
+    })
+  }, [userId, hydrated, updateStore])
 
   const sessions = useMemo(
     () => [...store.sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
@@ -72,81 +101,97 @@ export function useAiChatHistory (userId: string | undefined) {
 
   const ensureActiveSession = useCallback(() => {
     if (!userId) return null
-    if (activeSession) return activeSession
-    const session = newSession()
-    const next: AiChatHistoryStore = {
-      version: STORAGE_VERSION,
-      activeSessionId: session.id,
-      sessions: [session, ...store.sessions].slice(0, MAX_SESSIONS)
-    }
-    persist(next)
-    return session
-  }, [activeSession, persist, store.sessions, userId])
+
+    let result: AiChatSession | null = null
+    updateStore((prev) => {
+      const existing = prev.sessions.find((s) => s.id === prev.activeSessionId)
+      if (existing) {
+        result = existing
+        return prev
+      }
+      const session = newSession()
+      result = session
+      return {
+        version: STORAGE_VERSION,
+        activeSessionId: session.id,
+        sessions: [session, ...prev.sessions].slice(0, MAX_SESSIONS)
+      }
+    })
+    return result
+  }, [updateStore, userId])
 
   const startNewSession = useCallback(() => {
     if (!userId) return
     const session = newSession()
-    persist({
+    updateStore((prev) => ({
       version: STORAGE_VERSION,
       activeSessionId: session.id,
-      sessions: [session, ...store.sessions].slice(0, MAX_SESSIONS)
-    })
-  }, [persist, store.sessions, userId])
+      sessions: [session, ...prev.sessions].slice(0, MAX_SESSIONS)
+    }))
+  }, [updateStore, userId])
 
   const selectSession = useCallback((sessionId: string) => {
-    persist({ ...store, activeSessionId: sessionId })
-  }, [persist, store])
+    updateStore((prev) => ({ ...prev, activeSessionId: sessionId }))
+  }, [updateStore])
 
   const deleteSession = useCallback((sessionId: string) => {
-    const remaining = store.sessions.filter((s) => s.id !== sessionId)
-    let activeSessionId = store.activeSessionId
-    if (activeSessionId === sessionId) {
-      activeSessionId = remaining[0]?.id ?? null
-      if (!activeSessionId && userId) {
-        const fresh = newSession()
-        remaining.unshift(fresh)
-        activeSessionId = fresh.id
+    updateStore((prev) => {
+      const remaining = prev.sessions.filter((s) => s.id !== sessionId)
+      let activeSessionId = prev.activeSessionId
+      if (activeSessionId === sessionId) {
+        activeSessionId = remaining[0]?.id ?? null
+        if (!activeSessionId && userId) {
+          const fresh = newSession()
+          remaining.unshift(fresh)
+          activeSessionId = fresh.id
+        }
       }
-    }
-    persist({
-      version: STORAGE_VERSION,
-      activeSessionId,
-      sessions: remaining.slice(0, MAX_SESSIONS)
+      return {
+        version: STORAGE_VERSION,
+        activeSessionId,
+        sessions: remaining.slice(0, MAX_SESSIONS)
+      }
     })
-  }, [persist, store, userId])
+  }, [updateStore, userId])
 
   const appendToActiveSession = useCallback((messages: AiChatMessage[]) => {
     if (!userId || messages.length === 0) return null
-    let session = store.sessions.find((s) => s.id === store.activeSessionId)
-    if (!session) {
-      session = newSession()
-    }
-    const now = new Date().toISOString()
-    const firstUser = messages.find((m) => m.role === 'user')
-    const title = session.messages.length === 0 && firstUser
-      ? titleFromMessage(firstUser.content)
-      : session.title
 
-    const updated: AiChatSession = {
-      ...session,
-      title,
-      updatedAt: now,
-      messages: [...session.messages, ...messages]
-    }
+    let result: AiChatSession | null = null
+    updateStore((prev) => {
+      let session = prev.sessions.find((s) => s.id === prev.activeSessionId)
+      if (!session) {
+        session = newSession()
+      }
+      const now = new Date().toISOString()
+      const firstUser = messages.find((m) => m.role === 'user')
+      const title = session.messages.length === 0 && firstUser
+        ? titleFromMessage(firstUser.content)
+        : session.title
 
-    const others = store.sessions.filter((s) => s.id !== updated.id)
-    persist({
-      version: STORAGE_VERSION,
-      activeSessionId: updated.id,
-      sessions: [updated, ...others].slice(0, MAX_SESSIONS)
+      const updated: AiChatSession = {
+        ...session,
+        title,
+        updatedAt: now,
+        messages: [...session.messages, ...messages]
+      }
+      result = updated
+
+      const others = prev.sessions.filter((s) => s.id !== updated.id)
+      return {
+        version: STORAGE_VERSION,
+        activeSessionId: updated.id,
+        sessions: [updated, ...others].slice(0, MAX_SESSIONS)
+      }
     })
-    return updated
-  }, [persist, store.activeSessionId, store.sessions, userId])
+    return result
+  }, [updateStore, userId])
 
   return {
     sessions,
     activeSession,
     activeSessionId: store.activeSessionId,
+    hydrated,
     ensureActiveSession,
     startNewSession,
     selectSession,

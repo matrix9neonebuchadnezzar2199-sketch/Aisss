@@ -119,6 +119,21 @@ export function PermissionsPage () {
 
   return (
     <section className="view active" id="view-permissions">
+      <div className="stats">
+        <div className="stat-card">
+          <div className="num">{users.length}</div>
+          <div className="lbl">ユーザー</div>
+        </div>
+        <div className="stat-card">
+          <div className="num">{groups.length}</div>
+          <div className="lbl">グループ</div>
+        </div>
+        <div className="stat-card">
+          <div className="num">{ranges.length}</div>
+          <div className="lbl">閲覧範囲</div>
+        </div>
+      </div>
+
       <div className="panel">
         <div className="panel-header">
           <h2>ユーザー・グループ管理</h2>
@@ -140,9 +155,9 @@ export function PermissionsPage () {
 
           {tab === 'users' && (
             <div className="perm-panel active">
-              <div className="filter-bar" style={{ marginBottom: 12 }}>
+              <div className="filter-bar search-filter-row" style={{ marginBottom: 12 }}>
                 <input type="search" placeholder="ユーザー検索…" value={userQuery} onChange={(e) => setUserQuery(e.target.value)} />
-                <button type="button" className="btn btn-sm" onClick={() => void searchUsers()}>検索</button>
+                <button type="button" className="btn btn-sm btn-primary" onClick={() => void searchUsers()}>検索</button>
               </div>
               <table className="data-table">
                 <thead>
@@ -171,9 +186,12 @@ export function PermissionsPage () {
 
           {tab === 'groups' && (
             <div className="perm-panel active">
-              <div className="filter-bar" style={{ marginBottom: 12 }}>
-                <input placeholder="新規グループ名" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
-                <button type="button" className="btn btn-sm btn-primary" onClick={() => void addGroup()}>+ グループ</button>
+              <div className="form-section">
+                <h3>グループを追加</h3>
+                <div className="filter-bar search-filter-row">
+                  <input placeholder="新規グループ名" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
+                  <button type="button" className="btn btn-sm btn-primary" onClick={() => void addGroup()}>+ グループ</button>
+                </div>
               </div>
               <table className="data-table">
                 <thead>

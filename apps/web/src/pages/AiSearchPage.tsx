@@ -25,6 +25,7 @@ export function AiSearchPage () {
     sessions,
     activeSession,
     activeSessionId,
+    hydrated,
     ensureActiveSession,
     startNewSession,
     selectSession,
@@ -57,11 +58,6 @@ export function AiSearchPage () {
   }, [])
 
   useEffect(() => {
-    if (!me?.user_id) return
-    if (sessions.length === 0) startNewSession()
-  }, [me?.user_id, sessions.length, startNewSession])
-
-  useEffect(() => {
     if (!queryIdParam) {
       setAuditRef(null)
       setAuditRefError(null)
@@ -84,7 +80,7 @@ export function AiSearchPage () {
 
   async function onSubmit () {
     const text = message.trim()
-    if (!text || chatDisabled) return
+    if (!text || chatDisabled || !me?.user_id || !hydrated) return
 
     ensureActiveSession()
     setLoading(true)
@@ -200,6 +196,7 @@ export function AiSearchPage () {
 
           <AiMessageList
             messages={messages}
+            loading={loading}
             effectivePolicies={lastPolicies}
             copied={copied}
             onCopyAnswer={(text) => void copyAnswer(text)}
@@ -211,7 +208,7 @@ export function AiSearchPage () {
             models={models}
             pendingFiles={pendingFiles}
             loading={loading}
-            disabled={chatDisabled || models.length === 0}
+            disabled={chatDisabled || models.length === 0 || !me?.user_id || !hydrated}
             onMessageChange={setMessage}
             onModelChange={setModel}
             onFilesSelected={onFilesSelected}

@@ -3,8 +3,20 @@ import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
 import { isAdmin } from '../services/permissions.js'
 import { AppError } from '../lib/errors.js'
+import { getAuditStats } from '../services/audit-stats.js'
 
 export const auditRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { pool }) => {
+  app.get('/api/audit-logs/stats', async (request, reply) => {
+    try {
+      if (!isAdmin(request.user)) {
+        throw new AppError('permission_denied', 'Audit access requires admin role.', 403)
+      }
+      return await getAuditStats(pool)
+    } catch (error) {
+      return sendError(reply, error, request.id)
+    }
+  })
+
   app.get('/api/audit-logs', async (request, reply) => {
     try {
       if (!isAdmin(request.user)) {

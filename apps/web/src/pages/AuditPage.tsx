@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { apiFetch, getUserId } from '../lib/api'
+import { apiFetch, fetchAuditStats, getUserId, type AuditStats } from '../lib/api'
+import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
 
 type AuditRow = {
   id: string
@@ -26,6 +27,12 @@ export function AuditPage () {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [detailRow, setDetailRow] = useState<AuditRow | null>(null)
+  const [stats, setStats] = useState<AuditStats>({
+    total_today: 0,
+    case_ops: 0,
+    ai_ops: 0,
+    permission_ops: 0
+  })
 
   function buildFilterParams (overrides?: { case?: string; query_id?: string }): URLSearchParams {
     const params = new URLSearchParams()
@@ -73,6 +80,10 @@ export function AuditPage () {
     }
   }
 
+  useEffect(() => {
+    void fetchAuditStats().then(setStats).catch(() => {})
+  }, [])
+
   const urlInit = useRef<string>('')
   useEffect(() => {
     if (urlCase) setCaseDisplayId(urlCase)
@@ -90,33 +101,67 @@ export function AuditPage () {
 
   return (
     <section className="view active" id="view-audit">
+      <div className="stats">
+        <div className="stat-card">
+          <div className="num">{stats.total_today}</div>
+          <div className="lbl">本日のイベント</div>
+        </div>
+        <div className="stat-card">
+          <div className="num">{stats.case_ops}</div>
+          <div className="lbl">ケース操作</div>
+        </div>
+        <div className="stat-card">
+          <div className="num">{stats.ai_ops}</div>
+          <div className="lbl">AI 質問</div>
+        </div>
+        <div className="stat-card">
+          <div className="num">{stats.permission_ops}</div>
+          <div className="lbl">権限・マスタ変更</div>
+        </div>
+      </div>
+
       <div className="panel">
         <div className="panel-header">
           <h2>監査ログ</h2>
           <Link className="btn btn-sm" to="/jobs">ジョブ状態</Link>
         </div>
         <div className="panel-body">
-          <div className="filter-panel audit-filters">
-            <label>アクション
-              <input value={action} onChange={(e) => setAction(e.target.value)} placeholder="ai.chat" />
-            </label>
-            <label>表示 ID
-              <input value={caseDisplayId} onChange={(e) => setCaseDisplayId(e.target.value)} placeholder="CASE-..." />
-            </label>
-            <label>クエリ ID
-              <input value={queryId} onChange={(e) => setQueryId(e.target.value)} />
-            </label>
-            <label>開始
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </label>
-            <label>終了
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </label>
-            <div className="inline-actions">
-              <button type="button" className="btn btn-sm btn-primary" onClick={() => void load()}>絞り込み</button>
-              <button type="button" className="btn btn-sm" onClick={() => void downloadCsv()}>CSV</button>
+          <p className="rag-register-note">
+            登録・閲覧・ダウンロード・AI 質問・権限変更などの操作履歴です。制限ケースの<strong>本文は表示しません</strong>（監査権限のみ詳細参照）。
+          </p>
+
+          <CollapsibleFilterPanel storageKey="aisss-audit-filter-collapsed" title="絞り込み条件">
+            <div className="audit-filter-panel">
+              <div className="filter-bar audit-filter-row">
+                <input
+                  value={action}
+                  onChange={(e) => setAction(e.target.value)}
+                  placeholder="アクション（例: ai.chat）"
+                />
+                <input
+                  value={caseDisplayId}
+                  onChange={(e) => setCaseDisplayId(e.target.value)}
+                  placeholder="表示 ID"
+                  className="mono"
+                />
+                <input
+                  value={queryId}
+                  onChange={(e) => setQueryId(e.target.value)}
+                  placeholder="クエリ ID"
+                  className="mono"
+                />
+              </div>
+              <div className="filter-bar audit-filter-row">
+                <div className="audit-date-range">
+                  <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} title="開始日" />
+                  <span className="rag-date-sep">〜</span>
+                  <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} title="終了日" />
+                </div>
+                <button type="button" className="btn btn-sm btn-primary" onClick={() => void load()}>絞り込み</button>
+                <button type="button" className="btn btn-sm" onClick={() => void downloadCsv()}>CSV</button>
+              </div>
             </div>
-          </div>
+          </CollapsibleFilterPanel>
 
           {error && <p className="error">{error}</p>}
           <p className="meta">{total} 件</p>

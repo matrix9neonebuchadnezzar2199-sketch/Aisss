@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiFetch, type MasterItem } from '../lib/api'
+import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
+import { FormGroup } from '../components/form/FormGroup'
 
 const MASTER_OPTIONS = [
   { key: 'material-types', label: '資料区分' },
@@ -47,15 +49,40 @@ export function MastersPage () {
 
   return (
     <section className="view active" id="view-masters">
+      <div className="stats">
+        <div className="stat-card">
+          <div className="num">{items.length}</div>
+          <div className="lbl">{masterLabel} 件数</div>
+        </div>
+        <div className="stat-card">
+          <div className="num">{MASTER_OPTIONS.length}</div>
+          <div className="lbl">マスタ種別</div>
+        </div>
+      </div>
+
       <div className="panel">
         <div className="panel-header">
           <h2>マスタ管理</h2>
-          <select value={master} onChange={(e) => setMaster(e.target.value)}>
-            {MASTER_OPTIONS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
-          </select>
         </div>
         <div className="panel-body">
+          <p className="rag-register-note">
+            ケース登録・閲覧範囲・検索フィルタで使う区分値を管理します。名称の変更は既存ケースへの影響に注意してください。
+          </p>
+
+          <CollapsibleFilterPanel storageKey="aisss-masters-filter-collapsed" title="表示対象">
+            <div className="filter-bar search-filter-row">
+              <label className="filter-inline-label">
+                マスタ種別
+                <select value={master} onChange={(e) => setMaster(e.target.value)}>
+                  {MASTER_OPTIONS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+                </select>
+              </label>
+              <button type="button" className="btn btn-sm" onClick={() => void load()}>再読み込み</button>
+            </div>
+          </CollapsibleFilterPanel>
+
           {error && <p className="error">{error}</p>}
+          <p className="meta">{items.length} 件 · {masterLabel}</p>
 
           <table className="data-table">
             <thead>
@@ -74,13 +101,25 @@ export function MastersPage () {
             </tbody>
           </table>
 
-          <div className="filter-bar" style={{ marginTop: 12 }}>
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder={`${masterLabel} に追加する値`}
-            />
-            <button type="button" className="btn btn-sm btn-primary" onClick={() => void addValue()}>+ 値を追加</button>
+          <div className="form-section">
+            <h3>値を追加</h3>
+            <div className="form-grid">
+              <FormGroup label={`${masterLabel} の名称`} wide>
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder={`${masterLabel} に追加する値`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void addValue()
+                  }}
+                />
+              </FormGroup>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => void addValue()}>
+                + 値を追加
+              </button>
+            </div>
           </div>
         </div>
       </div>

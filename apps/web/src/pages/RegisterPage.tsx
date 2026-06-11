@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AttachmentPanel } from '../components/AttachmentPanel'
 import { ExcelImportPanel } from '../components/ExcelImportPanel'
 import { ViewingRangeCheckboxGroup } from '../components/ViewingRangeCheckboxGroup'
+import { FormGroup } from '../components/form/FormGroup'
 import { apiFetch, type CaseDetail, type MasterItem } from '../lib/api'
 
 const emptyForm = {
@@ -19,28 +20,6 @@ const emptyForm = {
   registering_department_id: '',
   rank_id: '',
   viewing_range_ids: [] as string[]
-}
-
-function FormGroup ({
-  label,
-  required,
-  wide,
-  children
-}: {
-  label: string
-  required?: boolean
-  wide?: boolean
-  children: ReactNode
-}) {
-  return (
-    <div className={`form-group${wide ? ' form-group-wide' : ''}`}>
-      <label>
-        {label}
-        {required ? ' *' : ''}
-      </label>
-      {children}
-    </div>
-  )
 }
 
 export function RegisterPage () {

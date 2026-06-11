@@ -5,13 +5,13 @@ import { AppSidebar } from './AppSidebar'
 import { useSidebarCollapsed } from '../../hooks/useSidebarCollapsed'
 
 export function AppLayout () {
-  const [collapsed] = useSidebarCollapsed()
+  const [collapsed, toggle] = useSidebarCollapsed()
 
   return (
     <>
       <GhHeader />
       <div className={`layout${collapsed ? ' sidebar-collapsed' : ''}`} id="layout">
-        <AppSidebar />
+        <AppSidebar collapsed={collapsed} onToggle={toggle} />
         <main id="mainContent">
           <Outlet />
           <p className="app-footer-mock-ref">

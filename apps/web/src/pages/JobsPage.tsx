@@ -8,6 +8,7 @@ import {
   type JobItem,
   type JobStats
 } from '../lib/api'
+import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
 
 const emptyStats: JobStats = {
   running: 0,
@@ -108,31 +109,44 @@ export function JobsPage () {
           <Link className="btn btn-sm" to="/audit">監査ログ</Link>
         </div>
         <div className="panel-body">
-          <div className="filter-panel audit-filters">
-            <label>種別
-              <input value={jobType} onChange={(e) => setJobType(e.target.value)} placeholder="extraction / embedding" />
-            </label>
-            <label>状態
-              <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="">すべて</option>
-                <option value="pending">pending</option>
-                <option value="running">running</option>
-                <option value="failed">failed</option>
-                <option value="dead_letter">dead_letter</option>
-                <option value="completed">completed</option>
-              </select>
-            </label>
-            <label>ケース
-              <input value={caseDisplayId} onChange={(e) => setCaseDisplayId(e.target.value)} placeholder="CASE-..." />
-            </label>
-            <button
-              type="button"
-              className="btn btn-sm btn-primary"
-              onClick={() => setAppliedFilters({ status, jobType, caseDisplayId })}
-            >
-              絞り込み
-            </button>
-          </div>
+          <p className="rag-register-note">
+            抽出・埋め込みジョブの実行状態を監視します。失敗行から再試行または DLQ へ移動できます。
+          </p>
+
+          <CollapsibleFilterPanel storageKey="aisss-jobs-filter-collapsed" title="絞り込み条件">
+            <div className="search-filter-panel">
+              <div className="filter-bar search-filter-row search-filter-masters">
+                <label className="filter-inline-label">
+                  種別
+                  <input value={jobType} onChange={(e) => setJobType(e.target.value)} placeholder="extraction / embedding" />
+                </label>
+                <label className="filter-inline-label">
+                  状態
+                  <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <option value="">すべて</option>
+                    <option value="pending">pending</option>
+                    <option value="running">running</option>
+                    <option value="failed">failed</option>
+                    <option value="dead_letter">dead_letter</option>
+                    <option value="completed">completed</option>
+                  </select>
+                </label>
+                <label className="filter-inline-label">
+                  ケース
+                  <input value={caseDisplayId} onChange={(e) => setCaseDisplayId(e.target.value)} placeholder="CASE-..." className="mono" />
+                </label>
+              </div>
+              <div className="filter-bar search-filter-row search-filter-actions">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setAppliedFilters({ status, jobType, caseDisplayId })}
+                >
+                  絞り込み
+                </button>
+              </div>
+            </div>
+          </CollapsibleFilterPanel>
 
           {error && <p className="error">{error}</p>}
           <p className="meta">{total} 件 · 10 秒ごとに自動更新</p>

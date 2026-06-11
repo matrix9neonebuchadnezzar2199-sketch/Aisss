@@ -238,6 +238,51 @@ export type RagFileItem = {
   is_knowledge_candidate: boolean
 }
 
+export type RagStorageCategoryId = 'case_text' | 'office' | 'pdf' | 'audio' | 'image'
+
+export type RagStorageCategory = {
+  id: RagStorageCategoryId
+  label: string
+  bytes: number
+  file_count: number
+  chunk_count: number
+  indexed_bytes: number
+}
+
+export type RagStorageBreakdown = {
+  total_bytes: number
+  total_files: number
+  total_chunks: number
+  categories: RagStorageCategory[]
+}
+
+export type RagTreeFile = {
+  id: string
+  label: string
+  rag_enabled: boolean
+  source_kind: 'case_attachment' | 'standalone'
+  extraction_status: string
+  auto_enable_rag_on_extraction?: boolean
+  rag_visibility_state?: string
+  rag_visibility_label?: string
+}
+
+export type RagTreeGroup = {
+  id: string
+  label: string
+  files: RagTreeFile[]
+}
+
+export type RagTreeGenre = {
+  id: string
+  label: string
+  groups: RagTreeGroup[]
+}
+
+export async function fetchRagTree (): Promise<{ genres: RagTreeGenre[] }> {
+  return apiFetch('/api/rag/tree')
+}
+
 export async function fetchRagStatus (): Promise<{
   chunk_count: number
   embedding_pending: number
@@ -245,6 +290,7 @@ export async function fetchRagStatus (): Promise<{
   vectors_synced: number
   not_enabled_candidates: number
   auto_enable_reserved: number
+  storage_breakdown: RagStorageBreakdown
 }> {
   return apiFetch('/api/rag/status')
 }
@@ -371,6 +417,17 @@ export type AdminDashboard = {
 
 export async function fetchAdminDashboard (): Promise<AdminDashboard> {
   return apiFetch('/api/admin/dashboard')
+}
+
+export type AuditStats = {
+  total_today: number
+  case_ops: number
+  ai_ops: number
+  permission_ops: number
+}
+
+export async function fetchAuditStats (): Promise<AuditStats> {
+  return apiFetch('/api/audit-logs/stats')
 }
 
 export type PilotFeedback = {

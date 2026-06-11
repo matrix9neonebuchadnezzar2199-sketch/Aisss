@@ -1,9 +1,13 @@
 import { NavLink } from 'react-router-dom'
 import { sidebarGroups } from '../../routes'
-import { useSidebarCollapsed } from '../../hooks/useSidebarCollapsed'
 
-export function AppSidebar () {
-  const [collapsed, toggle] = useSidebarCollapsed()
+type AppSidebarProps = {
+  collapsed: boolean
+  onToggle: () => void
+}
+
+export function AppSidebar ({ collapsed, onToggle }: AppSidebarProps) {
+  const toggleTitle = collapsed ? 'サイドバーを展開' : 'サイドバーを折りたたむ'
 
   return (
     <aside className={`sidebar${collapsed ? ' collapsed' : ''}`} id="sidebar">
@@ -12,9 +16,10 @@ export function AppSidebar () {
         <button
           type="button"
           className="sidebar-toggle"
-          title="サイドバーを折りたたむ"
-          aria-label="サイドバーを折りたたむ"
-          onClick={toggle}
+          title={toggleTitle}
+          aria-label={toggleTitle}
+          aria-expanded={!collapsed}
+          onClick={onToggle}
         >
           ‹
         </button>

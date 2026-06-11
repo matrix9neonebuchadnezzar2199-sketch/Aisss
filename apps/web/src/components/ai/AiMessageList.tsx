@@ -1,9 +1,11 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import type { AiChatMessage } from '../../types/ai-chat'
 import type { AiChatResponse } from '../../lib/api'
 
 type AiMessageListProps = {
   messages: AiChatMessage[]
+  loading?: boolean
   effectivePolicies?: AiChatResponse['effective_policies'] | null
   onCopyAnswer?: (text: string) => void
   copied: boolean
@@ -11,10 +13,17 @@ type AiMessageListProps = {
 
 export function AiMessageList ({
   messages,
+  loading = false,
   effectivePolicies,
   onCopyAnswer,
   copied
 }: AiMessageListProps) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [messages, loading])
+
   const printDisabled = effectivePolicies?.export_policy === 'deny_print' ||
     effectivePolicies?.export_policy === 'deny_all'
   const copyDisabled = effectivePolicies?.export_policy === 'deny_copy' ||
@@ -22,7 +31,7 @@ export function AiMessageList ({
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant')
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !loading) {
     return (
       <div className="ai-chat-empty">
         <h3>AI 検索</h3>
@@ -38,6 +47,7 @@ export function AiMessageList ({
           key={msg.id}
           className={`chat-msg ${msg.role === 'user' ? 'chat-user' : 'chat-ai'}`}
         >
+          <div className="chat-msg-role">{msg.role === 'user' ? 'あなた' : 'AI'}</div>
           {msg.role === 'user' && msg.attachments && msg.attachments.length > 0 && (
             <ul className="ai-msg-attachments">
               {msg.attachments.map((a) => (
@@ -69,7 +79,17 @@ export function AiMessageList ({
         </article>
       ))}
 
-      {lastAssistant && onCopyAnswer && (
+      {loading && (
+        <article className="chat-msg chat-ai chat-thinking" aria-live="polite" aria-busy="true">
+          <div className="chat-msg-role">AI</div>
+          <div className="ai-thinking-row">
+            <span className="ai-thinking-spinner" aria-hidden="true" />
+            <span>考え中…</span>
+          </div>
+        </article>
+      )}
+
+      {lastAssistant && onCopyAnswer && !loading && (
         <div className="ai-chat-actions">
           <button
             type="button"
@@ -89,6 +109,8 @@ export function AiMessageList ({
           </button>
         </div>
       )}
+
+      <div ref={bottomRef} className="ai-chat-scroll-anchor" aria-hidden="true" />
     </div>
   )
 }
