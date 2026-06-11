@@ -10,10 +10,11 @@ export function setUserId (id: string): void {
 }
 
 export async function apiFetch<T> (path: string, init?: RequestInit): Promise<T> {
+  const hasJsonBody = init?.body != null && init.body !== ''
   const response = await fetch(path, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      ...(hasJsonBody ? { 'Content-Type': 'application/json' } : {}),
       'X-AISSS-User-Id': getUserId(),
       ...(init?.headers ?? {})
     }

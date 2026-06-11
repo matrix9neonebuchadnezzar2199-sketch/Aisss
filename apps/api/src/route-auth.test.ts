@@ -114,6 +114,8 @@ test('operational routes reject general users before data queries', async (t) =>
     { method: 'POST', url: '/api/masters/conditions', payload: { name: '新条件' } },
     { method: 'POST', url: '/api/masters/viewing-ranges/00000000-0000-4000-8000-00000000bbbb/deactivate' },
     { method: 'PATCH', url: '/api/attachments/00000000-0000-4000-8000-00000000cccc/auto-enable-rag', payload: { enabled: true } },
+    { method: 'DELETE', url: '/api/attachments/00000000-0000-4000-8000-00000000cccc' },
+    { method: 'DELETE', url: '/api/rag/standalone-files/00000000-0000-4000-8000-00000000dddd' },
     { method: 'GET', url: '/api/users' },
     { method: 'GET', url: '/api/groups' }
   ] as const
