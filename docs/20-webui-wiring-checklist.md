@@ -56,3 +56,40 @@ Record in `90_DevLog/` when all rows are checked ok for admin, operator, and pil
 | PermissionsPage | 3 tabs + API (`/api/users`, `/api/groups`, `/api/viewing-ranges`) |
 
 Manual persona walkthrough (admin/operator/pilot): pending operator verification in pilot environment.
+
+## M20 follow-up regression
+
+Post-M19 UX fixes. Record results in `90_DevLog/` when checked.
+
+| Area | Check | Expected |
+|---|---|---|
+| AI search | Send question → navigate away → return `/ai` | User + assistant messages visible; active session restored from localStorage |
+| AI search | While generating | “考え中…” spinner shown; copy/print hidden until done |
+| RAG tree | Left panel “RAGの体系管理” | Genre → group (case title) → file hierarchy from `GET /api/rag/tree` |
+| RAG tree | Select genre/group/file | Right table filters to matching rows only |
+| RAG tree | Empty standalone genre | Count shows `０` (full-width zero) |
+| RAG status | Failed extraction file (e.g. budget-table.xlsx) | Red `×` in tree + table; row light-red background; red “抽出失敗” label |
+| RAG status | RAG enabled file | Green `●` mark; green “RAG有効” label |
+| Sidebar | Click `‹` collapse | `.layout.sidebar-collapsed` toggles; main content expands |
+| Admin filters | Collapse filter panel → reload | `localStorage` key per page restores collapsed state |
+| RAG dashboard | Stats row 2 | Storage breakdown donut + category cards from API |
+| Deploy | After code change | `pwsh scripts/deploy-web.ps1` or api+web rebuild + `verify-docker-deploy.ps1` exit 0 |
+
+### M20 change inventory (2026-06-11)
+
+| Category | Files |
+|---|---|
+| AI search | `hooks/useAiChatHistory.ts`, `pages/AiSearchPage.tsx`, `components/ai/AiMessageList.tsx` |
+| RAG admin | `pages/RagAdminPage.tsx`, `components/rag/*`, `api/services/rag-admin.ts`, `rag-storage-breakdown.ts` |
+| Common UI | `CollapsibleFilterPanel.tsx`, `FormGroup.tsx`, `AppLayout.tsx`, `AppSidebar.tsx`, `useFilterPanelCollapsed.ts`, admin pages |
+| API | `audit-stats.ts`, `routes/audit.ts`, `lib/api.ts` |
+| Styles | `app-overrides.css` |
+
+### M20 sign-off
+
+| Check | Result |
+|---|---|
+| `npm run build -w @aisss/web` | ok (2026-06-11) |
+| `npm test -w @aisss/api` | ok — 48 pass, 5 skipped (integration) |
+| `verify-docker-deploy.ps1` | ok — CSS 43620B, build label present |
+| Regression table above | pending pilot browser walkthrough |

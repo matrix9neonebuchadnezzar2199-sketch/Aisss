@@ -206,6 +206,31 @@ Done when:
 
 **Non-scope:** Full 17 search filters, all registration fields from spec 08, MAP search, AI streaming UI.
 
+## Milestone 20: WebUI UX Stabilization / QA Closure
+
+Goal: Fix and lock post-M19 UX regressions (AI chat history, RAG tree, admin filter parity) before expanding feature scope.
+
+Deliverables:
+
+- AI search chat persistence (`useAiChatHistory` hydration + functional updates), thinking spinner, chat-style bubbles.
+- RAG admin left tree (`GET /api/rag/tree`), tree-driven file list filter, status marks (●/×/◐/◎/○), row/label coloring.
+- RAG storage breakdown dashboard (`GET /api/rag/status` → `storage_breakdown`).
+- Unified admin UI: `CollapsibleFilterPanel`, stats → panel → filter → table; sidebar collapse state lifted to `AppLayout`.
+- Audit stats API (`GET /api/audit-logs/stats`) for dashboard cards.
+- [WebUI Wiring Checklist § M20](./20-webui-wiring-checklist.md#m20-follow-up-regression) regression rows.
+- Deploy verification gate (`verify-docker-deploy.ps1`) after web/api rebuild.
+
+Done when:
+
+- `npm run build -w @aisss/web` and `npm test -w @aisss/api` pass.
+- Docker deploy verify passes for running containers.
+- M20 regression checklist rows verified (manual or pilot environment).
+- Changes committed; M19 persona walkthrough can proceed on stable baseline.
+
+**Non-scope:** 17 search filters, full registration fields, AI streaming UI, RAG delete dialog, bulk reindex, tag/date RAG filters, MAP search.
+
+**Deferred to M21:** RAG Admin Full Operations (delete dialog, viewing-range guard, sortable list, standalone range edit) or Search/Register Spec Completion — pick one after M20 sign-off.
+
 ## Post-MVP Ideas
 
 - MAP search (geographic case map + filters; offline tiles) — discussed but **deferred**; not in mock. See [18 § Post-MVP](./18-webui-mock-inventory-and-flows.md#post-mvp-deferred).
