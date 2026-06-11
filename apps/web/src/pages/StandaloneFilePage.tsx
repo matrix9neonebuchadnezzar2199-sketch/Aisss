@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ViewingRangeCheckboxGroup } from '../components/ViewingRangeCheckboxGroup'
 import { apiFetch, uploadStandaloneFile, type MasterItem } from '../lib/api'
 
 export function StandaloneFilePage () {
@@ -55,15 +56,15 @@ export function StandaloneFilePage () {
             <label className="full">タグ（カンマ区切り）
               <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="参考, 条例" />
             </label>
-            <label className="full">閲覧範囲（複数選択可）
-              <select
-                multiple
+            <div className="form-group form-group-wide">
+              <label>閲覧範囲 *</label>
+              <ViewingRangeCheckboxGroup
+                options={viewingRanges}
                 value={viewingRangeIds}
-                onChange={(e) => setViewingRangeIds(Array.from(e.target.selectedOptions, (o) => o.value))}
-              >
-                {viewingRanges.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-              </select>
-            </label>
+                onChange={setViewingRangeIds}
+                disabled={loading}
+              />
+            </div>
             <label className="full upload-zone">
               ファイル
               <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />

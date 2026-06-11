@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AttachmentPanel } from '../components/AttachmentPanel'
 import { ExcelImportPanel } from '../components/ExcelImportPanel'
+import { ViewingRangeCheckboxGroup } from '../components/ViewingRangeCheckboxGroup'
 import { apiFetch, type CaseDetail, type MasterItem } from '../lib/api'
 
 const emptyForm = {
@@ -249,19 +250,15 @@ export function RegisterPage () {
           <div className="form-section">
             <h3>取扱・閲覧</h3>
             <FormGroup label="閲覧範囲" required wide>
-              <select
+              <ViewingRangeCheckboxGroup
                 id="field-viewing-range"
-                className="viewing-range-multi"
-                multiple
-                required
-                size={Math.min(Math.max(viewingRanges.length, 3), 6)}
+                options={viewingRanges}
                 value={form.viewing_range_ids}
-                onChange={(e) => update('viewing_range_ids', Array.from(e.target.selectedOptions, (o) => o.value))}
-              >
-                {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
+                onChange={(ids) => update('viewing_range_ids', ids)}
+                disabled={saving}
+              />
               <p className="rag-register-note">
-                必ず1つ以上選択（Ctrl+クリックで複数）。「全員」「管理者のみ」も明示的に選びます。
+                1つ以上チェックしてください。「全員」「管理者のみ」も必要に応じて明示的に選びます。
               </p>
             </FormGroup>
           </div>
