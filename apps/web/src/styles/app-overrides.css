@@ -547,17 +547,24 @@ a.nav-link-style:hover {
   min-height: 32px;
   max-height: 160px;
   resize: vertical;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  background: var(--input-bg);
   color: var(--input-fg);
   font: inherit;
   font-size: 14px;
   line-height: 1.5;
-  padding: 6px 4px;
+  padding: 8px 12px;
+}
+
+.ai-composer-input::placeholder {
+  color: var(--input-placeholder);
 }
 
 .ai-composer-input:focus {
   outline: none;
+  border-color: var(--accent-emphasis);
+  box-shadow: 0 0 0 2px rgba(56, 139, 253, 0.25);
 }
 
 .ai-composer-model {
