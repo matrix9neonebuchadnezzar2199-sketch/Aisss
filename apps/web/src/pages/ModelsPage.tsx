@@ -8,15 +8,59 @@ import {
 
 type ModelRow = {
   name: string
+  model_id: string
+  size_bytes: number
+  modified_at: string
+  digest: string | null
+  details: OllamaModelsResponse['models'][number]['details']
   enabled_for_chat: boolean
   is_default_chat: boolean
   is_default_embedding: boolean
   is_rerank: boolean
 }
 
+function formatBytes (bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '—'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024
+    unit += 1
+  }
+  return `${value >= 10 || unit === 0 ? value.toFixed(unit === 0 ? 0 : 1) : value.toFixed(2)} ${units[unit]}`
+}
+
+function formatDigest (digest: string | null): string {
+  if (!digest) return '—'
+  return digest.replace(/^sha256:/, '').slice(0, 12)
+}
+
+function formatModifiedAt (iso: string): string {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+function formatModelSpec (details: ModelRow['details']): string {
+  if (!details) return '—'
+  const parts = [
+    details.parameter_size,
+    details.quantization_level,
+    details.family
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : '—'
+}
+
 function mapModelsResponse (m: OllamaModelsResponse): ModelRow[] {
   return m.models.map((x) => ({
     name: x.name,
+    model_id: x.model_id,
+    size_bytes: x.size_bytes,
+    modified_at: x.modified_at,
+    digest: x.digest,
+    details: x.details,
     enabled_for_chat: x.enabled_for_chat,
     is_default_chat: x.is_default_chat,
     is_default_embedding: x.is_default_embedding,
@@ -141,6 +185,10 @@ export function ModelsPage () {
             <thead>
               <tr>
                 <th scope="col">モデル</th>
+                <th scope="col">ID</th>
+                <th scope="col">サイズ</th>
+                <th scope="col">最終更新</th>
+                <th scope="col">仕様</th>
                 <th scope="col">チャット有効</th>
                 <th scope="col">既定チャット</th>
                 <th scope="col">既定埋め込み</th>
@@ -156,7 +204,22 @@ export function ModelsPage () {
                     m.is_default_chat ? 'model-row-default-chat' : ''
                   ].filter(Boolean).join(' ')}
                 >
-                  <td>{m.name}</td>
+                  <td>
+                    <div className="model-name-cell">
+                      <code className="model-name-primary">{m.name}</code>
+                      {m.model_id !== m.name && (
+                        <span className="model-name-sub">{m.model_id}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <code className="model-digest" title={m.digest ?? undefined}>
+                      {formatDigest(m.digest)}
+                    </code>
+                  </td>
+                  <td>{formatBytes(m.size_bytes)}</td>
+                  <td>{formatModifiedAt(m.modified_at)}</td>
+                  <td className="model-spec-cell">{formatModelSpec(m.details)}</td>
                   <td>
                     <input
                       type="checkbox"
@@ -210,7 +273,7 @@ export function ModelsPage () {
               ReRank を有効化（既定: off）
             </label>
             <p className="rag-register-note models-page-note">
-              一覧は保存時・更新ボタン押下時に Ollama の <code>/api/tags</code> から取得します。pull した新モデルは「一覧更新」を押してください。
+              一覧は保存時・更新ボタン押下時に Ollama の <code>/api/tags</code> から取得します（<code>ollama list</code> 相当: ID・サイズ・最終更新）。pull した新モデルは「一覧更新」を押してください。
             </p>
             {error && <p className="error">{error}</p>}
             {saved && <p className="meta">設定を保存しました（AI 検索のモデル一覧に反映されます）</p>}

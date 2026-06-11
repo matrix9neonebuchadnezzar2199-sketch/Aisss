@@ -14,7 +14,20 @@ export const ollamaRoutes: FastifyPluginAsync<{
         return { models: [], error: `Ollama HTTP ${response.status}` }
       }
       const body = await response.json() as {
-        models?: Array<{ name: string; size: number; modified_at: string }>
+        models?: Array<{
+          name: string
+          model?: string
+          size: number
+          modified_at: string
+          digest?: string
+          details?: {
+            format?: string
+            family?: string
+            families?: string[]
+            parameter_size?: string
+            quantization_level?: string
+          }
+        }>
       }
       const roles = await pool.query(
         `SELECT model_name, roles, enabled_for_chat, is_default_chat, is_default_embedding, is_rerank
@@ -26,8 +39,11 @@ export const ollamaRoutes: FastifyPluginAsync<{
         const role = roleMap.get(m.name)
         return {
           name: m.name,
+          model_id: m.model ?? m.name,
           size_bytes: m.size,
           modified_at: m.modified_at,
+          digest: m.digest ?? null,
+          details: m.details ?? null,
           roles: role?.roles ?? [],
           enabled_for_chat: role?.enabled_for_chat ?? false,
           is_default_chat: role?.is_default_chat ?? false,

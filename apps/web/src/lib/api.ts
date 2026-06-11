@@ -177,9 +177,22 @@ export type CaseDetail = CaseListItem & {
   attachments?: AttachmentItem[]
 }
 
+export type OllamaModelDetails = {
+  format?: string
+  family?: string
+  families?: string[]
+  parameter_size?: string
+  quantization_level?: string
+}
+
 export type OllamaModelsResponse = {
   models: Array<{
     name: string
+    model_id: string
+    size_bytes: number
+    modified_at: string
+    digest: string | null
+    details: OllamaModelDetails | null
     enabled_for_chat: boolean
     is_default_chat: boolean
     is_default_embedding: boolean
