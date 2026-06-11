@@ -19,7 +19,8 @@ COPY apps/web ./apps/web
 COPY mockups ./mockups
 
 WORKDIR /repo/apps/web
-RUN npm run build
+# Reference ARGs in RUN so Docker invalidates cache when GIT_SHA / APP_VERSION change.
+RUN echo "build web ${APP_VERSION} (${GIT_SHA})" && npm run build
 RUN mkdir -p dist/mockups && cp -r ../../mockups/* dist/mockups/
 
 FROM nginx:alpine

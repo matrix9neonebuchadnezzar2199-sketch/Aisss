@@ -3,6 +3,9 @@
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
+Remove-Item Env:GIT_SHA -ErrorAction SilentlyContinue
+Remove-Item Env:APP_VERSION -ErrorAction SilentlyContinue
+
 $meta = node apps/web/scripts/resolve-build-meta.mjs | ConvertFrom-Json
 $env:APP_VERSION = $meta.version
 $env:GIT_SHA = $meta.gitSha
