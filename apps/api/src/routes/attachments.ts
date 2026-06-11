@@ -4,13 +4,14 @@ import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
 import { getObjectStream } from '../services/storage.js'
 import * as attachmentService from '../services/attachments.js'
-import type { ObjectStorageSettings } from '../settings.js'
+import type { ObjectStorageSettings, Settings } from '../settings.js'
 
 export const attachmentRoutes: FastifyPluginAsync<{
   pool: pg.Pool
+  settings: Settings
   storage: S3Client
   storageConfig: ObjectStorageSettings
-}> = async (app, { pool, storage, storageConfig }) => {
+}> = async (app, { pool, settings, storage, storageConfig }) => {
   app.post('/api/cases/:caseId/attachments', async (request, reply) => {
     try {
       const { caseId } = request.params as { caseId: string }
@@ -101,6 +102,22 @@ export const attachmentRoutes: FastifyPluginAsync<{
         request.user,
         attachmentId,
         body.enabled === true
+      )
+    } catch (error) {
+      return sendError(reply, error, request.id)
+    }
+  })
+
+  app.delete('/api/attachments/:attachmentId', async (request, reply) => {
+    try {
+      const { attachmentId } = request.params as { attachmentId: string }
+      return await attachmentService.deleteAttachment(
+        pool,
+        settings,
+        storage,
+        storageConfig,
+        request.user,
+        attachmentId
       )
     } catch (error) {
       return sendError(reply, error, request.id)

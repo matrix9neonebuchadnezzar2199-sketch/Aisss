@@ -3,6 +3,7 @@ import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
 import type { Settings } from '../settings.js'
 import * as caseService from '../services/cases.js'
+import * as ragAdmin from '../services/rag-admin.js'
 
 export const caseRoutes: FastifyPluginAsync<{
   pool: pg.Pool
@@ -74,6 +75,15 @@ export const caseRoutes: FastifyPluginAsync<{
       const { caseId } = request.params as { caseId: string }
       const result = await caseService.deleteCase(pool, settings, request.user, caseId)
       return result
+    } catch (error) {
+      return sendError(reply, error, request.id)
+    }
+  })
+
+  app.post('/api/cases/:caseId/reindex', async (request, reply) => {
+    try {
+      const { caseId } = request.params as { caseId: string }
+      return await ragAdmin.reindexCase(pool, request.user, caseId)
     } catch (error) {
       return sendError(reply, error, request.id)
     }

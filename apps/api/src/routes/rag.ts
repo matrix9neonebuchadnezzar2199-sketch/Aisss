@@ -36,6 +36,8 @@ export const ragRoutes: FastifyPluginAsync<{
         q: q.q,
         viewing_range_id: q.viewing_range_id,
         tag: q.tag,
+        date_from: q.date_from,
+        date_to: q.date_to,
         knowledge_candidates_only: q.knowledge_candidates_only === 'true'
       })
     } catch (error) {
@@ -107,6 +109,30 @@ export const ragRoutes: FastifyPluginAsync<{
         fileId,
         body.viewing_range_ids ?? []
       )
+    } catch (error) {
+      return sendError(reply, error, request.id)
+    }
+  })
+
+  app.delete('/api/rag/standalone-files/:fileId', async (request, reply) => {
+    try {
+      const { fileId } = request.params as { fileId: string }
+      return await ragAdmin.deleteStandaloneFile(
+        pool,
+        settings,
+        storage,
+        storageConfig,
+        request.user,
+        fileId
+      )
+    } catch (error) {
+      return sendError(reply, error, request.id)
+    }
+  })
+
+  app.post('/api/rag/bulk-reindex', async (request, reply) => {
+    try {
+      return await ragAdmin.bulkReindexRag(pool, request.user)
     } catch (error) {
       return sendError(reply, error, request.id)
     }

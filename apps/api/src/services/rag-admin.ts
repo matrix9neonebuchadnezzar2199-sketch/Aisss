@@ -6,7 +6,7 @@ import type { AuthUser } from '../types/auth.js'
 import type { ObjectStorageSettings } from '../settings.js'
 import { getCaseById } from './cases.js'
 import { isAdmin } from './permissions.js'
-import { putObject } from './storage.js'
+import { deleteObject, putObject } from './storage.js'
 import { writeAuditLog } from './audit.js'
 import { deletePoints } from './qdrant.js'
 import type { Settings } from '../settings.js'
@@ -96,6 +96,7 @@ type RagFileRow = {
   is_knowledge_candidate: boolean
   tags?: string[]
   genre?: string
+  registered_at?: string
 }
 
 async function mapViewingLabels (
@@ -154,19 +155,44 @@ export function resolveRagVisibilityState (input: {
   return { state: 'rag_disabled', label: 'RAG無効', is_knowledge_candidate: false }
 }
 
+function parseDateBound (value: string | undefined, endOfDay: boolean): Date | null {
+  if (!value?.trim()) return null
+  const parts = value.trim().split('-').map(Number)
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null
+  const [year, month, day] = parts
+  return endOfDay
+    ? new Date(year, month - 1, day, 23, 59, 59, 999)
+    : new Date(year, month - 1, day, 0, 0, 0, 0)
+}
+
+function withinDateRange (
+  registeredAt: Date,
+  dateFrom: Date | null,
+  dateTo: Date | null
+): boolean {
+  if (dateFrom && registeredAt < dateFrom) return false
+  if (dateTo && registeredAt > dateTo) return false
+  return true
+}
+
 export async function listRagFiles (
   pool: pg.Pool,
   query: {
     q?: string
     viewing_range_id?: string
     tag?: string
+    date_from?: string
+    date_to?: string
     knowledge_candidates_only?: boolean
   }
 ): Promise<{ items: RagFileRow[] }> {
   const items: RagFileRow[] = []
+  const dateFrom = parseDateBound(query.date_from, false)
+  const dateTo = parseDateBound(query.date_to, true)
 
   const attachSql = `
     SELECT a.id, a.file_name, a.rag_enabled, a.auto_enable_rag_on_extraction, a.extraction_status,
+           a.uploaded_at,
            c.id AS case_id, c.display_id AS case_display_id, c.title AS case_title,
            (SELECT COUNT(*)::int FROM rag_chunks rc WHERE rc.attachment_id = a.id) AS chunk_count,
            (SELECT COUNT(*)::int FROM rag_sync_states rs
@@ -187,6 +213,8 @@ export async function listRagFiles (
     if (query.viewing_range_id && !viewingRangeIds.includes(query.viewing_range_id)) continue
     const title = `${row.case_title} / ${row.file_name}`
     if (query.q && !title.toLowerCase().includes(query.q.toLowerCase())) continue
+    const uploadedAt = new Date(row.uploaded_at as string | Date)
+    if (!withinDateRange(uploadedAt, dateFrom, dateTo)) continue
 
     const visibility = resolveRagVisibilityState({
       rag_enabled: row.rag_enabled,
@@ -214,6 +242,7 @@ export async function listRagFiles (
       rag_visibility_state: visibility.state,
       rag_visibility_label: visibility.label,
       is_knowledge_candidate: visibility.is_knowledge_candidate,
+      registered_at: uploadedAt.toISOString(),
       genre: 'case'
     })
   }
@@ -239,6 +268,8 @@ export async function listRagFiles (
     if (query.viewing_range_id && !viewingRangeIds.includes(query.viewing_range_id)) continue
     if (query.q && !row.title.toLowerCase().includes(query.q.toLowerCase())) continue
     if (query.tag && !(row.tags ?? []).includes(query.tag)) continue
+    const registeredAt = new Date(row.registered_at as string | Date)
+    if (!withinDateRange(registeredAt, dateFrom, dateTo)) continue
 
     const visibility = resolveRagVisibilityState({
       rag_enabled: row.rag_enabled,
@@ -267,6 +298,7 @@ export async function listRagFiles (
       rag_visibility_label: visibility.label,
       is_knowledge_candidate: visibility.is_knowledge_candidate,
       tags: row.tags ?? [],
+      registered_at: registeredAt.toISOString(),
       genre: 'standalone_reference'
     })
   }
@@ -385,7 +417,7 @@ export async function setRagEnabled (
   return { id: fileId, rag_enabled: enabled, source_kind: 'case_attachment' }
 }
 
-async function syncDisableVectors (
+async function deleteQdrantPointsForSource (
   pool: pg.Pool,
   settings: Settings,
   fileId: string,
@@ -400,10 +432,35 @@ async function syncDisableVectors (
     [fileId]
   )
   const ids = rows.map((r) => r.vector_point_id)
+  if (ids.length === 0) return
   try {
     await deletePoints(settings.vectorDbUrl, settings.vectorCollection, ids)
   } catch {
     // vectors may already be gone
+  }
+}
+
+async function syncDisableVectors (
+  pool: pg.Pool,
+  settings: Settings,
+  fileId: string,
+  kind: 'attachment' | 'standalone'
+) {
+  await deleteQdrantPointsForSource(pool, settings, fileId, kind)
+}
+
+/** Qdrant ベクタ・チャンク・抽出テキストを削除する（ファイル本体削除の前処理） */
+export async function purgeRagDataForSource (
+  pool: pg.Pool,
+  settings: Settings,
+  fileId: string,
+  kind: 'attachment' | 'standalone'
+) {
+  await deleteQdrantPointsForSource(pool, settings, fileId, kind)
+  const col = kind === 'attachment' ? 'attachment_id' : 'standalone_file_id'
+  await pool.query(`DELETE FROM rag_chunks WHERE ${col} = $1`, [fileId])
+  if (kind === 'standalone') {
+    await pool.query(`DELETE FROM extracted_texts WHERE standalone_file_id = $1`, [fileId])
   }
 }
 
@@ -579,4 +636,146 @@ export async function purgeCaseVectors (
     [caseId]
   )
   await pool.query(`DELETE FROM rag_chunks WHERE case_id = $1`, [caseId])
+}
+
+export async function deleteStandaloneFile (
+  pool: pg.Pool,
+  settings: Settings,
+  storage: S3Client,
+  storageConfig: ObjectStorageSettings,
+  user: AuthUser,
+  fileId: string
+) {
+  requireOperator(user)
+  const { rows } = await pool.query<{ storage_key: string; title: string }>(
+    `SELECT storage_key, title FROM standalone_files WHERE id = $1 AND deleted_at IS NULL`,
+    [fileId]
+  )
+  if (!rows[0]) throw new AppError('not_found', 'Standalone file not found.', 404)
+
+  await purgeRagDataForSource(pool, settings, fileId, 'standalone')
+  await pool.query(
+    `UPDATE standalone_files SET deleted_at = NOW(), rag_enabled = FALSE, updated_at = NOW()
+     WHERE id = $1`,
+    [fileId]
+  )
+  await deleteObject(storage, storageConfig.bucket, rows[0].storage_key).catch(() => {})
+
+  await writeAuditLog(pool, {
+    userId: user.id,
+    action: 'standalone_file.delete',
+    resourceType: 'standalone_file',
+    resourceId: fileId,
+    details: { title: rows[0].title }
+  })
+
+  return { id: fileId, deleted: true }
+}
+
+export async function reindexCase (
+  pool: pg.Pool,
+  user: AuthUser,
+  caseId: string
+) {
+  requireOperator(user)
+  const caseRow = await getCaseById(pool, user, caseId)
+  let jobsEnqueued = 0
+
+  await enqueueEmbeddingJob(
+    pool,
+    { source: 'case_body', case_id: caseId },
+    caseId,
+    caseRow.display_id as string
+  )
+  jobsEnqueued += 1
+
+  const { rows: attachments } = await pool.query<{ id: string }>(
+    `SELECT id FROM attachments
+     WHERE case_id = $1 AND extraction_status = 'succeeded'`,
+    [caseId]
+  )
+  for (const attachment of attachments) {
+    await enqueueEmbeddingJob(
+      pool,
+      { source: 'attachment', attachment_id: attachment.id },
+      caseId,
+      caseRow.display_id as string,
+      attachment.id
+    )
+    jobsEnqueued += 1
+  }
+
+  await writeAuditLog(pool, {
+    userId: user.id,
+    action: 'rag.reindex_case',
+    resourceType: 'case',
+    resourceId: caseId,
+    caseDisplayId: caseRow.display_id as string,
+    details: { jobs_enqueued: jobsEnqueued }
+  })
+
+  return { case_id: caseId, jobs_enqueued: jobsEnqueued }
+}
+
+export async function bulkReindexRag (pool: pg.Pool, user: AuthUser) {
+  requireOperator(user)
+  let jobsEnqueued = 0
+
+  const { rows: caseBodies } = await pool.query<{ id: string; display_id: string }>(
+    `SELECT DISTINCT c.id, c.display_id
+     FROM cases c
+     JOIN rag_chunks rc ON rc.case_id = c.id
+     WHERE c.deleted_at IS NULL
+       AND rc.attachment_id IS NULL
+       AND rc.standalone_file_id IS NULL`
+  )
+  for (const row of caseBodies) {
+    await enqueueEmbeddingJob(
+      pool,
+      { source: 'case_body', case_id: row.id },
+      row.id,
+      row.display_id
+    )
+    jobsEnqueued += 1
+  }
+
+  const { rows: attachments } = await pool.query<{ id: string; case_id: string; display_id: string }>(
+    `SELECT a.id, a.case_id, c.display_id
+     FROM attachments a
+     JOIN cases c ON c.id = a.case_id
+     WHERE c.deleted_at IS NULL
+       AND a.rag_enabled = TRUE
+       AND a.extraction_status = 'succeeded'`
+  )
+  for (const row of attachments) {
+    await enqueueEmbeddingJob(
+      pool,
+      { source: 'attachment', attachment_id: row.id },
+      row.case_id,
+      row.display_id,
+      row.id
+    )
+    jobsEnqueued += 1
+  }
+
+  const { rows: standalones } = await pool.query<{ id: string }>(
+    `SELECT id FROM standalone_files
+     WHERE deleted_at IS NULL
+       AND rag_enabled = TRUE
+       AND extraction_status = 'succeeded'`
+  )
+  for (const row of standalones) {
+    await enqueueEmbeddingJob(pool, { source: 'standalone', standalone_file_id: row.id })
+    jobsEnqueued += 1
+  }
+
+  await writeAuditLog(pool, {
+    userId: user.id,
+    action: 'rag.bulk_reindex',
+    resourceType: 'rag',
+    resourceId: 'bulk',
+    details: { jobs_enqueued: jobsEnqueued }
+  })
+
+  return { jobs_enqueued: jobsEnqueued }
 }

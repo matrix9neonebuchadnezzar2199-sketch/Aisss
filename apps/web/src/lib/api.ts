@@ -227,6 +227,7 @@ export type RagFileItem = {
   file_name: string
   case_id: string | null
   case_display_id: string | null
+  viewing_range_ids: string[]
   viewing_range_labels: string[]
   editable_viewing_range: boolean
   pipeline_status: string
@@ -236,6 +237,8 @@ export type RagFileItem = {
   rag_visibility_state: string
   rag_visibility_label: string
   is_knowledge_candidate: boolean
+  tags?: string[]
+  registered_at?: string
 }
 
 export type RagStorageCategoryId = 'case_text' | 'office' | 'pdf' | 'audio' | 'image'
@@ -342,6 +345,20 @@ export async function updateStandaloneViewingRanges (
     method: 'PATCH',
     body: JSON.stringify({ viewing_range_ids: viewingRangeIds })
   })
+}
+
+export async function deleteRagFile (
+  item: Pick<RagFileItem, 'id' | 'source_kind'>
+): Promise<void> {
+  if (item.source_kind === 'standalone') {
+    await apiFetch(`/api/rag/standalone-files/${item.id}`, { method: 'DELETE' })
+    return
+  }
+  await apiFetch(`/api/attachments/${item.id}`, { method: 'DELETE' })
+}
+
+export async function bulkReindexRag (): Promise<{ jobs_enqueued: number }> {
+  return apiFetch('/api/rag/bulk-reindex', { method: 'POST', body: '{}' })
 }
 
 export async function saveModelRoles (input: {

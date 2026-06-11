@@ -227,9 +227,32 @@ Done when:
 - M20 regression checklist rows verified (manual or pilot environment).
 - Changes committed; M19 persona walkthrough can proceed on stable baseline.
 
-**Non-scope:** 17 search filters, full registration fields, AI streaming UI, RAG delete dialog, bulk reindex, tag/date RAG filters, MAP search.
+**Non-scope:** 17 search filters, full registration fields, AI streaming UI, MAP search.
 
 **Deferred to M21:** RAG Admin Full Operations (delete dialog, viewing-range guard, sortable list, standalone range edit) or Search/Register Spec Completion — pick one after M20 sign-off.
+
+## Milestone 21: RAG Admin Full Operations
+
+Goal: Complete RAG 管理 operator workflows deferred from M20 (mock parity for delete, filters, sort, reindex, viewing-range UX).
+
+Deliverables:
+
+- Delete confirmation dialog + `DELETE /api/attachments/{id}` and `DELETE /api/rag/standalone-files/{id}` (Qdrant + chunks + storage cleanup).
+- Case viewing-range guard dialog (redirect to case edit); standalone viewing-range `<select>` with immediate save.
+- Tag filter, date range filter (`date_from` / `date_to` on `GET /api/rag/files`).
+- Client-side sortable file list columns (file, viewing range, pipeline, RAG toggle).
+- Bulk reindex (`POST /api/rag/bulk-reindex`) and per-case reindex (`POST /api/cases/{case_id}/reindex`).
+- [WebUI Wiring Checklist § M21](./20-webui-wiring-checklist.md#m21-follow-up-regression) regression rows.
+
+Done when:
+
+- `npm run build -w @aisss/web` and `npm test -w @aisss/api` pass.
+- Docker deploy verify passes after web/api rebuild.
+- M21 regression checklist rows verified (manual or pilot environment).
+
+**Non-scope:** 17 search filters, full registration fields, AI streaming UI, tag combobox with history, MAP search.
+
+**Deferred to M22:** Search/Register Spec Completion (17 filters, registration fields, extracted-text preview on case detail).
 
 ## Post-MVP Ideas
 

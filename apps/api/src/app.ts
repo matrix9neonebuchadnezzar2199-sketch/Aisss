@@ -87,6 +87,7 @@ export async function buildApp ({ settings, pool, storage }: AppDeps) {
   await app.register(authPlugin, { pool, settings })
   await app.register(attachmentRoutes, {
     pool,
+    settings,
     storage,
     storageConfig: settings.objectStorage
   })

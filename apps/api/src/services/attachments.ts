@@ -5,10 +5,12 @@ import { detectAttachmentKind } from '../lib/attachment-kind.js'
 import { AppError } from '../lib/errors.js'
 import type { AuthUser } from '../types/auth.js'
 import type { ObjectStorageSettings } from '../settings.js'
+import type { Settings } from '../settings.js'
 import { getCaseById } from './cases.js'
 import { isOperator } from './permissions.js'
 import { deleteObject, putObject } from './storage.js'
 import { writeAuditLog } from './audit.js'
+import { purgeRagDataForSource } from './rag-admin.js'
 
 // RAG 自動有効化の予約は実質的な RAG 有効化トリガーのため、手動有効化（setRagEnabled）と同じく operator 以上に限定する
 function requireOperatorForAutoEnable (user: AuthUser) {
@@ -203,4 +205,47 @@ export async function updateAutoEnableRagOnExtraction (
     details: { auto_enable_rag_on_extraction: enabled }
   })
   return rows[0]
+}
+
+export async function deleteAttachment (
+  pool: pg.Pool,
+  settings: Settings,
+  storage: S3Client,
+  storageConfig: ObjectStorageSettings,
+  user: AuthUser,
+  attachmentId: string
+) {
+  if (!isOperator(user)) {
+    throw new AppError('permission_denied', 'Operator or admin role required.', 403)
+  }
+  const { rows } = await pool.query<{
+    storage_key: string | null
+    file_name: string
+    case_display_id: string
+  }>(
+    `SELECT a.storage_key, a.file_name, c.display_id AS case_display_id
+     FROM attachments a
+     JOIN cases c ON c.id = a.case_id
+     WHERE a.id = $1 AND c.deleted_at IS NULL`,
+    [attachmentId]
+  )
+  const row = rows[0]
+  if (!row) throw new AppError('not_found', 'Attachment not found.', 404)
+
+  await purgeRagDataForSource(pool, settings, attachmentId, 'attachment')
+  if (row.storage_key) {
+    await deleteObject(storage, storageConfig.bucket, row.storage_key).catch(() => {})
+  }
+  await pool.query(`DELETE FROM attachments WHERE id = $1`, [attachmentId])
+
+  await writeAuditLog(pool, {
+    userId: user.id,
+    action: 'attachment.delete',
+    resourceType: 'attachment',
+    resourceId: attachmentId,
+    caseDisplayId: row.case_display_id,
+    details: { file_name: row.file_name }
+  })
+
+  return { id: attachmentId, deleted: true }
 }
