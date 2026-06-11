@@ -1,38 +1,5 @@
 
     :root {
-      /* GitHub dark dimmed */
-      --canvas-default: #161b22;
-      --canvas-subtle: #0d1117;
-      --canvas-inset: #21262d;
-      --border-default: #30363d;
-      --border-muted: #21262d;
-      --fg-default: #e6edf3;
-      --fg-muted: #8b949e;
-      --fg-subtle: #6e7681;
-      --accent-fg: #58a6ff;
-      --accent-emphasis: #79c0ff;
-      --header-bg: #010409;
-      --header-fg: #f0f6fc;
-      /* Inputs: light gray on dark chrome */
-      --input-bg: #e8eaed;
-      --input-fg: #1f2328;
-      --input-border: #c9d1d9;
-      --input-placeholder: #656d76;
-      --success-fg: #3fb950;
-      --success-subtle: rgba(46, 160, 67, 0.15);
-      --danger-fg: #f85149;
-      --danger-subtle: rgba(248, 81, 73, 0.15);
-      --attention-fg: #d29922;
-      --attention-subtle: rgba(187, 128, 9, 0.15);
-      --info-subtle: rgba(56, 139, 253, 0.15);
-      --info-fg: #58a6ff;
-      --purple-subtle: rgba(163, 113, 247, 0.15);
-      --purple-fg: #a371f7;
-      --pink-subtle: rgba(219, 97, 162, 0.15);
-      --pink-fg: #db61a2;
-      --orange-subtle: rgba(219, 109, 40, 0.15);
-      --orange-fg: #db6d28;
-      --shadow: 0 1px 3px rgba(1, 4, 9, 0.5);
       --radius: 6px;
       --sidebar-width: 220px;
       --sidebar-collapsed: 52px;
@@ -59,7 +26,7 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      border-bottom: 1px solid #30363d;
+      border-bottom: 1px solid var(--header-border);
     }
     .gh-logo {
       display: flex;
@@ -81,11 +48,12 @@
       font-size: 11px;
       font-weight: 700;
       letter-spacing: -0.5px;
+      color: #fff;
     }
     .gh-logo-sub {
       font-size: 11px;
       font-weight: 400;
-      color: #8b949e;
+      color: var(--header-subtle-fg);
       display: block;
       line-height: 1.2;
     }
@@ -96,19 +64,19 @@
       flex: 1;
     }
     .gh-nav a {
-      color: #c9d1d9;
+      color: var(--nav-link-fg);
       text-decoration: none;
       padding: 6px 12px;
       border-radius: var(--radius);
       font-size: 13px;
     }
-    .gh-nav a:hover { background: #30363d; color: #fff; }
-    .gh-nav a.active { background: #388bfd26; color: #58a6ff; }
+    .gh-nav a:hover { background: var(--nav-link-bg-hover); color: var(--nav-link-fg-hover); }
+    .gh-nav a.active { background: var(--nav-link-active-bg); color: var(--nav-link-active-fg); }
     .gh-user {
       font-size: 12px;
-      color: #8b949e;
+      color: var(--chip-fg);
       padding: 4px 10px;
-      border: 1px solid #30363d;
+      border: 1px solid var(--chip-border);
       border-radius: 20px;
     }
     .ollama-status {
@@ -116,9 +84,9 @@
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      color: #8b949e;
+      color: var(--chip-fg);
       padding: 4px 10px;
-      border: 1px solid #30363d;
+      border: 1px solid var(--chip-border);
       border-radius: 20px;
     }
     .ollama-status .dot {
@@ -454,7 +422,7 @@
       background: var(--canvas-inset);
       color: var(--fg-default);
       font-family: inherit;
-      color-scheme: dark;
+      color-scheme: light dark;
       cursor: pointer;
     }
     .rag-viewing-select:hover,
@@ -742,7 +710,7 @@
       cursor: pointer;
       font-family: inherit;
     }
-    .btn:hover { background: #30363d; border-color: #8b949e; }
+    .btn:hover { background: var(--btn-hover-bg); border-color: var(--btn-hover-border); }
     .btn-primary {
       background: #2da44e;
       border-color: rgba(27, 31, 36, 0.15);
@@ -1012,7 +980,7 @@
       text-align: left;
       transition: background 0.15s;
     }
-    .filter-panel-toggle:hover { background: #30363d; }
+    .filter-panel-toggle:hover { background: var(--btn-hover-bg); }
     .filter-panel:not(.collapsed) .filter-panel-toggle {
       border-bottom-color: var(--border-default);
     }

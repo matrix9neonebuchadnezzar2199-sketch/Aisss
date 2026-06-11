@@ -3,6 +3,7 @@ import { AppVersionLabel } from '../AppVersionLabel'
 import { adminSubmenuItems, topNavItems, type TopNavItem } from '../../routes'
 import { useMe } from '../../hooks/useMe'
 import { OllamaStatusBadge } from '../OllamaStatusBadge'
+import { ThemePalettePanel } from '../theme/ThemePalettePanel'
 
 function isTopNavActive (pathname: string, item: TopNavItem): boolean {
   if (item.matchPrefix) {
@@ -56,9 +57,12 @@ export function GhHeader () {
           </div>
         </details>
       </nav>
-      <OllamaStatusBadge />
-      <AppVersionLabel className="gh-version-label" />
-      <span className="gh-user">{me?.display_name ?? '—'} / {me?.role ?? '…'}</span>
+      <div className="gh-header-tools">
+        <ThemePalettePanel />
+        <OllamaStatusBadge />
+        <AppVersionLabel className="gh-version-label" />
+        <span className="gh-user">{me?.display_name ?? '—'} / {me?.role ?? '…'}</span>
+      </div>
     </header>
   )
 }

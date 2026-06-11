@@ -1,0 +1,99 @@
+/**
+ * Light / dark semantic tokens. Applied via html[data-theme].
+ * Custom overrides may be set inline on documentElement (--fg-default, etc.).
+ */
+
+:root,
+[data-theme='dark'] {
+  --canvas-default: #161b22;
+  --canvas-subtle: #0d1117;
+  --canvas-inset: #21262d;
+  --border-default: #30363d;
+  --border-muted: #21262d;
+  --fg-default: #e6edf3;
+  --fg-muted: #8b949e;
+  --fg-subtle: #6e7681;
+  --accent-fg: #58a6ff;
+  --accent-emphasis: #79c0ff;
+  --header-bg: #010409;
+  --header-fg: #f0f6fc;
+  --header-border: #30363d;
+  --header-subtle-fg: #8b949e;
+  --nav-link-fg: #c9d1d9;
+  --nav-link-fg-hover: #ffffff;
+  --nav-link-bg-hover: #30363d;
+  --nav-link-active-bg: #388bfd26;
+  --nav-link-active-fg: #58a6ff;
+  --chip-fg: #8b949e;
+  --chip-border: #30363d;
+  --input-bg: #e8eaed;
+  --input-fg: #1f2328;
+  --input-border: #c9d1d9;
+  --input-placeholder: #656d76;
+  --success-fg: #3fb950;
+  --success-subtle: rgba(46, 160, 67, 0.15);
+  --danger-fg: #f85149;
+  --danger-subtle: rgba(248, 81, 73, 0.15);
+  --attention-fg: #d29922;
+  --attention-subtle: rgba(187, 128, 9, 0.15);
+  --info-subtle: rgba(56, 139, 253, 0.15);
+  --info-fg: #58a6ff;
+  --purple-subtle: rgba(163, 113, 247, 0.15);
+  --purple-fg: #a371f7;
+  --pink-subtle: rgba(219, 97, 162, 0.15);
+  --pink-fg: #db61a2;
+  --orange-subtle: rgba(219, 109, 40, 0.15);
+  --orange-fg: #db6d28;
+  --shadow: 0 1px 3px rgba(1, 4, 9, 0.5);
+  --btn-primary-fg: #ffffff;
+  --btn-hover-bg: #30363d;
+  --btn-hover-border: #8b949e;
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --canvas-default: #ffffff;
+  --canvas-subtle: #f6f8fa;
+  --canvas-inset: #eaeef2;
+  --border-default: #d0d7de;
+  --border-muted: #d8dee4;
+  --fg-default: #1f2328;
+  --fg-muted: #656d76;
+  --fg-subtle: #6e7781;
+  --accent-fg: #0969da;
+  --accent-emphasis: #0550ae;
+  --header-bg: #24292f;
+  --header-fg: #ffffff;
+  --header-border: #57606a;
+  --header-subtle-fg: #c9d1d9;
+  --nav-link-fg: #e6edf3;
+  --nav-link-fg-hover: #ffffff;
+  --nav-link-bg-hover: #424a53;
+  --nav-link-active-bg: rgba(56, 139, 253, 0.2);
+  --nav-link-active-fg: #79c0ff;
+  --chip-fg: #656d76;
+  --chip-border: #d0d7de;
+  --input-bg: #ffffff;
+  --input-fg: #1f2328;
+  --input-border: #d0d7de;
+  --input-placeholder: #656d76;
+  --success-fg: #1a7f37;
+  --success-subtle: rgba(26, 127, 55, 0.12);
+  --danger-fg: #cf222e;
+  --danger-subtle: rgba(207, 34, 46, 0.12);
+  --attention-fg: #9a6700;
+  --attention-subtle: rgba(154, 103, 0, 0.12);
+  --info-subtle: rgba(9, 105, 218, 0.12);
+  --info-fg: #0969da;
+  --purple-subtle: rgba(130, 80, 223, 0.12);
+  --purple-fg: #8250df;
+  --pink-subtle: rgba(219, 97, 162, 0.12);
+  --pink-fg: #bf3989;
+  --orange-subtle: rgba(219, 109, 40, 0.12);
+  --orange-fg: #bc4c00;
+  --shadow: 0 1px 3px rgba(31, 35, 40, 0.12);
+  --btn-primary-fg: #ffffff;
+  --btn-hover-bg: #eaeef2;
+  --btn-hover-border: #8c959f;
+  color-scheme: light;
+}

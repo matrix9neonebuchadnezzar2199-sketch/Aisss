@@ -1,6 +1,7 @@
 import { Link, Outlet } from 'react-router-dom'
 import { AppVersionLabel } from '../AppVersionLabel'
 import { OllamaStatusBadge } from '../OllamaStatusBadge'
+import { ThemePalettePanel } from '../theme/ThemePalettePanel'
 import { useMe } from '../../hooks/useMe'
 
 export function CaseDetailLayout () {
@@ -16,8 +17,11 @@ export function CaseDetailLayout () {
             <span className="gh-logo-sub">ケース詳細</span>
           </span>
         </Link>
-        <OllamaStatusBadge />
-        <span className="gh-user">{me?.display_name ?? '—'}</span>
+        <div className="gh-header-tools">
+          <ThemePalettePanel />
+          <OllamaStatusBadge />
+          <span className="gh-user">{me?.display_name ?? '—'}</span>
+        </div>
       </header>
       <div className="container">
         <Outlet />
