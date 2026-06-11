@@ -351,6 +351,28 @@ Done when:
 - PostgreSQL/MinIO/Qdrant rebuild steps documented and verifiable.
 - Wider pilot decision materials in `/admin`, `/jobs`, `/audit`, DevLog.
 
+## Milestone 28: Pilot Dry Run / Go-No-Go Closure
+
+Goal: Execute wider-pilot gate with recorded evidence — not new feature scope.
+
+Deliverables:
+
+- [M28 pilot dry-run guide](./m28-pilot-dry-run.md) with 12-step checklist and go/no-go criteria.
+- [M28 go/no-go results](./m28-go-no-go-results.md) with per-step `ok|warn|err`.
+- `scripts/pilot-smoke.ps1` for automated baseline (health, rag-eval, tests, build, Docker verify, optional backup-check).
+- [WebUI Wiring Checklist § M28](./20-webui-wiring-checklist.md#m28-pilot-dry-run--go-no-go) sign-off.
+- DevLog entry with decision summary and Post-MVP backlog items.
+
+Done when:
+
+- Dry-run 12 steps recorded (automated + manual).
+- `POST /api/admin/backup-checks` evidence exists for full-stack or component scopes.
+- AI audit shows `excluded_counts` without denied titles (step 10).
+- Job retry / DLQ visible and auditable (step 11).
+- `pilot-smoke.ps1` exits 0 on gate environment.
+
+**Non-scope:** OCR/ASR implementation, MAP search, ReRank execution ON, new registration/search fields.
+
 ## Post-MVP Ideas
 
 - MAP search (geographic case map + filters; offline tiles) — discussed but **deferred**; not in mock. See [18 § Post-MVP](./18-webui-mock-inventory-and-flows.md#post-mvp-deferred).

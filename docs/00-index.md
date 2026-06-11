@@ -43,7 +43,7 @@ The central design rule is simple: the case management database is the source of
 | Implementation start | [11](./11-milestones.md) → [18 completeness matrix](./18-webui-mock-inventory-and-flows.md#screen-completeness-matrix) → [10](./10-file-structure.md) → [09](./09-api-design.md) |
 | Case search → detail → edit | [18 § Flow B](./18-webui-mock-inventory-and-flows.md#flow-b-case-lifecycle-register--search--detail--edit--rag) → [03](./03-sequence-diagrams.md) → [case-detail.html](../mockups/case-detail.html) |
 | UI layout (filters, body fields) | [18 § Layout Conventions](./18-webui-mock-inventory-and-flows.md#mock-layout-conventions) → [08](./08-webui-design.md) |
-| Pilot operation | [19](./19-operational-runbook.md) → [11 § M7](./11-milestones.md#milestone-7-production-pilot) → [13](./13-deployment-docker.md) |
+| Pilot operation | [19](./19-operational-runbook.md) → [M28 dry-run](./m28-pilot-dry-run.md) → [11 § M28](./11-milestones.md#milestone-28-pilot-dry-run--go-no-go-closure) → [13](./13-deployment-docker.md) |
 
 ## Naming Convention
 

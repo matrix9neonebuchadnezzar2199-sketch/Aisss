@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npm run build -w @aisss/api && npm run build -w @aisss/web",
     "test": "npm test -w @aisss/api && npm test -w @aisss/web && npm test -w @aisss/workers",
-    "lint": "npm run lint -w @aisss/api && npm run lint -w @aisss/web"
+    "lint": "npm run lint -w @aisss/api && npm run lint -w @aisss/web",
+    "pilot-smoke": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/pilot-smoke.ps1"
   }
 }

@@ -161,3 +161,41 @@ Pilot regression closure after M21 RAG delete FK fix and extended search/registe
 | `npm test -w @aisss/workers` | ok |
 | `verify-docker-deploy.ps1` | ok |
 | Regression table above | ok — API/unit coverage; pilot browser walkthrough: warn |
+
+## M28 Pilot Dry Run / Go-No-Go
+
+Wider pilot gate. Full procedure: [m28-pilot-dry-run.md](./m28-pilot-dry-run.md). Results: [m28-go-no-go-results.md](./m28-go-no-go-results.md).
+
+### Automated baseline
+
+```powershell
+pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck
+```
+
+### Manual persona walkthrough
+
+| Step | Area | Actor | Expected |
+|---|---|---|---|
+| 2 | Case register + viewing range | Admin | `全員` required; PATCH rejects empty |
+| 3–4 | Attachment extract + auto-RAG reservation | Operator | extract ok; reservation flag stored |
+| 5–6 | RAG admin enable + embedding | Operator | 未ナレッジ化候補 → job completed |
+| 7–9 | AI + permission list | Pilot | in-range citation only; no analyst-only leak |
+| 10 | Audit AI query | Admin | `excluded_counts`; no denied titles |
+| 11 | Job retry | Operator | retry → pending; audit `job.retry` |
+
+### Go / No-Go
+
+| Decision | Criteria |
+|---|---|
+| Go | `pilot-smoke.ps1` exit 0; steps 2–11 ok or documented warn; backup-check recorded |
+| No-go | err on step 8 (permission), 10 (audit leak), or 11 (retry broken) |
+
+### M28 sign-off
+
+| Check | Result |
+|---|---|
+| `pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck` | ok (2026-06-11, exit 0 after web redeploy bfe90e7) |
+| Manual steps 2–7, 9, 11 | warn — operator env pending |
+| Automated step 8 (rag-eval) + 10 (audit keys) | ok |
+| `docs/m28-go-no-go-results.md` | ok — **Conditional Go** |
+| DevLog M28 entry | ok (2026-06-11) |

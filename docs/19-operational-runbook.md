@@ -201,6 +201,26 @@ Create explicit Post-MVP tasks when pilot feedback shows one of these patterns:
 
 Run once with admin, operator, and pilot users before loading representative production data.
 
+**M28 gate:** Use [m28-pilot-dry-run.md](./m28-pilot-dry-run.md) for full procedure, go/no-go criteria, and [m28-go-no-go-results.md](./m28-go-no-go-results.md) for per-step recording.
+
+### Automated baseline (Windows)
+
+```powershell
+cd F:\Cursor\Aisss
+pwsh scripts/pilot-smoke.ps1 -RecordBackupCheck
+```
+
+Equivalent checks without `make`:
+
+```powershell
+docker compose -f aisss/docker-compose.yaml up -d
+curl.exe -s http://127.0.0.1:8000/api/health
+npm test -w @aisss/api -- src/rag-eval.test.ts
+pwsh scripts/verify-docker-deploy.ps1
+```
+
+Record smoke output in `90_DevLog/` and update `m28-go-no-go-results.md`.
+
 | Step | Actor | Route / action | Expected result | Automated check |
 |---|---|---|---|---|
 | 1 | Admin | `make up` + `/api/health` | API healthy | Manual |
@@ -216,7 +236,7 @@ Run once with admin, operator, and pilot users before loading representative pro
 | 11 | Operator | `/jobs` failed job retry | Retry audit recorded | Manual |
 | 12 | All | `npm test` + `npm run build` | Green before pilot week | CI |
 
-Record dry-run outcomes in `90_DevLog/` with `status: ok|warn|err` per step. Blockers become M19 fix tasks.
+Record dry-run outcomes in `90_DevLog/` with `status: ok|warn|err` per step. Blockers become M28 fix tasks (or Post-MVP if cut criteria match).
 
 ## Deploy verification (running containers)
 
