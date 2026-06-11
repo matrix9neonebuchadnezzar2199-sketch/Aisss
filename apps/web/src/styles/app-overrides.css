@@ -843,6 +843,13 @@ a.nav-link-style:hover {
   max-width: 12rem;
 }
 
+.models-runtime-notice {
+  margin-top: 8px;
+  border-color: var(--attention-muted, rgba(210, 153, 34, 0.45));
+  background: var(--attention-subtle, rgba(210, 153, 34, 0.08));
+  color: var(--fg-default);
+}
+
 .models-table tbody tr.model-row-chat-enabled {
   background: rgba(56, 139, 253, 0.1);
 }

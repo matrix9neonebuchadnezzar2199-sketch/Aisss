@@ -180,6 +180,9 @@ export function ModelsPage () {
           <div className="policy-banner">
             ホスト Ollama のモデル一覧（<code>GET /api/ollama/models</code>）。pull / delete はホスト CLI で実施。ロール割当は管理者が WebUI で設定します。
           </div>
+          <div className="policy-banner models-runtime-notice">
+            モデルが動作中です。強制的にチャット有効対象を変更して有効化したい場合は Ollama を強制終了して再起動してください。AISSS は VRAM 上のモデル読み込み・切替は行いません（DB のロール設定のみ更新します）。
+          </div>
 
           <table className="data-table models-table">
             <thead>
