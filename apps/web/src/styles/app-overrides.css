@@ -1263,6 +1263,28 @@ a.nav-link-style:hover {
   min-width: 10rem;
 }
 
+/* ケース検索: 17 フィルタ行は 160px 上限だと最下行が切れる */
+.filter-panel:not(.collapsed) .filter-panel-body:has(.search-filter-panel) {
+  max-height: none;
+  overflow: visible;
+}
+
+.filter-bar.search-filter-viewing {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-bar.search-filter-viewing select {
+  flex: 1 1 140px;
+  max-width: 200px;
+  min-width: 110px;
+  width: auto;
+}
+
+.filter-bar.search-filter-viewing .search-date-label {
+  flex: 0 1 auto;
+}
+
 .extract-preview-block {
   margin-top: 8px;
   padding: 8px 10px;
