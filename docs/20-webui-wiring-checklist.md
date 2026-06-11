@@ -157,7 +157,7 @@ Pilot regression closure after M21 RAG delete FK fix and extended search/registe
 | Check | Result |
 |---|---|
 | `npm run build -w @aisss/web` | ok (2026-06-11) |
-| `npm test -w @aisss/api` | ok |
+| `npm test -w @aisss/api` | ok — 54 pass, 5 skipped |
 | `npm test -w @aisss/workers` | ok |
 | `verify-docker-deploy.ps1` | ok |
 | Regression table above | ok — API/unit coverage; pilot browser walkthrough: warn |
