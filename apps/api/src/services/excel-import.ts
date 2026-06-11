@@ -26,6 +26,13 @@ const STRICT_MASTER_FIELDS = [
   'rank'
 ] as const
 
+const OPTIONAL_MASTER_FIELDS = [
+  'retention_policy',
+  'registrant',
+  'information_request',
+  'acquisition_location'
+] as const
+
 function cellString (value: unknown): string {
   if (value === null || value === undefined) return ''
   return String(value).trim()
@@ -91,11 +98,11 @@ export function buildTemplateWorkbook (): Buffer {
       '',
       '',
       '',
-      '',
-      '',
-      '',
-      '',
-      ''
+      '5年',
+      '山田太郎',
+      '対外照会A',
+      '東京',
+      '佐藤花子;鈴木一郎'
     ]
   ])
   const workbook = XLSX.utils.book_new()
@@ -167,6 +174,36 @@ async function validateRow (
     } else {
       parsed[`${field}_id`] = id
     }
+  }
+
+  for (const field of OPTIONAL_MASTER_FIELDS) {
+    const label = cellString(raw[field])
+    if (!label) continue
+    const id = await resolver.resolve(field, label)
+    if (!id) {
+      errors.push({
+        level: 'error',
+        code: 'unknown_master',
+        message: `Unknown ${field}: ${label}`
+      })
+    } else {
+      parsed[`${field}_id`] = id
+    }
+  }
+
+  const collectorsLabel = cellString(raw.collectors)
+  if (collectorsLabel) {
+    const { ids, unknown } = await resolver.resolveMany('person', collectorsLabel)
+    if (unknown.length > 0) {
+      errors.push({
+        level: 'error',
+        code: 'unknown_collector',
+        message: `Unknown collector: ${unknown.join(', ')}`
+      })
+    }
+    parsed.collector_person_ids = ids
+  } else {
+    parsed.collector_person_ids = []
   }
 
   const viewingLabel = cellString(raw.viewing_ranges)
@@ -300,22 +337,13 @@ function toCaseInput (parsed: Record<string, unknown>): CaseInput {
     note_5: parsed.note_5 as string | null,
     note_6: parsed.note_6 as string | null,
     viewing_range_ids: (parsed.viewing_range_ids as string[]) ?? [],
-    condition_ids: (parsed.condition_ids as string[]) ?? []
-  }
-}
-
-async function linkKeywords (
-  pool: pg.Pool,
-  caseId: string,
-  keywords: string[],
-  resolver: MasterResolver
-) {
-  for (const kw of keywords) {
-    const keywordId = await resolver.findOrCreateKeyword(kw)
-    await pool.query(
-      `INSERT INTO case_keywords (case_id, keyword_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-      [caseId, keywordId]
-    )
+    condition_ids: (parsed.condition_ids as string[]) ?? [],
+    keyword_names: (parsed.keywords as string[]) ?? [],
+    collector_person_ids: (parsed.collector_person_ids as string[]) ?? [],
+    retention_policy_id: parsed.retention_policy_id as string | null,
+    registrant_id: parsed.registrant_id as string | null,
+    information_request_id: parsed.information_request_id as string | null,
+    acquisition_location_id: parsed.acquisition_location_id as string | null
   }
 }
 
@@ -338,7 +366,6 @@ export async function confirmExcelImport (
   }
 
   const validated = preview.rows_json as ValidatedExcelRow[]
-  const resolver = new MasterResolver(pool)
   const rowResults: Array<Record<string, unknown>> = []
   let created = 0
   let updated = 0
@@ -375,10 +402,6 @@ export async function confirmExcelImport (
         rowResults.push({ row_number: row.row_number, status: 'created', case_id: caseId, display_id: displayId })
       }
 
-      const keywords = (row.parsed.keywords as string[]) ?? []
-      if (keywords.length > 0) {
-        await linkKeywords(pool, caseId, keywords, resolver)
-      }
     } catch (error) {
       skipped++
       rowResults.push({

@@ -7,6 +7,8 @@ import { writeAuditLog } from './audit.js'
 import { enqueueCaseBodyEmbedding, enqueueCaseMetadataSync, purgeCaseVectors } from './rag-admin.js'
 import type { Settings } from '../settings.js'
 import { ALL_USERS_VIEWING_RANGE_ID } from '../lib/viewing-ranges.js'
+import { loadCaseCollectors, syncCaseCollectors } from './case-collectors.js'
+import { loadCaseKeywords, syncCaseKeywords } from './case-keywords.js'
 
 export type CaseInput = {
   material_number?: string | null
@@ -42,14 +44,29 @@ export type CaseInput = {
   note_6?: string | null
   viewing_range_ids?: string[]
   condition_ids?: string[]
+  keyword_names?: string[]
+  collector_person_ids?: string[]
+  acquisition_location_id?: string | null
 }
 
 export type CaseSearchQuery = {
   q?: string
+  title?: string
+  material_number?: string
   material_type_id?: string
   registering_department_id?: string
   rank_id?: string
   viewing_range_id?: string
+  category_id?: string
+  region_id?: string
+  source_id?: string
+  information_request_id?: string
+  handling_type_id?: string
+  reliability_id?: string
+  accuracy_id?: string
+  condition_id?: string
+  event_date_from?: string
+  event_date_to?: string
   page?: number
   limit?: number
   sort?: string
@@ -145,6 +162,57 @@ export async function searchCases (
       WHERE cvr.case_id = c.id AND cvr.viewing_range_id = $${params.length}
     )`)
   }
+  if (query.title) {
+    params.push(`%${query.title.replace(/[\\%_]/g, (m) => `\\${m}`)}%`)
+    where.push(`c.title ILIKE $${params.length}`)
+  }
+  if (query.material_number) {
+    params.push(`%${query.material_number.replace(/[\\%_]/g, (m) => `\\${m}`)}%`)
+    where.push(`c.material_number ILIKE $${params.length}`)
+  }
+  if (query.category_id) {
+    params.push(query.category_id)
+    where.push(`c.category_id = $${params.length}`)
+  }
+  if (query.region_id) {
+    params.push(query.region_id)
+    where.push(`c.region_id = $${params.length}`)
+  }
+  if (query.source_id) {
+    params.push(query.source_id)
+    where.push(`c.source_id = $${params.length}`)
+  }
+  if (query.information_request_id) {
+    params.push(query.information_request_id)
+    where.push(`c.information_request_id = $${params.length}`)
+  }
+  if (query.handling_type_id) {
+    params.push(query.handling_type_id)
+    where.push(`c.handling_type_id = $${params.length}`)
+  }
+  if (query.reliability_id) {
+    params.push(query.reliability_id)
+    where.push(`c.reliability_id = $${params.length}`)
+  }
+  if (query.accuracy_id) {
+    params.push(query.accuracy_id)
+    where.push(`c.accuracy_id = $${params.length}`)
+  }
+  if (query.condition_id) {
+    params.push(query.condition_id)
+    where.push(`EXISTS (
+      SELECT 1 FROM case_conditions cc
+      WHERE cc.case_id = c.id AND cc.condition_id = $${params.length}
+    )`)
+  }
+  if (query.event_date_from) {
+    params.push(query.event_date_from)
+    where.push(`c.event_start_date >= $${params.length}::date`)
+  }
+  if (query.event_date_to) {
+    params.push(query.event_date_to)
+    where.push(`c.event_end_date <= $${params.length}::date`)
+  }
 
   const whereSql = where.join(' AND ')
   params.push(limit, offset)
@@ -219,7 +287,7 @@ export async function getCaseById (
     throw new AppError('permission_denied', 'You do not have permission to access this resource.', 403)
   }
 
-  const [viewingRanges, conditions, attachments] = await Promise.all([
+  const [viewingRanges, conditions, attachments, keywords, collectors] = await Promise.all([
     pool.query(
       `SELECT vr.id, vr.name FROM viewing_ranges vr
        JOIN case_viewing_ranges cvr ON cvr.viewing_range_id = vr.id
@@ -233,17 +301,21 @@ export async function getCaseById (
       [caseId]
     ),
     pool.query(
-      `SELECT id, file_name, extraction_status, uploaded_at
+      `SELECT id, file_name, extraction_status, extraction_error, uploaded_at
        FROM attachments WHERE case_id = $1 ORDER BY uploaded_at DESC`,
       [caseId]
-    )
+    ),
+    loadCaseKeywords(pool, caseId),
+    loadCaseCollectors(pool, caseId)
   ])
 
   return {
     ...row,
     viewing_ranges: viewingRanges.rows,
     conditions: conditions.rows,
-    attachments: attachments.rows
+    attachments: attachments.rows,
+    keywords,
+    collectors
   }
 }
 
@@ -318,11 +390,12 @@ export async function createCase (
         reliability_id, accuracy_id, rank_id, retention_policy_id,
         classification_number, action_taken, condition_notes, viewing_range_note,
         note_1, note_2, note_3, note_4, note_5, note_6,
+        acquisition_location_id,
         created_by, updated_by
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
         $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,
-        $23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34
+        $23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35
       ) RETURNING id, display_id`,
       [
         displayId,
@@ -357,6 +430,7 @@ export async function createCase (
         input.note_4 ?? null,
         input.note_5 ?? null,
         input.note_6 ?? null,
+        input.acquisition_location_id ?? null,
         user.id,
         user.id
       ]
@@ -364,6 +438,8 @@ export async function createCase (
     const caseId = rows[0].id as string
     await syncJoinIds(client, caseId, 'case_viewing_ranges', 'viewing_range_id', input.viewing_range_ids)
     await syncJoinIds(client, caseId, 'case_conditions', 'condition_id', input.condition_ids)
+    await syncCaseKeywords(client, caseId, input.keyword_names)
+    await syncCaseCollectors(client, caseId, input.collector_person_ids)
     // 同一トランザクションで監査を書き、本体と監査の原子性を保つ
     await writeAuditLog(client, {
       userId: user.id,
@@ -439,7 +515,8 @@ export async function updateCase (
     note_3: 'note_3',
     note_4: 'note_4',
     note_5: 'note_5',
-    note_6: 'note_6'
+    note_6: 'note_6',
+    acquisition_location_id: 'acquisition_location_id'
   }
 
   for (const [col, key] of Object.entries(columnMap)) {
@@ -462,6 +539,8 @@ export async function updateCase (
     }
     await syncJoinIds(client, caseId, 'case_viewing_ranges', 'viewing_range_id', input.viewing_range_ids)
     await syncJoinIds(client, caseId, 'case_conditions', 'condition_id', input.condition_ids)
+    await syncCaseKeywords(client, caseId, input.keyword_names)
+    await syncCaseCollectors(client, caseId, input.collector_person_ids)
     await writeAuditLog(client, {
       userId: user.id,
       action: 'case.update',
@@ -480,7 +559,11 @@ export async function updateCase (
     }
     // 閲覧範囲・条件の変更は Qdrant payload の権限メタデータ再同期が必要
     const permissionsTouched =
-      input.viewing_range_ids !== undefined || input.condition_ids !== undefined
+      input.viewing_range_ids !== undefined ||
+      input.condition_ids !== undefined ||
+      input.keyword_names !== undefined ||
+      input.collector_person_ids !== undefined ||
+      'acquisition_location_id' in input
     if (permissionsTouched && !bodyTouched) {
       await enqueueCaseMetadataSync(pool, caseId, existing.display_id as string)
     }

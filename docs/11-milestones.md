@@ -254,6 +254,103 @@ Done when:
 
 **Deferred to M22:** Search/Register Spec Completion (17 filters, registration fields, extracted-text preview on case detail).
 
+## Milestone 22: Pilot Regression Closure
+
+Goal: Close M20/M21 manual verification gaps and confirm RAG delete / permission / pipeline stability before feature expansion.
+
+Deliverables:
+
+- M20/M21 checklist sign-off with automated regression tests (`m22-regression.test.ts`).
+- RAG delete FK cleanup (migration 010) verified.
+- Extended case search filters and registration fields (foundation for M23).
+- [WebUI Wiring Checklist § M22](./20-webui-wiring-checklist.md#m22-follow-up-regression).
+
+Done when:
+
+- Checklist rows recorded ok/warn/err.
+- `npm test -w @aisss/api`, `npm run build -w @aisss/web`, Docker verify pass.
+
+## Milestone 23: Search/Register Spec Completion
+
+Goal: Align register, search, Excel import, and case detail with doc 08 field contract.
+
+Deliverables:
+
+- Registration fields: 備考1-6, keywords, 処置, 保存期間, 情報収集者, 情報入手場所, 対応情報要求, 資料登録者.
+- Search 17 filters on `GET /api/cases` and Search UI.
+- Excel template v2 (`aisss-cases-v2`) synced with API.
+- Case detail extracted-text preview per attachment.
+- Migration `011_case_collectors_acquisition.sql`.
+
+Done when:
+
+- Register/edit/search/Excel import field contracts match.
+- Migrations apply without breaking existing cases.
+- Search filter API tests cover primary combinations.
+
+## Milestone 24: RAG Input Expansion
+
+Goal: Broaden practical RAG source formats.
+
+Deliverables:
+
+- XLSX extraction in worker (`xlsx` engine).
+- Transcript-first guidance for image/audio (OCR/ASR deferred).
+- Clear extraction failure messages in RAG admin and attachment panel.
+
+Done when:
+
+- XLSX attachments extract real cell text (not stub).
+- Image/audio failures guide operators to `.txt` transcript upload.
+- Failed extraction retry/audit trail visible in jobs.
+
+## Milestone 25: AI Search UX / Streaming / Policy Hardening
+
+Goal: Production-grade AI search UI.
+
+Deliverables:
+
+- SSE streaming UI (`POST /api/ai/chat/stream`) with incremental render.
+- Policy banner (quote/export) from `effective_policies`.
+- Ollama down / no chat model disables composer with recovery hints.
+
+Done when:
+
+- Streaming and failure paths preserve chat history.
+- Denied case titles do not leak in UI/audit/citations.
+- Pilot permission regression passes.
+
+## Milestone 26: Retrieval Quality / Evaluation Loop
+
+Goal: Improve findability, not just permission safety.
+
+Deliverables:
+
+- Expanded `apps/api/eval/retrieval-eval-set.json` (10 pilot scenarios).
+- DevLog/runbook notes for retrieval metrics.
+- ReRank ON/OFF decision documented (execution remains OFF until model path wired).
+
+Done when:
+
+- 10+ scenarios with expected citations recorded.
+- `npm test -- src/rag-eval.test.ts` passes on expanded set.
+- ReRank policy explicit in runbook.
+
+## Milestone 27: Operations / Backup / Governance Closure
+
+Goal: Evidence for wider pilot go/no-go.
+
+Deliverables:
+
+- Qdrant rebuild runbook section.
+- Backup-check workflow via `POST /api/admin/backup-checks`.
+- Audit `details_json` governance notes.
+
+Done when:
+
+- PostgreSQL/MinIO/Qdrant rebuild steps documented and verifiable.
+- Wider pilot decision materials in `/admin`, `/jobs`, `/audit`, DevLog.
+
 ## Post-MVP Ideas
 
 - MAP search (geographic case map + filters; offline tiles) — discussed but **deferred**; not in mock. See [18 § Post-MVP](./18-webui-mock-inventory-and-flows.md#post-mvp-deferred).

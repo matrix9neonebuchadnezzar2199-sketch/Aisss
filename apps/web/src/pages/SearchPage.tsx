@@ -10,21 +10,54 @@ import {
 } from '../lib/api'
 import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
 
+type SearchFilters = {
+  q: string
+  title: string
+  material_number: string
+  material_type_id: string
+  registering_department_id: string
+  rank_id: string
+  viewing_range_id: string
+  category_id: string
+  region_id: string
+  source_id: string
+  information_request_id: string
+  handling_type_id: string
+  reliability_id: string
+  accuracy_id: string
+  condition_id: string
+  event_date_from: string
+  event_date_to: string
+}
+
+const emptyFilters: SearchFilters = {
+  q: '',
+  title: '',
+  material_number: '',
+  material_type_id: '',
+  registering_department_id: '',
+  rank_id: '',
+  viewing_range_id: '',
+  category_id: '',
+  region_id: '',
+  source_id: '',
+  information_request_id: '',
+  handling_type_id: '',
+  reliability_id: '',
+  accuracy_id: '',
+  condition_id: '',
+  event_date_from: '',
+  event_date_to: ''
+}
+
 export function SearchPage () {
   const navigate = useNavigate()
   const [items, setItems] = useState<CaseListItem[]>([])
   const [total, setTotal] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [q, setQ] = useState('')
-  const [materialTypeId, setMaterialTypeId] = useState('')
-  const [departmentId, setDepartmentId] = useState('')
-  const [rankId, setRankId] = useState('')
-  const [viewingRangeId, setViewingRangeId] = useState('')
-  const [materialTypes, setMaterialTypes] = useState<MasterItem[]>([])
-  const [departments, setDepartments] = useState<MasterItem[]>([])
-  const [ranks, setRanks] = useState<MasterItem[]>([])
-  const [viewingRanges, setViewingRanges] = useState<MasterItem[]>([])
+  const [filters, setFilters] = useState<SearchFilters>(emptyFilters)
+  const [masters, setMasters] = useState<Record<string, MasterItem[]>>({})
   const [stats, setStats] = useState({
     cases: 0,
     extractionPending: 0,
@@ -33,19 +66,24 @@ export function SearchPage () {
   })
 
   useEffect(() => {
+    const masterPaths = [
+      'material-types', 'departments', 'rank-levels', 'viewing-ranges',
+      'categories', 'regions', 'sources', 'information-requests',
+      'handling-types', 'reliability-levels', 'accuracy-levels', 'conditions'
+    ]
     void Promise.all([
-      apiFetch<{ items: MasterItem[] }>('/api/masters/material-types'),
-      apiFetch<{ items: MasterItem[] }>('/api/masters/departments'),
-      apiFetch<{ items: MasterItem[] }>('/api/masters/rank-levels'),
-      apiFetch<{ items: MasterItem[] }>('/api/masters/viewing-ranges'),
+      ...masterPaths.map((p) =>
+        apiFetch<{ items: MasterItem[] }>(`/api/masters/${p}`).then((d) => [p, d.items] as const)
+      ),
       fetchJobStats().catch(() => null),
       fetchRagStatus().catch(() => null),
       fetchAdminDashboard().catch(() => null)
-    ]).then(([mt, dept, rank, vr, jobStats, ragStatus, dash]) => {
-      setMaterialTypes(mt.items)
-      setDepartments(dept.items)
-      setRanks(rank.items)
-      setViewingRanges(vr.items)
+    ]).then((results) => {
+      const masterEntries = results.slice(0, masterPaths.length) as Array<[string, MasterItem[]]>
+      setMasters(Object.fromEntries(masterEntries))
+      const jobStats = results[masterPaths.length] as Awaited<ReturnType<typeof fetchJobStats>> | null
+      const ragStatus = results[masterPaths.length + 1] as Awaited<ReturnType<typeof fetchRagStatus>> | null
+      const dash = results[masterPaths.length + 2] as Awaited<ReturnType<typeof fetchAdminDashboard>> | null
       setStats({
         cases: dash?.cases ?? 0,
         extractionPending: jobStats?.by_type?.extraction?.pending ?? jobStats?.pending ?? 0,
@@ -55,16 +93,18 @@ export function SearchPage () {
     }).catch((e: Error) => setError(e.message))
   }, [])
 
+  function setFilter<K extends keyof SearchFilters> (key: K, value: SearchFilters[K]) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
   async function runSearch () {
     setLoading(true)
     setError(null)
     try {
       const params = new URLSearchParams()
-      if (q) params.set('q', q)
-      if (materialTypeId) params.set('material_type_id', materialTypeId)
-      if (departmentId) params.set('registering_department_id', departmentId)
-      if (rankId) params.set('rank_id', rankId)
-      if (viewingRangeId) params.set('viewing_range_id', viewingRangeId)
+      for (const [key, value] of Object.entries(filters)) {
+        if (value?.trim()) params.set(key, value.trim())
+      }
       const data = await apiFetch<{ items: CaseListItem[]; total: number }>(
         `/api/cases?${params.toString()}`
       )
@@ -87,6 +127,8 @@ export function SearchPage () {
     if (jobType) params.set('job_type', jobType)
     navigate(`/jobs?${params.toString()}`)
   }
+
+  const m = (key: string) => masters[key] ?? []
 
   return (
     <section className="view active" id="view-search">
@@ -118,44 +160,77 @@ export function SearchPage () {
           <CollapsibleFilterPanel storageKey="aisss-search-filter-collapsed" title="検索条件">
             <div className="search-filter-panel">
               <div className="filter-bar search-filter-row search-filter-keyword">
-                <input
-                  type="search"
-                  placeholder="キーワード・全文検索…"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                />
+                <input type="search" placeholder="キーワード・全文検索…" value={filters.q} onChange={(e) => setFilter('q', e.target.value)} />
+                <input type="search" placeholder="表題" value={filters.title} onChange={(e) => setFilter('title', e.target.value)} />
+                <input type="search" placeholder="資料番号" value={filters.material_number} onChange={(e) => setFilter('material_number', e.target.value)} />
               </div>
               <div className="filter-bar search-filter-row search-filter-masters">
-                <select title="資料区分" value={materialTypeId} onChange={(e) => setMaterialTypeId(e.target.value)}>
+                <select title="資料区分" value={filters.material_type_id} onChange={(e) => setFilter('material_type_id', e.target.value)}>
                   <option value="">資料区分</option>
-                  {materialTypes.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {m('material-types').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
-                <select title="登録部署" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+                <select title="登録部署" value={filters.registering_department_id} onChange={(e) => setFilter('registering_department_id', e.target.value)}>
                   <option value="">登録部署</option>
-                  {departments.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {m('departments').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
-                <select title="ランク" value={rankId} onChange={(e) => setRankId(e.target.value)}>
+                <select title="ランク" value={filters.rank_id} onChange={(e) => setFilter('rank_id', e.target.value)}>
                   <option value="">ランク</option>
-                  {ranks.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {m('rank-levels').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <select title="分類" value={filters.category_id} onChange={(e) => setFilter('category_id', e.target.value)}>
+                  <option value="">分類</option>
+                  {m('categories').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <select title="地域" value={filters.region_id} onChange={(e) => setFilter('region_id', e.target.value)}>
+                  <option value="">地域</option>
+                  {m('regions').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+              </div>
+              <div className="filter-bar search-filter-row search-filter-masters">
+                <select title="資料源" value={filters.source_id} onChange={(e) => setFilter('source_id', e.target.value)}>
+                  <option value="">資料源</option>
+                  {m('sources').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <select title="対応情報要求" value={filters.information_request_id} onChange={(e) => setFilter('information_request_id', e.target.value)}>
+                  <option value="">対応情報要求</option>
+                  {m('information-requests').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <select title="取扱区分" value={filters.handling_type_id} onChange={(e) => setFilter('handling_type_id', e.target.value)}>
+                  <option value="">取扱区分</option>
+                  {m('handling-types').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <select title="信頼性" value={filters.reliability_id} onChange={(e) => setFilter('reliability_id', e.target.value)}>
+                  <option value="">信頼性</option>
+                  {m('reliability-levels').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <select title="正確性" value={filters.accuracy_id} onChange={(e) => setFilter('accuracy_id', e.target.value)}>
+                  <option value="">正確性</option>
+                  {m('accuracy-levels').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
               </div>
               <div className="filter-bar search-filter-row search-filter-viewing">
-                <select title="閲覧範囲" value={viewingRangeId} onChange={(e) => setViewingRangeId(e.target.value)}>
+                <select title="閲覧範囲" value={filters.viewing_range_id} onChange={(e) => setFilter('viewing_range_id', e.target.value)}>
                   <option value="">閲覧範囲</option>
-                  {viewingRanges.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {m('viewing-ranges').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
+                <select title="条件" value={filters.condition_id} onChange={(e) => setFilter('condition_id', e.target.value)}>
+                  <option value="">条件</option>
+                  {m('conditions').map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <label className="search-date-label">
+                  事象開始
+                  <input type="date" value={filters.event_date_from} onChange={(e) => setFilter('event_date_from', e.target.value)} />
+                </label>
+                <label className="search-date-label">
+                  事象終了
+                  <input type="date" value={filters.event_date_to} onChange={(e) => setFilter('event_date_to', e.target.value)} />
+                </label>
               </div>
               <div className="filter-bar search-filter-row search-filter-actions">
-                <button type="button" className="btn btn-sm btn-primary" onClick={() => void runSearch()} disabled={loading}>
-                  検索
-                </button>
+                <button type="button" className="btn btn-sm btn-primary" onClick={() => void runSearch()} disabled={loading}>検索</button>
               </div>
             </div>
           </CollapsibleFilterPanel>
-
-          <p className="search-hint">
-            表題クリックでケース詳細を表示。2件比較は <strong>Ctrl+クリック</strong>（Mac: <strong>⌘+クリック</strong>）で別タブ、または詳細画面の「別タブで開く」を使用。
-          </p>
 
           {error && <p className="error">{error}</p>}
           <p className="meta">{total} 件</p>
@@ -175,14 +250,10 @@ export function SearchPage () {
               {items.map((row) => (
                 <tr key={row.id}>
                   <td className="mono">
-                    <Link to={`/cases/${row.display_id}`} target="_blank" rel="noopener noreferrer">
-                      {row.display_id}
-                    </Link>
+                    <Link to={`/cases/${row.display_id}`} target="_blank" rel="noopener noreferrer">{row.display_id}</Link>
                   </td>
                   <td>
-                    <Link to={`/cases/${row.display_id}`} target="_blank" rel="noopener noreferrer">
-                      {row.title}
-                    </Link>
+                    <Link to={`/cases/${row.display_id}`} target="_blank" rel="noopener noreferrer">{row.title}</Link>
                   </td>
                   <td>{row.material_type_name ?? '—'}</td>
                   <td>{row.department_name ?? '—'}</td>

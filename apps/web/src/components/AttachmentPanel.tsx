@@ -115,7 +115,7 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
           onChange={(e) => void onFileChange(e.target.files)}
         />
         <p className="upload-zone-label">
-          {uploading ? 'アップロード中…' : 'ファイルを選択（PDF / TXT / DOCX 等）'}
+          {uploading ? 'アップロード中…' : 'PDF / DOCX / XLSX / TXT（画像・音声は .txt 文字起こし推奨）'}
         </p>
         <button
           type="button"
@@ -149,7 +149,13 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
               />
               抽出後RAG自動ON
             </label>
-            {item.extraction_error && <span className="extract-error">{item.extraction_error}</span>}
+            {item.extraction_error && (
+              <span className="extract-error" title={item.extraction_error}>
+                {item.extraction_error.length > 120
+                  ? `${item.extraction_error.slice(0, 120)}…`
+                  : item.extraction_error}
+              </span>
+            )}
             <button type="button" onClick={() => void showExtracted(item.id)}>抽出テキスト</button>
             {(item.extraction_status === 'failed') && (
               <button type="button" onClick={() => void retryFailedExtraction(item.id)}>再抽出</button>

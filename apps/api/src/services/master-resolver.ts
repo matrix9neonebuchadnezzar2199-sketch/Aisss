@@ -15,7 +15,10 @@ const MASTER_TABLES: Record<string, string> = {
   retention_policy: 'retention_policies',
   viewing_range: 'viewing_ranges',
   condition: 'conditions',
-  keyword: 'keywords'
+  keyword: 'keywords',
+  person: 'persons',
+  acquisition_location: 'acquisition_locations',
+  information_request: 'information_requests'
 }
 
 export class MasterResolver {
@@ -43,7 +46,7 @@ export class MasterResolver {
   }
 
   async resolveMany (
-    field: 'viewing_range' | 'condition',
+    field: 'viewing_range' | 'condition' | 'person',
     labels: string
   ): Promise<{ ids: string[]; unknown: string[] }> {
     const parts = labels.split(';').map((s) => s.trim()).filter(Boolean)

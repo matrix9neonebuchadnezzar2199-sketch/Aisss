@@ -83,6 +83,54 @@ Fields:
 - `status`: `ok`, `partial`, or `failed`.
 - `notes`: restore evidence and operator notes.
 
+Example (weekly pilot evidence):
+
+```bash
+curl -X POST http://localhost:8000/api/admin/backup-checks \
+  -H "Content-Type: application/json" \
+  -H "X-AISSS-User-Id: admin-user-id" \
+  -d '{"scope":"full-stack","status":"ok","notes":"Weekly restore drill — postgres pg_dump + minio mc mirror verified."}'
+```
+
+Record results in `/admin` dashboard and `90_DevLog/`.
+
+## Qdrant Rebuild (Secondary Data)
+
+Qdrant vectors are **rebuildable** from PostgreSQL chunk metadata + MinIO originals. Prefer rebuild over backup when corruption or drift is suspected.
+
+1. Stop embedding load (optional): pause worker or drain `/jobs` embedding queue.
+2. Note affected collections in runbook notes.
+3. Rebuild paths:
+   - **Per case:** `POST /api/cases/{case_id}/reindex` (admin/operator with case access).
+   - **Bulk:** RAG 管理 → 一括再インデックス (`POST /api/rag/bulk-reindex`).
+4. Verify:
+   - `/jobs` shows completed `embedding` / `rag_metadata_sync` jobs.
+   - AI search returns expected citations for pilot eval questions.
+5. Record evidence:
+   - `POST /api/admin/backup-checks` with `scope: qdrant`, `status: ok|partial`, rebuild notes.
+   - DevLog entry with case count / duration.
+
+If Qdrant volume must be wiped entirely (disaster recovery):
+
+```bash
+# Lab/pilot only — destroys all vectors
+docker compose exec qdrant curl -X DELETE 'http://localhost:6333/collections/aisss_chunks'
+# Then bulk-reindex from RAG admin after API recreates collection on next embed job
+```
+
+## Audit Governance (`details_json`)
+
+Reviewers expect these keys on security-sensitive actions:
+
+| Action | Required `details_json` keys |
+|---|---|
+| `ai.chat` / stream | `query_id`, `model`, `retrieved_case_ids`, `excluded_counts` (no denied titles) |
+| `attachment.delete` | `attachment_id`, `case_id`, `chunks_purged` |
+| `excel.import.confirm` | `created`, `updated`, `skipped` |
+| `job.retry` / `job.dead_letter` | `job_id`, `job_type`, prior `error` |
+
+Missing keys should be triaged before wider pilot — add via API change, not manual DB edits.
+
 ## Permission Regression Checks
 
 Before and during pilot:

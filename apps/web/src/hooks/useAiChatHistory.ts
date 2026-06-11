@@ -154,7 +154,10 @@ export function useAiChatHistory (userId: string | undefined) {
     })
   }, [updateStore, userId])
 
-  const appendToActiveSession = useCallback((messages: AiChatMessage[]) => {
+  const appendToActiveSession = useCallback((
+    messages: AiChatMessage[],
+    options?: { replaceAssistantId?: string }
+  ) => {
     if (!userId || messages.length === 0) return null
 
     let result: AiChatSession | null = null
@@ -169,11 +172,25 @@ export function useAiChatHistory (userId: string | undefined) {
         ? titleFromMessage(firstUser.content)
         : session.title
 
+      let nextMessages = session.messages
+      const replaceId = options?.replaceAssistantId
+      if (replaceId && messages.length === 1) {
+        const incoming = messages[0]
+        const idx = nextMessages.findIndex((m) => m.id === replaceId)
+        if (idx >= 0) {
+          nextMessages = nextMessages.map((m, i) => (i === idx ? { ...m, ...incoming, id: replaceId } : m))
+        } else {
+          nextMessages = [...nextMessages, { ...incoming, id: replaceId }]
+        }
+      } else {
+        nextMessages = [...nextMessages, ...messages]
+      }
+
       const updated: AiChatSession = {
         ...session,
         title,
         updatedAt: now,
-        messages: [...session.messages, ...messages]
+        messages: nextMessages
       }
       result = updated
 

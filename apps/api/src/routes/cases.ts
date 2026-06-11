@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type pg from 'pg'
 import { sendError } from '../lib/errors.js'
+import { parseCaseSearchQuery } from '../lib/case-search-query.js'
 import type { Settings } from '../settings.js'
 import * as caseService from '../services/cases.js'
 import * as ragAdmin from '../services/rag-admin.js'
@@ -12,17 +13,7 @@ export const caseRoutes: FastifyPluginAsync<{
   app.get('/api/cases', async (request, reply) => {
     try {
       const q = request.query as Record<string, string | undefined>
-      const result = await caseService.searchCases(pool, request.user, {
-        q: q.q,
-        material_type_id: q.material_type_id,
-        registering_department_id: q.registering_department_id,
-        rank_id: q.rank_id,
-        viewing_range_id: q.viewing_range_id,
-        page: q.page ? Number(q.page) : undefined,
-        limit: q.limit ? Number(q.limit) : undefined,
-        sort: q.sort,
-        order: q.order === 'asc' ? 'asc' : 'desc'
-      })
+      const result = await caseService.searchCases(pool, request.user, parseCaseSearchQuery(q))
       return result
     } catch (error) {
       return sendError(reply, error, request.id)

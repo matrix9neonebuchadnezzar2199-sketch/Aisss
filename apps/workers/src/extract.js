@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module'
 import mammoth from 'mammoth'
+import * as XLSX from 'xlsx'
 
 const require = createRequire(import.meta.url)
 const pdfParse = require('pdf-parse')
@@ -13,6 +14,17 @@ function sourceTypeForKind (kind) {
     case 'text': return 'manual_text'
     default: return 'manual_text'
   }
+}
+
+function extractSpreadsheetText (buffer) {
+  const workbook = XLSX.read(buffer, { type: 'buffer', cellDates: false })
+  const parts = []
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName]
+    const csv = XLSX.utils.sheet_to_csv(sheet).trim()
+    if (csv) parts.push(`## ${sheetName}\n${csv}`)
+  }
+  return parts.join('\n\n').trim()
 }
 
 export async function extractText (attachment, buffer) {
@@ -48,43 +60,51 @@ export async function extractText (attachment, buffer) {
     }
   }
 
+  if (kind === 'office' && /\.(xlsx|xls)$/.test(fileName)) {
+    const text = extractSpreadsheetText(buffer)
+    return {
+      text,
+      engine: 'xlsx',
+      sourceType: 'office_parse',
+      metadata: { format: fileName.endsWith('.xls') ? 'xls' : 'xlsx', sheets: text ? undefined : 0 },
+      ...(text ? {} : { error: 'Spreadsheet has no extractable cell text.' })
+    }
+  }
+
   if (kind === 'office') {
     return {
       text: '',
       engine: 'stub',
       sourceType: 'office_parse',
-      metadata: {},
-      error: `Office parser not implemented for ${fileName}. Convert to PDF or DOCX for M3.`
+      metadata: { format: fileName.split('.').pop() },
+      error: `Office parser not implemented for ${fileName}. Use PDF, DOCX, or XLSX; for PPTX convert to PDF.`
     }
   }
 
   if (kind === 'image') {
     return {
       text: '',
-      engine: 'ocr-stub',
+      engine: 'transcript-first',
       sourceType: 'ocr',
       metadata: {},
-      error: 'OCR engine not configured in M3 worker. Add Tesseract or external OCR service.'
+      error: 'OCR は未設定です。画像の内容は .txt 形式の文字起こしを添付してください（transcript-first）。'
     }
   }
 
   if (kind === 'audio') {
     return {
       text: '',
-      engine: 'asr-stub',
+      engine: 'transcript-first',
       sourceType: 'asr',
       metadata: {},
-      error: 'ASR engine not configured in M3 worker. Upload a manual transcript as .txt.'
+      error: 'ASR は未設定です。音声の内容は .txt 形式の文字起こしを添付してください（transcript-first）。'
     }
   }
 
   return {
-    text: '',
-    engine: 'unknown',
-    sourceType: 'manual_text',
-    metadata: {},
-    error: `Unsupported attachment kind: ${kind}`
+    text: buffer.toString('utf8').trim(),
+    engine: 'fallback-utf8',
+    sourceType: sourceTypeForKind(kind),
+    metadata: {}
   }
 }
-
-export { sourceTypeForKind }

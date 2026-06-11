@@ -150,7 +150,30 @@ export type CaseDetail = CaseListItem & {
   material_type_id?: string
   registering_department_id?: string
   rank_id?: string
+  classification_number?: string
+  category_id?: string
+  region_id?: string
+  source_id?: string
+  registrant_id?: string
+  information_request_id?: string
+  handling_type_id?: string
+  reliability_id?: string
+  accuracy_id?: string
+  retention_policy_id?: string
+  acquisition_location_id?: string
+  action_taken?: string
+  condition_notes?: string
+  viewing_range_note?: string
+  note_1?: string
+  note_2?: string
+  note_3?: string
+  note_4?: string
+  note_5?: string
+  note_6?: string
   viewing_ranges?: Array<{ id: string; name: string }>
+  conditions?: Array<{ id: string; name: string }>
+  keywords?: Array<{ id: string; name: string }>
+  collectors?: Array<{ id: string; name: string }>
   attachments?: AttachmentItem[]
 }
 
@@ -219,6 +242,54 @@ export async function sendAiChat (message: string, model?: string): Promise<AiCh
     method: 'POST',
     body: JSON.stringify({ message, model })
   })
+}
+
+export type AiChatStreamEvent =
+  | { type: 'meta'; query_id: string; model: string; citations: AiChatResponse['citations']; effective_policies: AiChatResponse['effective_policies'] }
+  | { type: 'token'; content: string }
+  | { type: 'done' }
+  | { type: 'error'; message: string }
+
+/** SSE `/api/ai/chat/stream` — token 単位でコールバック */
+export async function sendAiChatStream (
+  message: string,
+  model: string | undefined,
+  onEvent: (event: AiChatStreamEvent) => void
+): Promise<void> {
+  const response = await fetch('/api/ai/chat/stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-AISSS-User-Id': getUserId()
+    },
+    body: JSON.stringify({ message, model })
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(body.error?.message ?? `HTTP ${response.status}`)
+  }
+  if (!response.body) throw new Error('Stream body missing')
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const parts = buffer.split('\n\n')
+    buffer = parts.pop() ?? ''
+    for (const part of parts) {
+      const line = part.split('\n').find((l) => l.startsWith('data: '))
+      if (!line) continue
+      try {
+        onEvent(JSON.parse(line.slice(6)) as AiChatStreamEvent)
+      } catch {
+        // malformed SSE chunk — skip
+      }
+    }
+  }
 }
 
 export type RagFileItem = {

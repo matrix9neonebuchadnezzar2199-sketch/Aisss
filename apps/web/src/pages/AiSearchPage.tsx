@@ -11,7 +11,8 @@ import {
   fetchOllamaModels,
   getEnabledChatModelNames,
   resolveDefaultChatModel,
-  sendAiChat,
+  sendAiChatStream,
+  type AiChatStreamEvent,
   type AiChatResponse,
   type AuditLogEntry
 } from '../lib/api'
@@ -99,17 +100,30 @@ export function AiSearchPage () {
     setPendingFiles([])
 
     try {
-      const res = await sendAiChat(text, model || undefined)
-      setLastPolicies(res.effective_policies)
-      const assistantMsg: AiChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: res.answer,
-        createdAt: new Date().toISOString(),
-        queryId: res.query_id,
-        citations: res.citations
+      let meta: AiChatStreamEvent & { type: 'meta' } | null = null
+      let answer = ''
+      const assistantId = crypto.randomUUID()
+
+      await sendAiChatStream(text, model || undefined, (event) => {
+        if (event.type === 'meta') {
+          meta = event
+          setLastPolicies(event.effective_policies)
+        } else if (event.type === 'token') {
+          answer += event.content
+          appendToActiveSession([{
+            id: assistantId,
+            role: 'assistant',
+            content: answer,
+            createdAt: new Date().toISOString(),
+            queryId: meta?.query_id,
+            citations: meta?.citations
+          }], { replaceAssistantId: assistantId })
+        }
+      })
+
+      if (!meta) {
+        throw new Error('ストリーム応答が空でした')
       }
-      appendToActiveSession([assistantMsg])
     } catch (e) {
       setError(e instanceof Error ? e.message : '送信に失敗しました')
     } finally {

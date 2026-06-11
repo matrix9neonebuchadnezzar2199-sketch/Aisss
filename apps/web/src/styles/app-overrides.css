@@ -1250,3 +1250,32 @@ a.nav-link-style:hover {
   margin-left: auto;
   flex-shrink: 0;
 }
+
+.search-date-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.search-date-label input[type="date"] {
+  min-width: 10rem;
+}
+
+.extract-preview-block {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-subtle);
+}
+
+.extract-preview-text {
+  margin: 6px 0 0;
+  max-height: 240px;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,4 +1,4 @@
-export const EXCEL_TEMPLATE_VERSION = 'aisss-cases-v1'
+export const EXCEL_TEMPLATE_VERSION = 'aisss-cases-v2'
 
 export const TEMPLATE_HEADERS = [
   'case_uuid',
@@ -38,7 +38,12 @@ export const TEMPLATE_HEADERS = [
   'note6',
   'action_taken',
   'condition_notes',
-  'viewing_range_note'
+  'viewing_range_note',
+  'retention_policy',
+  'registrant',
+  'information_request',
+  'acquisition_location',
+  'collectors'
 ] as const
 
 export type ExcelRow = Record<string, string | number | boolean | null | undefined>

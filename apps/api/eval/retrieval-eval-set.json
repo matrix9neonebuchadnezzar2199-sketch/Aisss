@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Lightweight Japanese RAG retrieval evaluation set for pilot prep.",
+  "version": 2,
+  "description": "Japanese RAG retrieval evaluation set — pilot questions + permission regression.",
   "scenarios": [
     {
       "id": "in-range-hit",
@@ -83,6 +83,176 @@
         "allowed_display_ids": [],
         "forbidden_display_ids": ["CASE-2026-00999"],
         "excluded_counts": { "search_policy": 1 }
+      }
+    },
+    {
+      "id": "pilot-keyword-sanctions",
+      "query": "対象国への経済制裁の最新動向は？",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-sanctions",
+          "display_id": "CASE-2026-00201",
+          "title": "経済制裁に関する週次整理"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-sanctions": {
+            "viewing_range_ids": ["range-a"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": ["CASE-2026-00201"],
+        "forbidden_display_ids": [],
+        "min_contexts": 1
+      }
+    },
+    {
+      "id": "pilot-supply-chain",
+      "query": "半導体サプライチェーンの供給リスクを教えて",
+      "user": { "role": "operator", "viewing_range_ids": ["range-a", "range-b"] },
+      "hits": [
+        {
+          "case_id": "case-semiconductor",
+          "display_id": "CASE-2026-00188",
+          "title": "半導体供給網リスク評価（2026Q1）"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-semiconductor": {
+            "viewing_range_ids": ["range-b"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": ["CASE-2026-00188"],
+        "forbidden_display_ids": [],
+        "min_contexts": 1
+      }
+    },
+    {
+      "id": "pilot-maritime-security",
+      "query": "重要海峡の海上交通の安全確保について",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-maritime",
+          "display_id": "CASE-2026-00155",
+          "title": "海上交通路の安全確保に関する分析"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-maritime": {
+            "viewing_range_ids": ["range-a"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": ["CASE-2026-00155"],
+        "forbidden_display_ids": [],
+        "min_contexts": 1
+      }
+    },
+    {
+      "id": "pilot-energy-price",
+      "query": "エネルギー価格の変動要因を整理して",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-energy",
+          "display_id": "CASE-2026-00167",
+          "title": "エネルギー市場動向レポート"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-energy": {
+            "viewing_range_ids": ["range-a"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": ["CASE-2026-00167"],
+        "forbidden_display_ids": [],
+        "min_contexts": 1
+      }
+    },
+    {
+      "id": "pilot-cyber-incident",
+      "query": "最近のサイバー攻撃キャンペーンの特徴は？",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-cyber",
+          "display_id": "CASE-2026-00210",
+          "title": "サイバー攻撃キャンペーン分析メモ"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-cyber": {
+            "viewing_range_ids": ["range-a"],
+            "conditions": [
+              {
+                "name": "複製禁止",
+                "search_policy": "allow",
+                "quote_policy": "deny",
+                "export_policy": "deny_all",
+                "priority": 10
+              }
+            ]
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": ["CASE-2026-00210"],
+        "forbidden_display_ids": [],
+        "min_contexts": 1
+      }
+    },
+    {
+      "id": "pilot-admin-only-range",
+      "query": "管理者限定案件の概要",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [
+        {
+          "case_id": "case-admin-only",
+          "display_id": "CASE-2026-00901",
+          "title": "管理者限定サンプル"
+        }
+      ],
+      "fixture": {
+        "cases": {
+          "case-admin-only": {
+            "viewing_range_ids": ["range-admin"],
+            "conditions": []
+          }
+        }
+      },
+      "expect": {
+        "allowed_display_ids": [],
+        "forbidden_display_ids": ["CASE-2026-00901"],
+        "excluded_counts": { "viewing_range": 1 }
+      }
+    },
+    {
+      "id": "pilot-no-hit-graceful",
+      "query": "存在しない架空トピックXYZ123の分析",
+      "user": { "role": "user", "viewing_range_ids": ["range-a"] },
+      "hits": [],
+      "fixture": { "cases": {} },
+      "expect": {
+        "allowed_display_ids": [],
+        "forbidden_display_ids": [],
+        "min_contexts": 0
       }
     }
   ]

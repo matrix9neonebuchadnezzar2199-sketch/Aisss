@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { apiFetch, downloadAttachment, type CaseDetail } from '../lib/api'
+import { AttachmentExtractPreview } from '../components/AttachmentExtractPreview'
 
 const bodySections: Array<[string, keyof CaseDetail]> = [
   ['1 要約', 'body_summary'],
@@ -63,6 +64,12 @@ export function CaseDetailPage () {
           </dd>
           <dt>閲覧範囲</dt>
           <dd>{item.viewing_ranges?.map((v) => v.name).join(', ') || '—'}</dd>
+          {item.keywords && item.keywords.length > 0 && (
+            <>
+              <dt>キーワード</dt>
+              <dd>{item.keywords.map((k) => k.name).join(', ')}</dd>
+            </>
+          )}
         </dl>
 
         <h3 className="section-title">本文（結合表示）</h3>
@@ -100,6 +107,8 @@ export function CaseDetailPage () {
                 >
                   ダウンロード
                 </button>
+                {' '}
+                <AttachmentExtractPreview attachmentId={att.id} fileName={att.file_name} />
               </span>
             </li>
           ))}

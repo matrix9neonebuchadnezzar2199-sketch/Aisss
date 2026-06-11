@@ -22,7 +22,7 @@ Per-screen verification that React UI calls the correct APIs and navigation matc
 | マスタ管理 | `/masters` | `GET/POST/PATCH /api/masters/*` | A |
 | RAG 管理 | `/rag` | `GET /api/rag/*`, enable, delete, reindex | B, C |
 | 単独ファイル | `/rag/standalone` | `POST /api/rag/standalone-files` | C |
-| AI 検索 | `/ai` | `POST /api/ai/chat`, `GET /api/ollama/health` | C |
+| AI 検索 | `/ai` | `POST /api/ai/chat/stream`, `GET /api/ollama/health` | C |
 | モデル管理 | `/models` | `GET /api/ollama/models`, `PUT /api/admin/ollama/model-roles` | — |
 | 監査ログ | `/audit` | `GET /api/audit-logs`, CSV export | dry-run 10 |
 | ジョブ状態 | `/jobs` | `GET /api/jobs`, retry, dead-letter | dry-run 11 |
@@ -92,7 +92,7 @@ Post-M19 UX fixes. Record results in `90_DevLog/` when checked.
 | `npm run build -w @aisss/web` | ok (2026-06-11) |
 | `npm test -w @aisss/api` | ok — 48 pass, 5 skipped (integration) |
 | `verify-docker-deploy.ps1` | ok — CSS 43620B, build label present |
-| Regression table above | pending pilot browser walkthrough |
+| Regression table above | ok — automated API tests + build/deploy verify (2026-06-11); pilot browser walkthrough: warn (operator env pending) |
 
 ## M21 follow-up regression
 
@@ -126,4 +126,38 @@ RAG Admin Full Operations (mock `view-rag-admin` parity). Record results in `90_
 | `npm run build -w @aisss/web` | ok (2026-06-11) |
 | `npm test -w @aisss/api` | ok — 48 pass, 5 skipped |
 | `verify-docker-deploy.ps1` | ok — CSS 43620B, build label present |
-| Regression table above | pending pilot browser walkthrough |
+| Regression table above | ok — automated API tests + build/deploy verify (2026-06-11); pilot browser walkthrough: warn (operator env pending) |
+
+## M22 follow-up regression
+
+Pilot regression closure after M21 RAG delete FK fix and extended search/register work.
+
+| Area | Check | Expected |
+|---|---|---|
+| RAG delete | DELETE attachment after jobs exist | 200; no `jobs_attachment_id_fkey` 500 |
+| RAG pipeline | PDF/DOCX/TXT case attachment | extract → embed → AI citation path |
+| Search filters | Extended GET `/api/cases` query params | title, masters, dates, condition filter |
+| Register | 備考1-6, keywords, collectors, masters | PATCH persists; case detail shows values |
+| Excel import | Template v2 columns | preview/confirm matches register fields |
+| AI search | Stream response | SSE tokens render incrementally; Ollama down disables input |
+| Permission | pilot user outside range | restricted cases absent from search/AI |
+
+### M22 change inventory (2026-06-11)
+
+| Category | Files |
+|---|---|
+| Regression tests | `m22-regression.test.ts`, `case-search-query.test.ts` |
+| Search/Register | `cases.ts`, `case-search-query.ts`, `RegisterPage.tsx`, `SearchPage.tsx`, migration `011_*` |
+| RAG input | `workers/src/extract.js`, xlsx dependency |
+| AI UX | `api.ts` `sendAiChatStream`, `AiSearchPage.tsx`, `useAiChatHistory.ts` |
+| Eval/Ops docs | `eval/retrieval-eval-set.json`, `19-operational-runbook.md` |
+
+### M22 sign-off
+
+| Check | Result |
+|---|---|
+| `npm run build -w @aisss/web` | ok (2026-06-11) |
+| `npm test -w @aisss/api` | ok |
+| `npm test -w @aisss/workers` | ok |
+| `verify-docker-deploy.ps1` | ok |
+| Regression table above | ok — API/unit coverage; pilot browser walkthrough: warn |
