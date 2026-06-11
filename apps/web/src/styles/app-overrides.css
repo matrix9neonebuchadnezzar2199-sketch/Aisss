@@ -863,6 +863,27 @@ a.nav-link-style:hover {
   background: rgba(56, 139, 253, 0.1);
 }
 
+.models-table tbody tr.model-row-embed-only {
+  background: var(--purple-subtle);
+}
+
+.models-table tbody tr.model-row-embed-only td {
+  border-color: rgba(163, 113, 247, 0.28);
+}
+
+.models-table tbody tr.model-row-embed-only:hover {
+  background: rgba(163, 113, 247, 0.18);
+}
+
+.models-table tbody tr.model-row-embed-only.model-row-default-embed {
+  box-shadow: inset 3px 0 0 var(--purple-fg, #a371f7);
+}
+
+.model-role-na {
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+
 .models-table tbody tr.model-row-chat-enabled td {
   border-color: rgba(56, 139, 253, 0.22);
 }

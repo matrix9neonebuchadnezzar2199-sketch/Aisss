@@ -70,20 +70,33 @@ function capabilityTagClass (id: ModelCapabilityTag['id']): string {
   }
 }
 
+function isEmbedOnlyModel (m: Pick<ModelRow, 'capability_tags'>): boolean {
+  const ids = new Set(m.capability_tags.map((t) => t.id))
+  return ids.has('embed') && !ids.has('text')
+}
+
 function mapModelsResponse (m: OllamaModelsResponse): ModelRow[] {
-  return m.models.map((x) => ({
-    name: x.name,
-    model_id: x.model_id,
-    size_bytes: x.size_bytes,
-    modified_at: x.modified_at,
-    digest: x.digest,
-    details: x.details,
-    capability_tags: x.capability_tags,
-    enabled_for_chat: x.enabled_for_chat,
-    is_default_chat: x.is_default_chat,
-    is_default_embedding: x.is_default_embedding,
-    is_rerank: x.is_rerank
-  }))
+  return m.models.map((x) => {
+    const row: ModelRow = {
+      name: x.name,
+      model_id: x.model_id,
+      size_bytes: x.size_bytes,
+      modified_at: x.modified_at,
+      digest: x.digest,
+      details: x.details,
+      capability_tags: x.capability_tags,
+      enabled_for_chat: x.enabled_for_chat,
+      is_default_chat: x.is_default_chat,
+      is_default_embedding: x.is_default_embedding,
+      is_rerank: x.is_rerank
+    }
+    if (!isEmbedOnlyModel(row)) return row
+    return {
+      ...row,
+      enabled_for_chat: false,
+      is_default_chat: false
+    }
+  })
 }
 
 export function ModelsPage () {
@@ -180,18 +193,23 @@ export function ModelsPage () {
       setInferenceNotice(null)
       await saveModelRoles({
         rerank_enabled: rerankEnabled,
-        assignments: models.map((m) => ({
-          model_name: m.name,
-          roles: [
-            ...(m.enabled_for_chat ? ['chat'] : []),
-            ...(m.is_default_embedding ? ['embedding'] : []),
-            ...(m.is_rerank ? ['rerank'] : [])
-          ],
-          enabled_for_chat: m.enabled_for_chat,
-          is_default_chat: m.is_default_chat,
-          is_default_embedding: m.is_default_embedding,
-          is_rerank: m.is_rerank
-        }))
+        assignments: models.map((m) => {
+          const embedOnly = isEmbedOnlyModel(m)
+          const enabled_for_chat = embedOnly ? false : m.enabled_for_chat
+          const is_default_chat = embedOnly ? false : m.is_default_chat
+          return {
+            model_name: m.name,
+            roles: [
+              ...(enabled_for_chat ? ['chat'] : []),
+              ...(m.is_default_embedding ? ['embedding'] : []),
+              ...(m.is_rerank ? ['rerank'] : [])
+            ],
+            enabled_for_chat,
+            is_default_chat,
+            is_default_embedding: m.is_default_embedding,
+            is_rerank: m.is_rerank
+          }
+        })
       })
       setSaved(true)
       await reloadFromOllama()
@@ -200,7 +218,7 @@ export function ModelsPage () {
     }
   }
 
-  const enabledChatCount = models.filter((m) => m.enabled_for_chat).length
+  const enabledChatCount = models.filter((m) => m.enabled_for_chat && !isEmbedOnlyModel(m)).length
 
   return (
     <section className="view active" id="view-models">
@@ -264,12 +282,16 @@ export function ModelsPage () {
               </tr>
             </thead>
             <tbody>
-              {models.map((m) => (
+              {models.map((m) => {
+                const embedOnly = isEmbedOnlyModel(m)
+                return (
                 <tr
                   key={m.name}
                   className={[
-                    m.enabled_for_chat ? 'model-row-chat-enabled' : '',
-                    m.is_default_chat ? 'model-row-default-chat' : ''
+                    embedOnly ? 'model-row-embed-only' : '',
+                    !embedOnly && m.enabled_for_chat ? 'model-row-chat-enabled' : '',
+                    !embedOnly && m.is_default_chat ? 'model-row-default-chat' : '',
+                    !embedOnly && m.is_default_embedding ? 'model-row-default-embed' : ''
                   ].filter(Boolean).join(' ')}
                 >
                   <td>
@@ -300,25 +322,33 @@ export function ModelsPage () {
                   <td>{formatBytes(m.size_bytes)}</td>
                   <td>{formatModifiedAt(m.modified_at)}</td>
                   <td className="model-spec-cell">{formatModelSpec(m.details)}</td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={m.enabled_for_chat}
-                      aria-label={`${m.name} をチャット有効`}
-                      onChange={(e) => void tryChatRoleChange(m.name, {
-                        enabled_for_chat: e.target.checked,
-                        ...(e.target.checked ? {} : { is_default_chat: false })
-                      })}
-                    />
+                  <td className="model-role-cell">
+                    {embedOnly ? (
+                      <span className="model-role-na" title="Embed 専用モデル">—</span>
+                    ) : (
+                      <input
+                        type="checkbox"
+                        checked={m.enabled_for_chat}
+                        aria-label={`${m.name} をチャット有効`}
+                        onChange={(e) => void tryChatRoleChange(m.name, {
+                          enabled_for_chat: e.target.checked,
+                          ...(e.target.checked ? {} : { is_default_chat: false })
+                        })}
+                      />
+                    )}
                   </td>
-                  <td>
-                    <input
-                      type="radio"
-                      name="default_chat"
-                      checked={m.is_default_chat}
-                      aria-label={`${m.name} を既定チャット`}
-                      onChange={() => void tryChatRoleChange(m.name, { is_default_chat: true, enabled_for_chat: true })}
-                    />
+                  <td className="model-role-cell">
+                    {embedOnly ? (
+                      <span className="model-role-na" title="Embed 専用モデル">—</span>
+                    ) : (
+                      <input
+                        type="radio"
+                        name="default_chat"
+                        checked={m.is_default_chat}
+                        aria-label={`${m.name} を既定チャット`}
+                        onChange={() => void tryChatRoleChange(m.name, { is_default_chat: true, enabled_for_chat: true })}
+                      />
+                    )}
                   </td>
                   <td>
                     <input
@@ -338,7 +368,8 @@ export function ModelsPage () {
                     />
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
 
