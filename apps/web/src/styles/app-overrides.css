@@ -922,6 +922,34 @@ a.nav-link-style:hover {
   background: rgba(56, 139, 253, 0.16);
 }
 
+.models-embedding-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--purple-fg, rgba(163, 113, 247, 0.45));
+}
+
+.models-embedding-section h3 {
+  color: var(--purple-fg, #a371f7);
+}
+
+.models-embedding-warn {
+  margin: 12px 0;
+  border-color: rgba(163, 113, 247, 0.45);
+  background: var(--purple-subtle, rgba(163, 113, 247, 0.1));
+}
+
+.models-embedding-active {
+  margin: 0 0 12px;
+}
+
+.models-embedding-actions {
+  margin-top: 12px;
+}
+
+.models-embedding-table {
+  margin-top: 8px;
+}
+
 /* RAG storage dashboard (row 2) */
 .rag-storage-dashboard {
   background: var(--canvas-default);

@@ -81,6 +81,11 @@ function isEmbedOnlyModel (m: Pick<ModelRow, 'capability_tags'>): boolean {
   return ids.has('embed') && !ids.has('text')
 }
 
+/** 既定埋め込みの候補（capability に embed を含むモデル） */
+function isEmbedCandidate (m: Pick<ModelRow, 'capability_tags'>): boolean {
+  return m.capability_tags.some((t) => t.id === 'embed')
+}
+
 function mapModelsResponse (m: OllamaModelsResponse): ModelRow[] {
   return m.models.map((x) => {
     const row: ModelRow = {
@@ -280,10 +285,9 @@ export function ModelsPage () {
     })))
   }
 
-  async function onSave () {
+  async function onSaveChatSettings () {
     setError(null)
     setSaved(false)
-    setReindexNotice(null)
     try {
       const status = await fetchOllamaInferenceStatus()
       if (status.active && chatRolesChangedFromInitial()) {
@@ -291,22 +295,28 @@ export function ModelsPage () {
         return
       }
       setInferenceNotice(null)
-
-      if (embeddingChangedFromInitial()) {
-        const newModel = currentDefaultEmbedding()
-        if (newModel) {
-          setPendingEmbedModel(newModel)
-          setReindexDialogOpen(true)
-        }
-        return
-      }
-
-      await persistModelRoles(false)
+      await persistModelRoles(true)
       setSaved(true)
       await reloadFromOllama()
     } catch (e) {
       setError(e instanceof Error ? e.message : '保存失敗')
     }
+  }
+
+  function onApplyEmbeddingChange () {
+    setError(null)
+    setReindexNotice(null)
+    if (!embeddingChangedFromInitial()) {
+      setError('埋め込みモデルが変更されていません。')
+      return
+    }
+    const newModel = currentDefaultEmbedding()
+    if (!newModel) {
+      setError('既定埋め込みモデルを選択してください。')
+      return
+    }
+    setPendingEmbedModel(newModel)
+    setReindexDialogOpen(true)
   }
 
   async function onConfirmReindex () {
@@ -368,6 +378,9 @@ export function ModelsPage () {
   }
 
   const enabledChatCount = models.filter((m) => m.enabled_for_chat && !isEmbedOnlyModel(m)).length
+  const chatModels = models.filter((m) => !isEmbedOnlyModel(m))
+  const embedModels = models.filter((m) => isEmbedCandidate(m))
+  const activeEmbeddingName = initialEmbeddingRef.current ?? currentDefaultEmbedding()
 
   return (
     <section className="view active" id="view-models">
@@ -447,22 +460,17 @@ export function ModelsPage () {
                 <th scope="col">仕様</th>
                 <th scope="col">チャット有効</th>
                 <th scope="col">既定チャット</th>
-                <th scope="col">既定埋め込み</th>
                 <th scope="col">ReRank</th>
                 <th scope="col">操作</th>
               </tr>
             </thead>
             <tbody>
-              {models.map((m) => {
-                const embedOnly = isEmbedOnlyModel(m)
-                return (
+              {chatModels.map((m) => (
                 <tr
                   key={m.name}
                   className={[
-                    embedOnly ? 'model-row-embed-only' : '',
-                    !embedOnly && m.enabled_for_chat ? 'model-row-chat-enabled' : '',
-                    !embedOnly && m.is_default_chat ? 'model-row-default-chat' : '',
-                    !embedOnly && m.is_default_embedding ? 'model-row-default-embed' : ''
+                    m.enabled_for_chat ? 'model-row-chat-enabled' : '',
+                    m.is_default_chat ? 'model-row-default-chat' : ''
                   ].filter(Boolean).join(' ')}
                 >
                   <td>
@@ -494,41 +502,23 @@ export function ModelsPage () {
                   <td>{formatModifiedAt(m.modified_at)}</td>
                   <td className="model-spec-cell">{formatModelSpec(m.details)}</td>
                   <td className="model-role-cell">
-                    {embedOnly ? (
-                      <span className="model-role-na" title="Embed 専用モデル">—</span>
-                    ) : (
-                      <input
-                        type="checkbox"
-                        checked={m.enabled_for_chat}
-                        aria-label={`${m.name} をチャット有効`}
-                        onChange={(e) => void tryChatRoleChange(m.name, {
-                          enabled_for_chat: e.target.checked,
-                          ...(e.target.checked ? {} : { is_default_chat: false })
-                        })}
-                      />
-                    )}
+                    <input
+                      type="checkbox"
+                      checked={m.enabled_for_chat}
+                      aria-label={`${m.name} をチャット有効`}
+                      onChange={(e) => void tryChatRoleChange(m.name, {
+                        enabled_for_chat: e.target.checked,
+                        ...(e.target.checked ? {} : { is_default_chat: false })
+                      })}
+                    />
                   </td>
                   <td className="model-role-cell">
-                    {embedOnly ? (
-                      <span className="model-role-na" title="Embed 専用モデル">—</span>
-                    ) : (
-                      <input
-                        type="radio"
-                        name="default_chat"
-                        checked={m.is_default_chat}
-                        aria-label={`${m.name} を既定チャット`}
-                        onChange={() => void tryChatRoleChange(m.name, { is_default_chat: true, enabled_for_chat: true })}
-                      />
-                    )}
-                  </td>
-                  <td>
                     <input
                       type="radio"
-                      name="default_embed"
-                      checked={m.is_default_embedding}
-                      disabled={reindexActive}
-                      aria-label={`${m.name} を既定埋め込み`}
-                      onChange={() => updateModel(m.name, { is_default_embedding: true })}
+                      name="default_chat"
+                      checked={m.is_default_chat}
+                      aria-label={`${m.name} を既定チャット`}
+                      onChange={() => void tryChatRoleChange(m.name, { is_default_chat: true, enabled_for_chat: true })}
                     />
                   </td>
                   <td>
@@ -550,13 +540,106 @@ export function ModelsPage () {
                     </button>
                   </td>
                 </tr>
-                )
-              })}
+              ))}
             </tbody>
           </table>
 
+          <div className="form-section models-embedding-section">
+            <h3>既定埋め込みモデル（RAG / ベクトル DB）</h3>
+            <div className="policy-banner models-embedding-warn" role="note">
+              埋め込みモデルの変更は<strong>全チャンクの再埋め込み（reindex）</strong>を伴い、Qdrant のベクトル空間ごと差し替わります。
+              次元数の<strong>下げ</strong>やモデル変更は検索品質・互換性に直結するため、チャット設定とは別操作です。
+              完了まで検索は旧モデルで継続します。
+            </div>
+            {activeEmbeddingName && (
+              <p className="models-embedding-active meta">
+                現在稼働中: <code>{activeEmbeddingName}</code>
+                {embeddingChangedFromInitial() && currentDefaultEmbedding() && (
+                  <> → 変更予定: <code>{currentDefaultEmbedding()}</code></>
+                )}
+              </p>
+            )}
+            <table className="data-table models-table models-embedding-table">
+              <thead>
+                <tr>
+                  <th scope="col">選択</th>
+                  <th scope="col">モデル</th>
+                  <th scope="col">サイズ</th>
+                  <th scope="col">仕様</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {embedModels.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="meta">Embed 候補モデルがありません。ホストで pull 後「一覧更新」を押してください。</td>
+                  </tr>
+                )}
+                {embedModels.map((m) => (
+                  <tr
+                    key={`embed-${m.name}`}
+                    className={[
+                      'model-row-embed-only',
+                      m.is_default_embedding ? 'model-row-default-embed' : ''
+                    ].filter(Boolean).join(' ')}
+                  >
+                    <td className="model-role-cell">
+                      <input
+                        type="radio"
+                        name="default_embed"
+                        checked={m.is_default_embedding}
+                        disabled={reindexActive}
+                        aria-label={`${m.name} を既定埋め込み`}
+                        onChange={() => updateModel(m.name, { is_default_embedding: true })}
+                      />
+                    </td>
+                    <td>
+                      <div className="model-name-cell">
+                        <code className="model-name-primary">{m.name}</code>
+                        <div className="label-row model-capability-tags">
+                          {m.capability_tags.filter((t) => t.id === 'embed' || t.id === 'vision').map((tag) => (
+                            <span
+                              key={`${m.name}-${tag.id}`}
+                              className={`label ${capabilityTagClass(tag.id)}`}
+                            >
+                              {tag.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </td>
+                    <td>{formatBytes(m.size_bytes)}</td>
+                    <td className="model-spec-cell">{formatModelSpec(m.details)}</td>
+                    <td className="model-actions-cell">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        aria-label={`${m.name} をホストから削除`}
+                        disabled={m.is_default_embedding && !embeddingChangedFromInitial()}
+                        title={m.is_default_embedding ? '稼働中の既定埋め込みは先に別モデルへ切替えてください' : undefined}
+                        onClick={() => setDeleteTarget(m)}
+                      >
+                        削除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="form-actions models-embedding-actions">
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={reindexActive || !embeddingChangedFromInitial()}
+                onClick={() => onApplyEmbeddingChange()}
+              >
+                埋め込みモデルを変更（再埋め込み）
+              </button>
+            </div>
+          </div>
+
           <div className="form-section">
-            <h3>デフォルト・ReRank</h3>
+            <h3>チャット・ReRank</h3>
             <label className="rerank-toggle">
               <input
                 type="checkbox"
@@ -569,10 +652,10 @@ export function ModelsPage () {
               一覧は保存時・更新ボタン押下時に Ollama の <code>/api/tags</code> から取得します（<code>ollama list</code> 相当: ID・サイズ・最終更新）。pull した新モデルは「一覧更新」を押してください。
             </p>
             {error && <p className="error">{error}</p>}
-            {saved && <p className="meta">設定を保存しました（AI 検索のモデル一覧に反映されます）</p>}
+            {saved && <p className="meta">チャット・ReRank 設定を保存しました</p>}
             <div className="form-actions">
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => void onSave()}>
-                設定を保存
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => void onSaveChatSettings()}>
+                チャット・ReRank 設定を保存
               </button>
             </div>
           </div>
