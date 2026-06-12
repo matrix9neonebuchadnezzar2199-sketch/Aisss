@@ -9,6 +9,7 @@ export function loadConfig () {
     databaseUrl: required('DATABASE_URL'),
     pollIntervalMs: Number(process.env.WORKER_POLL_MS ?? '5000'),
     ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://host.docker.internal:11434',
+    zeusdbUrl: process.env.ZEUSDB_URL ?? 'http://zeus-db:8090',
     vectorDbUrl: process.env.VECTOR_DB_URL ?? 'http://vector:6333',
     vectorCollection: process.env.VECTOR_COLLECTION ?? 'aisss_chunks',
     objectStorage: {

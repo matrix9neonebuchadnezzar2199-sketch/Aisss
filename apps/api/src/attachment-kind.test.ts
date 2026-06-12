@@ -8,6 +8,8 @@ test('detectAttachmentKind classifies common types', () => {
   assert.equal(detectAttachmentKind('scan.png', 'image/png'), 'image')
   assert.equal(detectAttachmentKind('meeting.mp3', 'audio/mpeg'), 'audio')
   assert.equal(detectAttachmentKind('sheet.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'), 'office')
+  assert.equal(detectAttachmentKind('cache.sqlite', 'application/x-sqlite3'), 'sqlite')
+  assert.equal(detectAttachmentKind('messages.db', ''), 'sqlite')
 })
 
 test('sourceTypeForKind maps to ingestion source types', () => {

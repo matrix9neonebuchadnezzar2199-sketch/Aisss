@@ -12,6 +12,23 @@ test('extractText reads plain text files', async () => {
   assert.equal(result.engine, 'utf8')
 })
 
+test('extractText routes sqlite attachments through ZEUS-DB client', async () => {
+  const result = await extractText(
+    { attachment_kind: 'sqlite', file_name: 'cache.sqlite' },
+    Buffer.from('SQLite format 3\x00'),
+    {
+      analyzeSQLite: async () => ({
+        text: '[live] users row_id=1 name="Alice"',
+        engine: 'zeus-db',
+        sourceType: 'sqlite_forensic',
+        metadata: { schema_version: '1.0' }
+      })
+    }
+  )
+  assert.match(result.text, /users/)
+  assert.equal(result.engine, 'zeus-db')
+})
+
 test('extractText reads xlsx workbook sheets as csv text', async () => {
   const sheet = XLSX.utils.aoa_to_sheet([['列A', '列B'], ['値1', '値2']])
   const workbook = XLSX.utils.book_new()

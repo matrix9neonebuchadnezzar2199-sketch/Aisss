@@ -1,6 +1,8 @@
 import { createRequire } from 'node:module'
 import mammoth from 'mammoth'
 import * as XLSX from 'xlsx'
+import { analyzeSQLiteBuffer } from './zeusdb.js'
+import { loadConfig } from './config.js'
 
 const require = createRequire(import.meta.url)
 const pdfParse = require('pdf-parse')
@@ -11,6 +13,7 @@ function sourceTypeForKind (kind) {
     case 'office': return 'office_parse'
     case 'image': return 'ocr'
     case 'audio': return 'asr'
+    case 'sqlite': return 'sqlite_forensic'
     case 'text': return 'manual_text'
     default: return 'manual_text'
   }
@@ -27,9 +30,27 @@ function extractSpreadsheetText (buffer) {
   return parts.join('\n\n').trim()
 }
 
-export async function extractText (attachment, buffer) {
+export async function extractText (attachment, buffer, deps = {}) {
   const kind = attachment.attachment_kind
   const fileName = attachment.file_name.toLowerCase()
+
+  if (kind === 'sqlite' || /\.(sqlite|sqlite3|db)$/.test(fileName)) {
+    try {
+      if (deps.analyzeSQLite) {
+        return await deps.analyzeSQLite(buffer, attachment.file_name, deps.config ?? {})
+      }
+      const config = deps.config ?? loadConfig()
+      return await analyzeSQLiteBuffer(buffer, attachment.file_name, config)
+    } catch (error) {
+      return {
+        text: '',
+        engine: 'zeus-db',
+        sourceType: 'sqlite_forensic',
+        metadata: {},
+        error: error instanceof Error ? error.message : String(error)
+      }
+    }
+  }
 
   if (kind === 'pdf' || fileName.endsWith('.pdf')) {
     const parsed = await pdfParse(buffer)

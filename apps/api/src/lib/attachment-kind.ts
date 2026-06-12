@@ -1,4 +1,4 @@
-export type AttachmentKind = 'office' | 'pdf' | 'image' | 'audio' | 'text' | 'other'
+export type AttachmentKind = 'office' | 'pdf' | 'image' | 'audio' | 'text' | 'sqlite' | 'other'
 
 export function detectAttachmentKind (
   fileName: string,
@@ -21,6 +21,11 @@ export function detectAttachmentKind (
     /\.(txt|md|csv|log)$/.test(lower)
   ) return 'text'
   if (
+    /\.(sqlite|sqlite3|db)$/.test(lower) ||
+    mime.includes('sqlite') ||
+    mime.includes('x-sqlite3')
+  ) return 'sqlite'
+  if (
     /\.(docx?|xlsx?|pptx?|odt|ods|odp)$/.test(lower) ||
     mime.includes('officedocument') ||
     mime.includes('msword') ||
@@ -37,6 +42,7 @@ export function sourceTypeForKind (kind: AttachmentKind): string {
     case 'image': return 'ocr'
     case 'audio': return 'asr'
     case 'text': return 'manual_text'
+    case 'sqlite': return 'sqlite_forensic'
     default: return 'manual_text'
   }
 }

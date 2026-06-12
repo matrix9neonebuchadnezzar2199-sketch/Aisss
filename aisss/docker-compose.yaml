@@ -77,6 +77,8 @@ services:
         condition: service_started
       vector:
         condition: service_started
+      zeus-db:
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -133,3 +135,18 @@ services:
     networks:
       - default
     restart: unless-stopped
+
+  zeus-db:
+    build:
+      context: ${ZEUSDB_BUILD_CONTEXT:?set ZEUSDB_BUILD_CONTEXT in .env}
+      dockerfile: service/Dockerfile
+    ports:
+      - "${ZEUSDB_PORT:-8090}:8090"
+    networks:
+      - default
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5

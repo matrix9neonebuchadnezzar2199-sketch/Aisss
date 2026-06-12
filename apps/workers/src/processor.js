@@ -1,5 +1,6 @@
 import { downloadObject } from './storage.js'
 import { extractText } from './extract.js'
+import { detectAttachmentKind } from './attachment-kind.js'
 
 function resolveProcessorDeps (deps = {}) {
   return {
@@ -184,7 +185,7 @@ async function processStandaloneExtraction (pool, storage, storageConfig, job, s
 
   const pseudoAttachment = {
     file_name: file.file_name,
-    attachment_kind: 'other'
+    attachment_kind: detectAttachmentKind(file.file_name, file.content_type ?? '')
   }
   const buffer = await resolved.download(storage, storageConfig.bucket, file.storage_key)
   const result = await resolved.extract(pseudoAttachment, buffer)
