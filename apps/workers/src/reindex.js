@@ -173,7 +173,7 @@ async function activateNewConfig (pool, reindexJob, targetConfigId, modelName) {
          is_default_embedding = TRUE,
          roles = CASE
            WHEN 'embedding' = ANY(ollama_model_roles.roles) THEN ollama_model_roles.roles
-           ELSE ollama_model_roles.roles || 'embedding'
+           ELSE array_append(ollama_model_roles.roles, 'embedding')
          END,
          updated_at = NOW()`,
       [modelName]
@@ -368,8 +368,14 @@ export async function processReindexJob (pool, config, job, deps = {}) {
           payload: qdrantPayload
         }])
         await pool.query(
-          `INSERT INTO rag_sync_states (chunk_id, vector_collection, vector_point_id, sync_status, last_synced_at)
-           VALUES ($1, $2, $3, 'synced', NOW())`,
+          `INSERT INTO rag_sync_states (chunk_id, vector_collection, vector_point_id, sync_status, last_synced_at, updated_at)
+           VALUES ($1, $2, $3, 'synced', NOW(), NOW())
+           ON CONFLICT (chunk_id) DO UPDATE SET
+             vector_collection = EXCLUDED.vector_collection,
+             vector_point_id = EXCLUDED.vector_point_id,
+             sync_status = EXCLUDED.sync_status,
+             last_synced_at = EXCLUDED.last_synced_at,
+             updated_at = NOW()`,
           [row.id, collectionName, pointId]
         )
         processed += 1

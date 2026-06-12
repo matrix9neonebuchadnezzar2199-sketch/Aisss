@@ -74,6 +74,9 @@ test('activateNewConfig retires old active config and promotes building config',
   assert.ok(queries.some((q) => q.sql.includes("status = 'retired'") && q.sql.includes("status = 'active'")))
   assert.ok(queries.some((q) => q.sql.includes("status = 'active'") && q.params?.[0] === 'config-new'))
   assert.ok(queries.some((q) => q.sql.includes('is_default_embedding = TRUE') && q.params?.[0] === 'qwen-embed:latest'))
+  const roleUpsert = queries.find((q) => q.sql.includes('ON CONFLICT (model_name)'))
+  assert.ok(roleUpsert)
+  assert.match(roleUpsert.sql, /array_append\(ollama_model_roles\.roles, 'embedding'\)/)
   assert.ok(queries.some((q) => q.sql.includes("reindex_jobs") && q.sql.includes("status = 'completed'")))
 })
 
