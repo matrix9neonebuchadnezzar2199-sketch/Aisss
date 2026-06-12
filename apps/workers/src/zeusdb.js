@@ -22,7 +22,10 @@ export async function analyzeSQLiteBuffer (buffer, fileName, config) {
     const cols = Object.entries(record.columns ?? {})
       .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
       .join(', ')
-    const source = record.provenance?.source ?? 'unknown'
+    const provenances = record.provenances ?? []
+    const source = provenances.length > 0
+      ? provenances.map((p) => p.source ?? 'unknown').join(';')
+      : (record.provenance?.source ?? 'unknown')
     lines.push(`[${source}] ${record.table_name} row_id=${record.row_id ?? 'null'} ${cols}`)
   }
 
