@@ -325,6 +325,9 @@ export function ModelsPage () {
       await reloadFromOllama()
     } catch (e) {
       setError(e instanceof Error ? e.message : '再埋め込みの開始に失敗しました')
+      revertEmbeddingSelection()
+      setReindexDialogOpen(false)
+      setPendingEmbedModel(null)
     } finally {
       setReindexPending(false)
     }
@@ -332,13 +335,15 @@ export function ModelsPage () {
 
   function onCancelReindex () {
     if (reindexPending) return
+    setError(null)
+    setReindexNotice(null)
+    setSaved(false)
     revertEmbeddingSelection()
     setReindexDialogOpen(false)
     setPendingEmbedModel(null)
     void (async () => {
       try {
         await persistModelRoles(true)
-        setSaved(true)
         await reloadFromOllama()
       } catch (e) {
         setError(e instanceof Error ? e.message : '保存失敗')

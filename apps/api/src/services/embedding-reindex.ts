@@ -53,9 +53,12 @@ export async function probeEmbeddingModel (
   } catch (error) {
     if (error instanceof AppError) {
       if (error.code === 'ollama_error') {
+        const hint = /does not support embeddings/i.test(error.message)
+          ? ' Ollama がこのモデルを embedding 非対応と判定しています（VL embedding や chat モデルは不可）。`qwen3-embedding` や `bge-m3` 等の embedding 専用モデルを使用してください。'
+          : ''
         throw new AppError(
           'validation_error',
-          `Embedding precheck failed for "${modelName}": ${error.message}`,
+          `Embedding precheck failed for "${modelName}": ${error.message}.${hint}`,
           400
         )
       }
