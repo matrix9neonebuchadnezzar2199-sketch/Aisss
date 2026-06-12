@@ -183,6 +183,9 @@ export type OllamaModelDetails = {
   families?: string[]
   parameter_size?: string
   quantization_level?: string
+  /** Ollama /api/tags — embed モデルのベクトル次元 */
+  embedding_length?: number
+  context_length?: number
 }
 
 export type ModelCapabilityTagId =

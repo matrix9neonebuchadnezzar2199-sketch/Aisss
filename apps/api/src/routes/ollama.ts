@@ -32,6 +32,8 @@ export const ollamaRoutes: FastifyPluginAsync<{
             families?: string[]
             parameter_size?: string
             quantization_level?: string
+            context_length?: number
+            embedding_length?: number
           }
         }>
       }

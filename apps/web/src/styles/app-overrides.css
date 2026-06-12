@@ -954,6 +954,14 @@ a.nav-link-style:hover {
   margin-top: 8px;
 }
 
+.model-embed-dims-cell {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--purple-fg, #a371f7);
+  font-weight: 600;
+}
+
 /* RAG storage dashboard (row 2) */
 .rag-storage-dashboard {
   background: var(--canvas-default);

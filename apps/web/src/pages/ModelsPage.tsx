@@ -63,6 +63,21 @@ function formatModelSpec (details: ModelRow['details']): string {
   return parts.length > 0 ? parts.join(' · ') : '—'
 }
 
+/** Ollama details.embedding_length（/api/tags）を表示用に整形 */
+function formatEmbeddingDimensions (details: ModelRow['details']): string {
+  const n = details?.embedding_length
+  if (typeof n === 'number' && Number.isFinite(n) && n > 0) {
+    return `${n.toLocaleString('ja-JP')} 次元`
+  }
+  return '—'
+}
+
+function formatModelLabelWithDims (name: string, models: ModelRow[]): string {
+  const row = models.find((m) => m.name === name)
+  const dims = formatEmbeddingDimensions(row?.details ?? null)
+  return dims === '—' ? name : `${name}（${dims}）`
+}
+
 function capabilityTagClass (id: ModelCapabilityTag['id']): string {
   switch (id) {
     case 'text': return 'label-info'
@@ -575,9 +590,9 @@ export function ModelsPage () {
             </div>
             {activeEmbeddingName && (
               <p className="models-embedding-active meta">
-                現在稼働中: <code>{activeEmbeddingName}</code>
+                現在稼働中: <code>{formatModelLabelWithDims(activeEmbeddingName, embedModels)}</code>
                 {embeddingChangedFromInitial() && currentDefaultEmbedding() && (
-                  <> → 変更予定: <code>{currentDefaultEmbedding()}</code></>
+                  <> → 変更予定: <code>{formatModelLabelWithDims(currentDefaultEmbedding()!, embedModels)}</code></>
                 )}
               </p>
             )}
@@ -586,6 +601,7 @@ export function ModelsPage () {
                 <tr>
                   <th scope="col">選択</th>
                   <th scope="col">モデル</th>
+                  <th scope="col">次元</th>
                   <th scope="col">サイズ</th>
                   <th scope="col">仕様</th>
                   <th scope="col">操作</th>
@@ -594,7 +610,7 @@ export function ModelsPage () {
               <tbody>
                 {embedModels.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="meta">Embed 候補モデルがありません。ホストで pull 後「一覧更新」を押してください。</td>
+                    <td colSpan={6} className="meta">Embed 候補モデルがありません。ホストで pull 後「一覧更新」を押してください。</td>
                   </tr>
                 )}
                 {embedModels.map((m) => (
@@ -630,6 +646,7 @@ export function ModelsPage () {
                         </div>
                       </div>
                     </td>
+                    <td className="model-embed-dims-cell">{formatEmbeddingDimensions(m.details)}</td>
                     <td>{formatBytes(m.size_bytes)}</td>
                     <td className="model-spec-cell">{formatModelSpec(m.details)}</td>
                     <td className="model-actions-cell">
@@ -648,6 +665,10 @@ export function ModelsPage () {
                 ))}
               </tbody>
             </table>
+            <p className="rag-register-note models-page-note models-embedding-dims-note">
+              次元は Ollama の <code>embedding length</code>（<code>/api/tags</code> メタデータ）。
+              未記載のモデルは「—」。reindex 開始時に <code>/api/embed</code> で実次元を precheck します。
+            </p>
             <div className="form-actions models-embedding-actions">
               <button
                 type="button"
