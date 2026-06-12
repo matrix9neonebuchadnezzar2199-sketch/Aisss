@@ -34,6 +34,10 @@ export const auditRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { 
         params.push(q.action)
         where.push(`al.action = $${params.length}`)
       }
+      if (q.action_prefix) {
+        params.push(`${q.action_prefix}%`)
+        where.push(`al.action LIKE $${params.length}`)
+      }
       if (q.case) {
         params.push(q.case)
         where.push(`al.case_display_id = $${params.length}`)
@@ -71,14 +75,15 @@ export const auditRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { 
       if (q.export === 'csv') {
         const { rows } = await pool.query(
           `SELECT al.created_at, u.display_name AS user_name, al.action,
-                  al.resource_type, al.resource_id, al.case_display_id, al.query_id
+                  al.resource_type, al.resource_id, al.case_display_id, al.query_id,
+                  al.details_json
            ${baseSql}
            ORDER BY al.created_at DESC
            LIMIT 1000`,
           params
         )
         const csv = [
-          'created_at,user_name,action,resource_type,resource_id,case_display_id,query_id',
+          'created_at,user_name,action,resource_type,resource_id,case_display_id,query_id,details_json',
           ...rows.map((row) => [
             row.created_at?.toISOString?.() ?? row.created_at,
             row.user_name ?? '',
@@ -86,7 +91,8 @@ export const auditRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, { 
             row.resource_type ?? '',
             row.resource_id ?? '',
             row.case_display_id ?? '',
-            row.query_id ?? ''
+            row.query_id ?? '',
+            row.details_json != null ? JSON.stringify(row.details_json) : ''
           ].map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
         ].join('\n')
         // ExcelがUTF-8として認識するようBOMを付与（日本語の文字化け対策）

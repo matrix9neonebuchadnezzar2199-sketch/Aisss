@@ -75,7 +75,7 @@ export const masterRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, {
         action: 'master.create',
         resourceType: masterName,
         resourceId: rows[0].id as string,
-        details: { name: body.name }
+        details: { master: masterName, name: body.name.trim() }
       })
 
       return reply.code(201).send(rows[0])
@@ -93,6 +93,12 @@ export const masterRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, {
 
       const isConditions = table === 'conditions'
       const body = request.body as { name?: string; code?: string; sort_order?: number }
+      const { rows: beforeRows } = await pool.query<{ name: string; code?: string | null }>(
+        `SELECT name${isConditions ? '' : ', code'} FROM ${table} WHERE id = $1`,
+        [id]
+      )
+      if (!beforeRows[0]) throw new AppError('not_found', 'Master value not found.', 404)
+
       const fields: string[] = []
       const values: unknown[] = []
       if (body.name !== undefined) {
@@ -128,7 +134,14 @@ export const masterRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, {
         userId: request.user.id,
         action: 'master.update',
         resourceType: masterName,
-        resourceId: id
+        resourceId: id,
+        details: {
+          master: masterName,
+          name_before: beforeRows[0].name,
+          name_after: rows[0].name,
+          ...(body.name !== undefined ? { name: body.name.trim() } : {}),
+          ...(body.code !== undefined ? { code_before: beforeRows[0].code ?? null, code_after: rows[0].code ?? null } : {})
+        }
       })
 
       return rows[0]
@@ -155,7 +168,8 @@ export const masterRoutes: FastifyPluginAsync<{ pool: pg.Pool }> = async (app, {
         userId: request.user.id,
         action: 'master.deactivate',
         resourceType: masterName,
-        resourceId: id
+        resourceId: id,
+        details: { master: masterName, name: rows[0].name as string }
       })
 
       return rows[0]

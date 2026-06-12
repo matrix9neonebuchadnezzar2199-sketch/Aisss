@@ -5,7 +5,16 @@
 
 html {
   --font-scale: 1;
-  font-size: calc(14px * var(--font-scale));
+  /* px 指定が多い UI 向け: zoom で文字・余白を一括スケール（Chromium / Edge / Safari / Firefox 126+） */
+  font-size: 14px;
+  zoom: var(--font-scale);
+}
+
+/* zoom 非対応ブラウザ: rem 継承要素のみ拡縮（px 固定 UI はほぼ変わらない） */
+@supports not (zoom: 1) {
+  html {
+    font-size: calc(14px * var(--font-scale));
+  }
 }
 
 :root,
@@ -48,12 +57,17 @@ html {
   --pink-subtle: rgba(219, 97, 162, 0.15);
   --pink-fg: #db61a2;
   --empty-field-bg: rgba(255, 182, 193, 0.38);
+  --filled-field-bg: rgba(56, 139, 253, 0.16);
+  --filled-field-border: rgba(56, 139, 253, 0.42);
+  --field-editing-bg: var(--input-bg);
   --orange-subtle: rgba(219, 109, 40, 0.15);
   --orange-fg: #db6d28;
   --shadow: 0 1px 3px rgba(1, 4, 9, 0.5);
   --btn-primary-fg: #ffffff;
   --btn-hover-bg: #30363d;
   --btn-hover-border: #8b949e;
+  --list-header-bg: #21262d;
+  --list-header-hover-bg: #30363d;
   color-scheme: dark;
 }
 
@@ -96,11 +110,16 @@ html {
   --pink-subtle: rgba(219, 97, 162, 0.12);
   --pink-fg: #bf3989;
   --empty-field-bg: rgba(255, 192, 203, 0.55);
+  --filled-field-bg: rgba(9, 105, 218, 0.1);
+  --filled-field-border: rgba(9, 105, 218, 0.38);
+  --field-editing-bg: #ffffff;
   --orange-subtle: rgba(219, 109, 40, 0.12);
   --orange-fg: #bc4c00;
   --shadow: 0 1px 3px rgba(31, 35, 40, 0.12);
   --btn-primary-fg: #ffffff;
   --btn-hover-bg: #eaeef2;
   --btn-hover-border: #8c959f;
+  --list-header-bg: #dfe3e8;
+  --list-header-hover-bg: #d0d7de;
   color-scheme: light;
 }

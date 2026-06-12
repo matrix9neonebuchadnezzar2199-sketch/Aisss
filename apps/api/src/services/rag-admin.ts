@@ -13,6 +13,9 @@ import type { Settings } from '../settings.js'
 import { deletePointsAcrossCollections } from './embedding-config.js'
 import { getRagStorageBreakdown } from './rag-storage-breakdown.js'
 import { deleteJobsForStandaloneFile } from './job-cleanup.js'
+import { buildExtractionProgress, type ExtractionProgress } from './extraction-progress.js'
+
+export type { ExtractionProgress as RagExtractionProgress } from './extraction-progress.js'
 
 function requireOperator (user: AuthUser) {
   if (!isAdmin(user) && user.role !== 'operator') {
@@ -99,6 +102,8 @@ type RagFileRow = {
   tags?: string[]
   genre?: string
   registered_at?: string
+  file_size_bytes?: number | null
+  extraction_progress?: ExtractionProgress | null
 }
 
 async function mapViewingLabels (
@@ -111,6 +116,65 @@ async function mapViewingLabels (
     [ids]
   )
   return rows.map((r) => r.name)
+}
+
+type ActiveExtractionJob = {
+  status: string
+  created_at: Date
+  updated_at: Date
+}
+
+async function loadActiveExtractionJobs (pool: pg.Pool): Promise<{
+  byAttachment: Map<string, ActiveExtractionJob>
+  byStandalone: Map<string, ActiveExtractionJob>
+}> {
+  const { rows } = await pool.query<{
+    attachment_id: string | null
+    standalone_file_id: string | null
+    status: string
+    created_at: Date
+    updated_at: Date
+  }>(
+    `SELECT attachment_id,
+            payload_json->>'standalone_file_id' AS standalone_file_id,
+            status, created_at, updated_at
+     FROM jobs
+     WHERE job_type = 'extraction'
+       AND status IN ('pending', 'running')
+     ORDER BY created_at DESC`
+  )
+  const byAttachment = new Map<string, ActiveExtractionJob>()
+  const byStandalone = new Map<string, ActiveExtractionJob>()
+  for (const row of rows) {
+    if (row.attachment_id && !byAttachment.has(row.attachment_id)) {
+      byAttachment.set(row.attachment_id, row)
+    }
+    if (row.standalone_file_id && !byStandalone.has(row.standalone_file_id)) {
+      byStandalone.set(row.standalone_file_id, row)
+    }
+  }
+  return { byAttachment, byStandalone }
+}
+
+function attachExtractionProgress (
+  item: RagFileRow,
+  job: ActiveExtractionJob | undefined
+): RagFileRow {
+  if (item.extraction_status !== 'pending' && item.extraction_status !== 'running') {
+    return item
+  }
+  const registeredAt = item.registered_at ? new Date(item.registered_at) : null
+  return {
+    ...item,
+    extraction_progress: buildExtractionProgress({
+      extraction_status: item.extraction_status,
+      job_status: job?.status ?? null,
+      job_created_at: job?.created_at ?? registeredAt,
+      job_updated_at: job?.updated_at ?? job?.created_at ?? registeredAt,
+      file_size_bytes: item.file_size_bytes ?? null,
+      file_name: item.file_name
+    })
+  }
 }
 
 function pipelineStatus (extraction: string, chunkCount: number, syncedCount: number): string {
@@ -193,7 +257,7 @@ export async function listRagFiles (
   const dateTo = parseDateBound(query.date_to, true)
 
   const attachSql = `
-    SELECT a.id, a.file_name, a.rag_enabled, a.auto_enable_rag_on_extraction, a.extraction_status,
+    SELECT a.id, a.file_name, a.file_size, a.rag_enabled, a.auto_enable_rag_on_extraction, a.extraction_status,
            a.uploaded_at,
            c.id AS case_id, c.display_id AS case_display_id, c.title AS case_title,
            (SELECT COUNT(*)::int FROM rag_chunks rc WHERE rc.attachment_id = a.id) AS chunk_count,
@@ -245,7 +309,8 @@ export async function listRagFiles (
       rag_visibility_label: visibility.label,
       is_knowledge_candidate: visibility.is_knowledge_candidate,
       registered_at: uploadedAt.toISOString(),
-      genre: 'case'
+      genre: 'case',
+      file_size_bytes: row.file_size != null ? Number(row.file_size) : null
     })
   }
 
@@ -301,8 +366,18 @@ export async function listRagFiles (
       is_knowledge_candidate: visibility.is_knowledge_candidate,
       tags: row.tags ?? [],
       registered_at: registeredAt.toISOString(),
-      genre: 'standalone_reference'
+      genre: 'standalone_reference',
+      file_size_bytes: row.file_size != null ? Number(row.file_size) : null
     })
+  }
+
+  const { byAttachment, byStandalone } = await loadActiveExtractionJobs(pool)
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    const job = item.source_kind === 'case_attachment'
+      ? byAttachment.get(item.id)
+      : byStandalone.get(item.id)
+    items[i] = attachExtractionProgress(item, job)
   }
 
   const filtered = query.knowledge_candidates_only
@@ -471,6 +546,7 @@ export async function registerStandaloneFile (
     fileName: string
     contentType: string
     buffer: Buffer
+    rag_enabled?: boolean
   }
 ) {
   requireOperator(user)
@@ -491,8 +567,8 @@ export async function registerStandaloneFile (
     await client.query('BEGIN')
     await client.query(
       `INSERT INTO standalone_files (
-        id, title, file_name, storage_key, content_type, file_size, sha256, registered_by
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        id, title, file_name, storage_key, content_type, file_size, sha256, registered_by, rag_enabled
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [
         fileId,
         input.title.trim(),
@@ -501,7 +577,8 @@ export async function registerStandaloneFile (
         input.contentType,
         input.buffer.length,
         sha256,
-        user.id
+        user.id,
+        input.rag_enabled === true
       ]
     )
     for (const vrId of input.viewing_range_ids) {

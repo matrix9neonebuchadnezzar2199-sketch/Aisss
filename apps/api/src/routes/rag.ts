@@ -74,8 +74,10 @@ export const ragRoutes: FastifyPluginAsync<{
       const title = (fields.title as { value?: string })?.value ?? ''
       const viewingRaw = (fields.viewing_range_ids as { value?: string })?.value ?? '[]'
       const tagsRaw = (fields.tags as { value?: string })?.value ?? '[]'
+      const ragEnabledRaw = (fields.rag_enabled as { value?: string })?.value ?? 'false'
       const viewingRangeIds = JSON.parse(viewingRaw) as string[]
       const tags = JSON.parse(tagsRaw) as string[]
+      const ragEnabled = ragEnabledRaw === 'true' || ragEnabledRaw === '1'
       const buffer = await data.toBuffer()
 
       const created = await ragAdmin.registerStandaloneFile(
@@ -89,7 +91,8 @@ export const ragRoutes: FastifyPluginAsync<{
           tags,
           fileName: data.filename,
           contentType: data.mimetype,
-          buffer
+          buffer,
+          rag_enabled: ragEnabled
         }
       )
       return reply.code(201).send(created)

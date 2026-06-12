@@ -82,7 +82,7 @@ export function ThemePalettePanel () {
           </output>
         </div>
         <p className="theme-palette-hint theme-font-scale-hint">
-          100% · 125% · 150% · 175% · 200%
+          100% · 125% · 150% · 175% · 200% — 画面全体（文字・ボタン・余白）の表示倍率
         </p>
 
         <p className="theme-palette-heading">カラーパレット</p>

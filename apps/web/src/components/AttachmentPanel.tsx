@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { RegisterDropZone } from './rag/RegisterDropZone'
 import {
   downloadAttachment,
   fetchExtractedText,
@@ -55,6 +56,7 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
         await uploadAttachment(caseId, file, autoEnableOnUpload)
       }
       await refresh()
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed')
     } finally {
@@ -105,27 +107,16 @@ export function AttachmentPanel ({ caseId, initial = [] }: AttachmentPanelProps)
         />
         抽出成功後に自動でRAG有効化する
       </label>
-      <div className="upload-zone">
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="upload-zone-file"
-          multiple
-          disabled={uploading}
-          onChange={(e) => void onFileChange(e.target.files)}
-        />
-        <p className="upload-zone-label">
-          {uploading ? 'アップロード中…' : 'PDF / DOCX / XLSX / TXT（画像・音声は .txt 文字起こし推奨）'}
-        </p>
-        <button
-          type="button"
-          className="btn btn-sm"
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          ファイルを選択
-        </button>
-      </div>
+      <RegisterDropZone
+        variant="file"
+        multiple
+        busy={uploading}
+        busyLabel="アップロード中…"
+        disabled={uploading}
+        inputRef={fileInputRef}
+        fileHint="PDF / DOCX / XLSX / TXT（画像・音声は .txt 文字起こし推奨）— 複数可"
+        onFiles={(files) => void onFileChange(files)}
+      />
       {error && <p className="error">{error}</p>}
       <ul className="attachment-list">
         {items.map((item) => (

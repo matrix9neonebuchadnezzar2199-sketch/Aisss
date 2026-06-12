@@ -9,6 +9,7 @@ import {
   type MasterItem
 } from '../lib/api'
 import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
+import { caseMasterKeys } from '../lib/master-catalog'
 
 type SearchFilters = {
   q: string
@@ -66,11 +67,7 @@ export function SearchPage () {
   })
 
   useEffect(() => {
-    const masterPaths = [
-      'material-types', 'departments', 'rank-levels', 'viewing-ranges',
-      'categories', 'regions', 'sources', 'information-requests',
-      'handling-types', 'reliability-levels', 'accuracy-levels', 'conditions'
-    ]
+    const masterPaths = caseMasterKeys()
     void Promise.all([
       ...masterPaths.map((p) =>
         apiFetch<{ items: MasterItem[] }>(`/api/masters/${p}`).then((d) => [p, d.items] as const)

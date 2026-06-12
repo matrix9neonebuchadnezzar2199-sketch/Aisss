@@ -13,6 +13,7 @@ import {
   type CaseFormState
 } from '../lib/case-form'
 import { apiFetch, type CaseDetail, type MasterItem } from '../lib/api'
+import { caseMasterKeys } from '../lib/master-catalog'
 
 export function RegisterPage () {
   const [params] = useSearchParams()
@@ -25,12 +26,7 @@ export function RegisterPage () {
   const [masters, setMasters] = useState<Record<string, MasterItem[]>>({})
 
   useEffect(() => {
-    const paths = [
-      'material-types', 'departments', 'categories', 'regions', 'sources',
-      'information-requests', 'handling-types', 'reliability-levels',
-      'accuracy-levels', 'rank-levels', 'retention-policies', 'conditions',
-      'viewing-ranges', 'persons', 'acquisition-locations'
-    ]
+    const paths = caseMasterKeys()
     void Promise.all(
       paths.map((p) => apiFetch<{ items: MasterItem[] }>(`/api/masters/${p}`).then((d) => [p, d.items] as const))
     ).then((entries) => {

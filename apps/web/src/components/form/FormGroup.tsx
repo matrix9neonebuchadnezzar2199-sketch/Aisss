@@ -16,7 +16,7 @@ export function FormGroup ({
   children: ReactNode
 }) {
   return (
-    <div className={`form-group${wide ? ' form-group-wide' : ''}${empty ? ' form-group-empty' : ''}`}>
+    <div className={`form-group${wide ? ' form-group-wide' : ''}${empty ? ' form-group-empty' : ' form-group-filled'}`}>
       <label>
         {label}
         {required ? ' *' : ''}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import {
   apiFetch,
@@ -34,6 +34,7 @@ import {
   type SortDirection
 } from '../components/rag/rag-file-sort'
 import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
+import { ExtractionProgressCell } from '../components/rag/ExtractionProgressCell'
 
 const SORTABLE_COLUMNS: Array<{ key: RagSortKey; label: string; type?: string }> = [
   { key: 'file_name', label: 'ファイル' },
@@ -42,8 +43,22 @@ const SORTABLE_COLUMNS: Array<{ key: RagSortKey; label: string; type?: string }>
   { key: 'rag_enabled', label: '㋹ RAG', type: 'checkbox' }
 ]
 
+const PIPELINE_STATUS_LABELS: Record<string, string> = {
+  extracting: '抽出中',
+  extraction_failed: '抽出失敗',
+  embedding_pending: '抽出済',
+  embedding: 'ベクトル化中',
+  ready: '完了'
+}
+
+type RagNavigateState = {
+  extractingFileIds?: string[]
+}
+
 export function RagAdminPage () {
   const navigate = useNavigate()
+  const location = useLocation()
+  const watchExtractionIds = (location.state as RagNavigateState | null)?.extractingFileIds ?? []
   const [status, setStatus] = useState({
     chunk_count: 0,
     embedding_pending: 0,
@@ -107,6 +122,35 @@ export function RagAdminPage () {
     void reload().catch((e: Error) => setError(e.message))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidatesOnly])
+
+  const hasActiveExtraction = useMemo(
+    () => items.some((item) =>
+      item.extraction_status === 'pending' ||
+      item.extraction_status === 'running' ||
+      item.rag_visibility_state === 'extracting'
+    ) || watchExtractionIds.some((id) => {
+      const item = items.find((row) => row.id === id)
+      return !item ||
+        item.extraction_status === 'pending' ||
+        item.extraction_status === 'running'
+    }),
+    [items, watchExtractionIds]
+  )
+
+  useEffect(() => {
+    if (!hasActiveExtraction) return
+    const timer = window.setInterval(() => {
+      void reload().catch((e: Error) => setError(e.message))
+    }, 1000)
+    return () => window.clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveExtraction, q, tag, dateFrom, dateTo, viewingRangeId, candidatesOnly])
+
+  useEffect(() => {
+    if (!hasActiveExtraction && watchExtractionIds.length > 0) {
+      navigate('.', { replace: true, state: null })
+    }
+  }, [hasActiveExtraction, navigate, watchExtractionIds.length])
 
   const filteredItems = useMemo(() => {
     const treeFiltered = filterItemsByTreeSelection(items, treeSelection)
@@ -230,7 +274,7 @@ export function RagAdminPage () {
       <div className="panel">
         <div className="panel-header">
           <h2>RAG 管理</h2>
-          <Link className="btn btn-primary btn-sm" to="/rag/standalone">+ 単独ファイル登録</Link>
+          <Link className="btn btn-primary btn-sm" to="/rag/standalone">+ 参照資料登録</Link>
           <button
             type="button"
             className="btn btn-sm"
@@ -244,7 +288,7 @@ export function RagAdminPage () {
           <p className="rag-register-note">
             <strong>ファイルの登録方法:</strong>
             ① <strong>ケース添付</strong> — 登録 → ケース（事象）でファイルを添付。
-            ② <strong>単独ファイル</strong> — 本画面の「+ 単独ファイル登録」。
+            ② <strong>参照資料（単独 / フォルダ）</strong> — 本画面の「+ 参照資料登録」。
             いずれも左の「RAGの体系管理」に表示され、ここで抽出状態の確認と RAG 有効化を行います。
           </p>
 
@@ -383,7 +427,11 @@ export function RagAdminPage () {
                           </button>
                         )}
                       </td>
-                      <td><span className={`status status-${item.extraction_status}`}>{item.pipeline_status}</span></td>
+                      <td>
+                        <span className={`status status-${item.extraction_status}`}>
+                          {PIPELINE_STATUS_LABELS[item.pipeline_status] ?? item.pipeline_status}
+                        </span>
+                      </td>
                       <td>
                         <input
                           type="checkbox"
@@ -395,9 +443,22 @@ export function RagAdminPage () {
                         />
                       </td>
                       <td>
-                        <span className={`rag-visibility rag-visibility-${item.rag_visibility_state}`}>
-                          {item.rag_visibility_label}
-                        </span>
+                        {item.rag_visibility_state === 'extracting' ||
+                        item.extraction_status === 'pending' ||
+                        item.extraction_status === 'running' ? (
+                          <ExtractionProgressCell
+                            progress={item.extraction_progress}
+                            fallbackLabel={item.rag_visibility_label}
+                            extractionStatus={item.extraction_status}
+                            fileName={item.file_name}
+                            fileSizeBytes={item.file_size_bytes}
+                            registeredAt={item.registered_at}
+                          />
+                        ) : (
+                          <span className={`rag-visibility rag-visibility-${item.rag_visibility_state}`}>
+                            {item.rag_visibility_label}
+                          </span>
+                        )}
                       </td>
                       <td>
                         <span className={item.auto_enable_rag_on_extraction ? 'rag-auto-on-reserved' : 'rag-auto-on-off'}>

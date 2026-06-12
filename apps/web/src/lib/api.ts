@@ -331,6 +331,13 @@ export async function sendAiChatStream (
   }
 }
 
+export type RagExtractionProgress = {
+  phase: 'queued' | 'running'
+  percent: number
+  eta_seconds: number
+  elapsed_seconds: number
+}
+
 export type RagFileItem = {
   id: string
   source_kind: 'case_attachment' | 'standalone'
@@ -350,6 +357,8 @@ export type RagFileItem = {
   is_knowledge_candidate: boolean
   tags?: string[]
   registered_at?: string
+  file_size_bytes?: number | null
+  extraction_progress?: RagExtractionProgress | null
 }
 
 export type RagStorageCategoryId = 'case_text' | 'office' | 'pdf' | 'audio' | 'image'
@@ -430,11 +439,13 @@ export async function uploadStandaloneFile (input: {
   viewingRangeIds: string[]
   tags: string[]
   file: File
+  ragEnabled?: boolean
 }): Promise<{ id: string }> {
   const form = new FormData()
   form.append('title', input.title)
   form.append('viewing_range_ids', JSON.stringify(input.viewingRangeIds))
   form.append('tags', JSON.stringify(input.tags))
+  form.append('rag_enabled', input.ragEnabled ? 'true' : 'false')
   form.append('file', input.file)
   const response = await fetch('/api/rag/standalone-files', {
     method: 'POST',
@@ -442,8 +453,11 @@ export async function uploadStandaloneFile (input: {
     body: form
   })
   if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error('ファイルが大きすぎてアップロードできませんでした（上限 50MB）')
+    }
     const body = await response.json().catch(() => ({})) as { error?: { message?: string } }
-    throw new Error(body.error?.message ?? `HTTP ${response.status}`)
+    throw new Error(body.error?.message ?? `登録に失敗しました（HTTP ${response.status}）`)
   }
   return response.json() as Promise<{ id: string }>
 }

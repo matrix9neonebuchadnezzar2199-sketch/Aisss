@@ -1,126 +1,85 @@
-import { useEffect, useState } from 'react'
-import { apiFetch, type MasterItem } from '../lib/api'
-import { CollapsibleFilterPanel } from '../components/layout/CollapsibleFilterPanel'
-import { FormGroup } from '../components/form/FormGroup'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-const MASTER_OPTIONS = [
-  { key: 'material-types', label: '資料区分' },
-  { key: 'departments', label: '登録部署' },
-  { key: 'rank-levels', label: 'ランク' },
-  { key: 'viewing-ranges', label: '閲覧範囲' }
-]
+import { MasterPageSection } from '../components/masters/MasterPageSection'
+import { collectMasterKeys, MASTER_PAGES } from '../lib/master-catalog'
+import { apiFetch, type MasterItem } from '../lib/api'
 
 export function MastersPage () {
-  const [master, setMaster] = useState('material-types')
-  const [items, setItems] = useState<MasterItem[]>([])
-  const [newName, setNewName] = useState('')
+  const masterKeys = useMemo(() => collectMasterKeys(), [])
+  const [masters, setMasters] = useState<Record<string, MasterItem[]>>({})
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  async function load () {
+  const loadAll = useCallback(async () => {
+    setLoading(true)
     setError(null)
     try {
-      const data = await apiFetch<{ items: MasterItem[] }>(`/api/masters/${master}`)
-      setItems(data.items)
+      const entries = await Promise.all(
+        masterKeys.map(async (key) => {
+          const data = await apiFetch<{ items: MasterItem[] }>(`/api/masters/${key}`)
+          return [key, data.items] as const
+        })
+      )
+      setMasters(Object.fromEntries(entries))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Load failed')
+      setError(e instanceof Error ? e.message : 'マスタの取得に失敗しました')
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [masterKeys])
 
   useEffect(() => {
-    void load()
-  }, [master])
+    void loadAll()
+  }, [loadAll])
 
-  async function addValue () {
-    if (!newName.trim()) return
-    setError(null)
-    try {
-      await apiFetch(`/api/masters/${master}`, {
-        method: 'POST',
-        body: JSON.stringify({ name: newName.trim() })
-      })
-      setNewName('')
-      await load()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'マスタ値の追加に失敗しました')
-    }
-  }
+  const handleMasterChange = useCallback((key: string, items: MasterItem[]) => {
+    setMasters((prev) => ({ ...prev, [key]: items }))
+  }, [])
 
-  const masterLabel = MASTER_OPTIONS.find((m) => m.key === master)?.label ?? master
+  const totalItems = useMemo(
+    () => masterKeys.reduce((sum, key) => sum + (masters[key]?.length ?? 0), 0),
+    [masterKeys, masters]
+  )
 
   return (
     <section className="view active" id="view-masters">
       <div className="stats">
         <div className="stat-card">
-          <div className="num">{items.length}</div>
-          <div className="lbl">{masterLabel} 件数</div>
+          <div className="num">{masterKeys.length}</div>
+          <div className="lbl">マスタ種別</div>
         </div>
         <div className="stat-card">
-          <div className="num">{MASTER_OPTIONS.length}</div>
-          <div className="lbl">マスタ種別</div>
+          <div className="num">{loading ? '…' : totalItems}</div>
+          <div className="lbl">有効候補（合計）</div>
         </div>
       </div>
 
       <div className="panel">
         <div className="panel-header">
           <h2>マスタ管理</h2>
+          <button type="button" className="btn btn-sm" disabled={loading} onClick={() => void loadAll()}>
+            再読み込み
+          </button>
         </div>
         <div className="panel-body">
           <p className="rag-register-note">
-            ケース登録・閲覧範囲・検索フィルタで使う区分値を管理します。名称の変更は既存ケースへの影響に注意してください。
+            各画面の select / チェックボックス候補を編集します。名称の変更は入力後に自動保存されます。
+            <strong>閲覧範囲</strong>は参照資料登録・RAG 管理・ユーザー・グループ管理でも同一候補を参照するため、ここで一元管理します。
+            既存ケース・参照資料に紐づく値の名称変更は履歴表示に影響する場合があります。
           </p>
 
-          <CollapsibleFilterPanel storageKey="aisss-masters-filter-collapsed" title="表示対象">
-            <div className="filter-bar search-filter-row">
-              <label className="filter-inline-label">
-                マスタ種別
-                <select value={master} onChange={(e) => setMaster(e.target.value)}>
-                  {MASTER_OPTIONS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
-                </select>
-              </label>
-              <button type="button" className="btn btn-sm" onClick={() => void load()}>再読み込み</button>
-            </div>
-          </CollapsibleFilterPanel>
-
           {error && <p className="error">{error}</p>}
-          <p className="meta">{items.length} 件 · {masterLabel}</p>
+          {loading && <p className="meta">読み込み中…</p>}
 
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th scope="col">名称</th>
-                <th scope="col">ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td className="mono">{item.id.slice(0, 8)}…</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="form-section">
-            <h3>値を追加</h3>
-            <div className="form-grid">
-              <FormGroup label={`${masterLabel} の名称`} wide>
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder={`${masterLabel} に追加する値`}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void addValue()
-                  }}
-                />
-              </FormGroup>
-            </div>
-            <div className="form-actions">
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => void addValue()}>
-                + 値を追加
-              </button>
-            </div>
-          </div>
+          {!loading && MASTER_PAGES.map((page) => (
+            <MasterPageSection
+              key={page.id}
+              page={page}
+              masters={masters}
+              onMasterChange={handleMasterChange}
+              onError={setError}
+            />
+          ))}
         </div>
       </div>
     </section>
