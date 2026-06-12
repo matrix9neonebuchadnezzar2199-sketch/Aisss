@@ -922,6 +922,10 @@ a.nav-link-style:hover {
   background: rgba(56, 139, 253, 0.16);
 }
 
+.models-chat-section {
+  margin-top: 20px;
+}
+
 .models-embedding-section {
   margin-top: 24px;
   padding-top: 20px;

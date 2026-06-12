@@ -544,6 +544,28 @@ export function ModelsPage () {
             </tbody>
           </table>
 
+          <div className="form-section models-chat-section">
+            <h3>チャット・ReRank</h3>
+            <label className="rerank-toggle">
+              <input
+                type="checkbox"
+                checked={rerankEnabled}
+                onChange={(e) => { setRerankEnabled(e.target.checked); setSaved(false) }}
+              />
+              ReRank を有効化（既定: off）
+            </label>
+            <p className="rag-register-note models-page-note">
+              一覧は保存時・更新ボタン押下時に Ollama の <code>/api/tags</code> から取得します（<code>ollama list</code> 相当: ID・サイズ・最終更新）。pull した新モデルは「一覧更新」を押してください。
+            </p>
+            {error && <p className="error">{error}</p>}
+            {saved && <p className="meta">チャット・ReRank 設定を保存しました</p>}
+            <div className="form-actions">
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => void onSaveChatSettings()}>
+                チャット・ReRank 設定を保存
+              </button>
+            </div>
+          </div>
+
           <div className="form-section models-embedding-section">
             <h3>既定埋め込みモデル（RAG / ベクトル DB）</h3>
             <div className="policy-banner models-embedding-warn" role="note">
@@ -634,28 +656,6 @@ export function ModelsPage () {
                 onClick={() => onApplyEmbeddingChange()}
               >
                 埋め込みモデルを変更（再埋め込み）
-              </button>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3>チャット・ReRank</h3>
-            <label className="rerank-toggle">
-              <input
-                type="checkbox"
-                checked={rerankEnabled}
-                onChange={(e) => { setRerankEnabled(e.target.checked); setSaved(false) }}
-              />
-              ReRank を有効化（既定: off）
-            </label>
-            <p className="rag-register-note models-page-note">
-              一覧は保存時・更新ボタン押下時に Ollama の <code>/api/tags</code> から取得します（<code>ollama list</code> 相当: ID・サイズ・最終更新）。pull した新モデルは「一覧更新」を押してください。
-            </p>
-            {error && <p className="error">{error}</p>}
-            {saved && <p className="meta">チャット・ReRank 設定を保存しました</p>}
-            <div className="form-actions">
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => void onSaveChatSettings()}>
-                チャット・ReRank 設定を保存
               </button>
             </div>
           </div>
